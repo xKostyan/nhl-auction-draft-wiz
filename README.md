@@ -2,12 +2,14 @@
 
 A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft and auction decisions using CSV-based player and stat data.
 
+**Current implementation stage:** the app only supports importing the yearly CSV export (via browser file upload) into a local persistent workspace, and clearing that workspace to prepare for the next season. There is no ranking, analysis, or chart/visualization functionality yet.
+
 ## Stack
 
 - Python 3.10+
 - Dash
 - dash-ag-grid
-- Plotly
+- Plotly (planned for a later stage; not used yet)
 - pandas
 - pytest
 
@@ -93,22 +95,23 @@ python -m pytest
 
 ## Data model
 
-The app expects CSV fixtures with:
+The app expects 4 CSV files per yearly import:
 - `players.csv` for player identity and roster metadata
 - `f_stats.csv`, `d_stats.csv`, and `g_stats.csv` for position-specific stats
-- a distinct `stats_type` field for `projected` vs `actual` values
+
+Each stats file carries a `stats_type` field for `projected` vs `actual` values, broken out per `year`. Since this app is used prior to a season starting, the current/upcoming season will only ever have `projected` data — its `actual` rows exist in the file but are always blank. The app detects the draft season automatically as the year whose `actual` rows are entirely empty.
 
 ## Persistent workspace and yearly import flow
 
-The dashboard stores imports and player state in a local SQLite database under `.workspace/draft_workspace.sqlite3`.
+The app stores imported data in a local SQLite database under `.workspace/draft_workspace.sqlite3`.
 
 Typical usage:
-1. Import the yearly CSV export once at the start of the season
-2. Mark players as `drafted`, `keeper`, or `unavailable` as the draft progresses
-3. Keep the current workspace persistent across app restarts
-4. Clear the workspace when the next season's data is ready to import
+1. On the dashboard, select the 4 CSV files (players, forwards, defencemen, goalies) using the upload controls — this works from any machine on the local network, not just localhost, so you can supply the files from whichever machine has them.
+2. Click **Import season data**. The app auto-detects the draft season from the data and stores it in the local workspace.
+3. The workspace persists across app restarts.
+4. Click **Clear workspace** when the next season's data is ready to import, then repeat step 1.
 
-This gives the app a durable draft-management layer without requiring an external database.
+This gives the app a durable local-only import layer without requiring an external database. Player status tracking (drafted/keeper/unavailable) and draft analysis are planned for a later stage.
 
 ## Development workflow rules
 

@@ -9,7 +9,7 @@ This repo is a Python dashboard project for NHL auction draft planning. The stac
 - Plotly
 - pandas
 
-The app will analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard.
+The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app only supports importing the yearly CSV export into the local workspace and clearing the workspace — no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested.
 
 ## Required project setup
 
@@ -52,17 +52,20 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
    - `src/data_loader.py`
    - validate required columns
    - normalize positions and missing data
-   - merge player and stat tables
+   - decode browser-uploaded CSV payloads (`parse_uploaded_csv`) as well as bundled sample fixtures
 
-3. Draft analysis logic
-   - `src/analysis.py`
-   - compute rankings and value comparisons
-   - separate business logic from UI code
+3. Persistent workspace / import layer
+   - `src/storage.py`
+   - imports the 4 expected CSVs (players, forwards, defencemen, goalies) into SQLite
+   - auto-detects the draft season (the year with no `actual` results yet)
+   - clears the workspace to prepare for the next season's import
+   - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist yet — do not add it until analysis is explicitly requested)
 
 4. Dash dashboard layer
    - `src/dashboard.py`
-   - render AG Grid tables and Plotly charts
-   - keep callbacks thin and use shared data transformations
+   - exposes only: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players
+   - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
+   - keep callback logic thin; the import/clear branching lives in the testable `handle_workspace_action` helper
 
 5. App entry point
    - `app.py`
@@ -70,11 +73,11 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 
 ## Conventions specific to this repo
 
-- Keep `projected` and `actual` as first-class concepts in the data model and UI
+- Keep `projected` and `actual` as first-class concepts in the data model (no `actual` data will exist for the upcoming draft season)
 - Use the `F`, `D`, and `G` position codes consistently
 - Treat CSV files as the canonical fixture source for development
 - Keep data choice and filtering logic in helper functions rather than inline in callbacks
-- Use pandas for all data shaping and joins; use Dash/Plotly only for presentation
+- Use pandas for all data shaping and joins; use Dash only for presentation at this stage (no Plotly yet)
 - Preserve explicit column names and file names to reduce breakage in future agent-driven work
 
 ## AI-agent guardrails
@@ -93,8 +96,10 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 
 This repo supports a yearly import workflow with a local persistent workspace database:
 
+- Import is done via 4 browser file-upload controls (players, forwards, defencemen, goalies CSVs) so the app can be used from any machine on the local network, not just localhost
+- The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty); no manual year entry is required
 - Import the upstream CSV export once per season into `.workspace/draft_workspace.sqlite3`
-- Track player state as `available`, `drafted`, `keeper`, or `unavailable`
+- Track player state as `available`, `drafted`, `keeper`, or `unavailable` (status defaults to `available` on import; editing status is a future feature, not yet exposed in the UI)
 - Keep the workspace durable across app restarts
 - Clear the workspace before importing the next year's dataset
 

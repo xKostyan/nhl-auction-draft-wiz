@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from .data_loader import CSV_DIR, load_players, load_stats
+from .data_loader import (
+    load_players,
+    load_stats,
+    validate_players_df,
+    validate_stats_df,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB_PATH = ROOT / ".workspace" / "draft_workspace.sqlite3"
@@ -134,26 +139,57 @@ def clear_workspace() -> None:
         conn.close()
 
 
-def import_yearly_dataset(
-    year: int,
-    players_path: str | Path | None = None,
-    forward_path: str | Path | None = None,
-    defense_path: str | Path | None = None,
-    goalie_path: str | Path | None = None,
-) -> int:
-    """Import a season dataset into the local SQLite workspace.
+def detect_draft_year(*stat_frames: pd.DataFrame) -> int:
+    """Pick the upcoming draft season: the latest year with no 'actual' results yet.
 
-    This replaces the current dataset so the app can track draft availability and keepers
-    against a fresh yearly import.
+    The yearly export always contains a fixed 'projected' and 'actual' row per
+    player/year, but for a season that has not started, the 'actual' row exists
+    structurally with every stat column left blank. Falls back to the max year
+    present if every year already has some actual results (e.g. sample/test data).
     """
-    players_df = load_players() if players_path is None else pd.read_csv(players_path, encoding="latin-1")
-    forward_df = (load_stats("F") if forward_path is None else pd.read_csv(forward_path, encoding="latin-1")).copy()
-    defense_df = (load_stats("D") if defense_path is None else pd.read_csv(defense_path, encoding="latin-1")).copy()
-    goalie_df = (load_stats("G") if goalie_path is None else pd.read_csv(goalie_path, encoding="latin-1")).copy()
+    all_years: set[int] = set()
+    upcoming_years: set[int] = set()
 
-    for frame in (forward_df, defense_df, goalie_df):
-        if "year" in frame.columns:
-            frame.drop(frame[frame["year"] != int(year)].index, inplace=True)
+    for frame in stat_frames:
+        if frame is None or frame.empty or "year" not in frame.columns:
+            continue
+        stat_columns = [c for c in frame.columns if c not in ("id", "year", "stats_type")]
+        for year, group in frame.groupby("year"):
+            all_years.add(int(year))
+            actual_rows = group[group["stats_type"] == "actual"]
+            if not actual_rows.empty and actual_rows[stat_columns].isna().all(axis=None):
+                upcoming_years.add(int(year))
+
+    if upcoming_years:
+        return max(upcoming_years)
+    if all_years:
+        return max(all_years)
+    raise ValueError("Unable to detect a draft year: no year data found in the imported stat files.")
+
+
+def import_yearly_dataset(
+    players_df: pd.DataFrame | None = None,
+    forward_df: pd.DataFrame | None = None,
+    defense_df: pd.DataFrame | None = None,
+    goalie_df: pd.DataFrame | None = None,
+) -> dict[str, int]:
+    """Import the four expected CSV datasets into the local SQLite workspace.
+
+    This replaces any existing dataset. The draft season is detected automatically
+    from the stats files (the season with only projected, no actual, data yet).
+    When a dataset is omitted, the bundled sample CSV fixture is used instead,
+    which keeps this function easy to exercise directly in tests.
+    """
+    players_df = validate_players_df(players_df if players_df is not None else load_players())
+    forward_df = validate_stats_df(forward_df if forward_df is not None else load_stats("F"), "forwards CSV")
+    defense_df = validate_stats_df(defense_df if defense_df is not None else load_stats("D"), "defencemen CSV")
+    goalie_df = validate_stats_df(goalie_df if goalie_df is not None else load_stats("G"), "goalies CSV")
+
+    year = detect_draft_year(forward_df, defense_df, goalie_df)
+
+    forward_df = forward_df[forward_df["year"] == year].copy()
+    defense_df = defense_df[defense_df["year"] == year].copy()
+    goalie_df = goalie_df[goalie_df["year"] == year].copy()
 
     conn = db_connection()
     try:
@@ -204,62 +240,25 @@ def import_yearly_dataset(
             ("last_imported_at", str(pd.Timestamp.utcnow().isoformat())),
         )
         conn.commit()
-        return len(players_df)
-    finally:
-        conn.close()
-
-
-def set_player_status(player_id: int, status: str, notes: str = "") -> None:
-    """Set the tracking status for an imported player (available, drafted, keeper, unavailable)."""
-    allowed = {"available", "drafted", "keeper", "unavailable"}
-    if status not in allowed:
-        raise ValueError(f"Unsupported player status: {status!r}")
-
-    conn = db_connection()
-    try:
-        conn.execute(
-            """
-            INSERT INTO player_status (player_id, status, notes, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(player_id) DO UPDATE SET
-                status = excluded.status,
-                notes = excluded.notes,
-                updated_at = CURRENT_TIMESTAMP
-            """,
-            (player_id, status, notes),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def get_player_status(player_id: int) -> str:
-    conn = db_connection()
-    try:
-        row = conn.execute(
-            "SELECT status FROM player_status WHERE player_id = ?",
-            (player_id,),
-        ).fetchone()
-        return row["status"] if row else "available"
+        return {"players_imported": len(players_df), "year": int(year)}
     finally:
         conn.close()
 
 
 def get_players_for_grid() -> pd.DataFrame:
-    """Return a DataFrame for the dashboard with each player's status."""
+    """Return a DataFrame for the dashboard confirming the imported players and their status."""
     conn = db_connection()
     try:
         rows = conn.execute(
             """
-            SELECT p.id, p.name, p.position, p.selected, COALESCE(ps.status, 'available') AS status,
-                   COALESCE(ps.notes, '') AS notes, p.imported_year
+            SELECT p.id, p.name, p.position, COALESCE(ps.status, 'available') AS status, p.imported_year
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
             ORDER BY p.name ASC
             """
         ).fetchall()
         data = [dict(row) for row in rows]
-        return pd.DataFrame(data)
+        return pd.DataFrame(data, columns=["id", "name", "position", "status", "imported_year"])
     finally:
         conn.close()
 
@@ -268,23 +267,12 @@ def get_workspace_summary() -> dict[str, str | int]:
     conn = db_connection()
     try:
         total_players = conn.execute("SELECT COUNT(*) AS count FROM players").fetchone()["count"]
-        drafted = conn.execute("SELECT COUNT(*) AS count FROM player_status WHERE status = 'drafted'").fetchone()["count"]
-        keepers = conn.execute("SELECT COUNT(*) AS count FROM player_status WHERE status = 'keeper'").fetchone()["count"]
         current_year = get_workspace_value("current_year")
         imported_at = get_workspace_value("last_imported_at")
         return {
             "total_players": int(total_players),
-            "drafted": int(drafted),
-            "keepers": int(keepers),
             "current_year": int(current_year) if current_year and current_year != "0" else 0,
             "last_imported_at": imported_at,
         }
     finally:
         conn.close()
-
-
-def load_latest_workspace() -> pd.DataFrame:
-    """Convenience wrapper for the Dashboard: return the current local workspace state."""
-    if not (DEFAULT_DB_PATH.exists() if _DB_PATH == DEFAULT_DB_PATH else Path(_DB_PATH).exists()):
-        ensure_schema()
-    return get_players_for_grid()
