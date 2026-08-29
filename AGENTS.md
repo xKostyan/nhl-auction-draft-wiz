@@ -57,6 +57,7 @@ When adding a brand-new page: create the `src/pages/<name>.py` module (register 
 
 - Page modules call `dash.register_page(...)` as an import-time side effect. Dash requires a `Dash(use_pages=True, ...)` app to already exist before that call succeeds, so `src/dashboard.py`'s `build_dashboard()` creates the app first and only then imports the page modules.
 - Because of this, any test that imports `src.pages.*` needs an app to already exist; `tests/conftest.py` builds one eagerly at conftest-import time so this works transparently in every test file.
+- `Dash(...)` must be created with `suppress_callback_exceptions=True`. Without it, the frontend renderer validates every callback's Output/Input ids against whichever page's layout is currently rendered, and throws "ID not found in layout" console errors for every other page's component ids (e.g. `upload-players-filename` while viewing a different page, or during the initial `/` redirect before any page layout is mounted). This is expected/required for multi-page apps, not a bug to "fix" by removing the flag.
 
 ## Required stack
 

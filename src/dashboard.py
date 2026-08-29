@@ -42,7 +42,11 @@ def build_dashboard() -> Dash:
     """Create the multi-page app: persistent menu + routed page content."""
     ensure_schema()
 
-    app = Dash(__name__, use_pages=True, pages_folder="")
+    # suppress_callback_exceptions is required for multi-page apps: each
+    # page's callbacks reference ids that only exist in that page's own
+    # layout, which isn't part of the initial/validation layout for pages
+    # other than the one currently rendered.
+    app = Dash(__name__, use_pages=True, pages_folder="", suppress_callback_exceptions=True)
 
     # Importing the page modules triggers their `dash.register_page(...)` calls.
     # This must happen after the Dash(use_pages=True) app above is created.
