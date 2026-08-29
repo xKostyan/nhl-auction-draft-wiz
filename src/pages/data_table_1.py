@@ -14,8 +14,6 @@ PATH = "/data-table-1"
 NAME = "Data table 1"
 ORDER = 1
 
-dash.register_page(__name__, path=PATH, name=NAME, order=ORDER)
-
 
 def layout(**_kwargs):
     """Placeholder layout. Replace with real content when this page is implemented."""
@@ -30,3 +28,10 @@ def layout(**_kwargs):
             html.P("No functionality is implemented here yet.", style={"fontStyle": "italic", "color": "#555"}),
         ],
     )
+
+
+# Registered here (after `layout` is defined) rather than at module import time,
+# because dash.register_page() looks up `layout` from this module's namespace
+# at call time if not passed explicitly — see the matching comment in
+# src/pages/import_data.py for details.
+dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)

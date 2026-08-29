@@ -16,6 +16,15 @@ def test_both_pages_are_registered_in_menu_order():
     assert paths_in_order == ["/import-data", "/data-table-1"]
 
 
+def test_every_registered_page_has_a_callable_layout():
+    """Regression test: dash.register_page() silently stores layout=None if it
+    is called before the module's `layout` function is defined and `layout`
+    isn't passed explicitly, which renders an empty page with no error. Every
+    page must register a real callable layout."""
+    for module_name, page in dash.page_registry.items():
+        assert callable(page.get("layout")), f"{module_name} registered without a callable layout"
+
+
 def test_app_layout_contains_persistent_menu_and_page_container(dash_app, collect_component_ids):
     ids = collect_component_ids(dash_app.layout)
     assert "app-menu-toggle" in ids

@@ -22,8 +22,6 @@ PATH = "/import-data"
 NAME = "Import data"
 ORDER = 0
 
-dash.register_page(__name__, path=PATH, name=NAME, order=ORDER)
-
 UPLOAD_STYLE = {
     "width": "100%",
     "height": "56px",
@@ -151,6 +149,13 @@ def layout(**_kwargs):
             ),
         ],
     )
+
+
+# Registered here (after `layout` is defined) rather than at module import time,
+# because dash.register_page() looks up `layout` from this module's namespace
+# at call time if not passed explicitly — calling it before `layout` exists
+# would register a page with layout=None and no content would ever render.
+dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 
 for _upload_id, _ in UPLOAD_FIELDS:
