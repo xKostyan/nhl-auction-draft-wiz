@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "playwright": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        ". \"$HOME/.nvm/nvm.sh\" && nvm use 22 >/dev/null && npx -y @playwright/mcp@latest"
+      ],
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "0"
+      }
+    }
+  }
+}
