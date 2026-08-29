@@ -11,7 +11,7 @@ This repository is a Python dashboard project for NHL auction draft planning. Th
 
 The goal is to provide a single-agent-friendly environment for building and iterating on a draft planning dashboard without losing project context or conventions.
 
-**Current implementation stage:** the app only supports (1) importing the 4 expected yearly CSV files (players, forwards, defencemen, goalies) via browser file upload, and (2) clearing the local workspace to reset for the next season's import. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested.
+**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering 2 pages: **1 - Import data** (`/import-data`, fully implemented) and **2 - Data table 1** (`/data-table-1`, placeholder for the future data-analysis feature). There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
 
 ## Repo layout
 
@@ -20,8 +20,43 @@ The goal is to provide a single-agent-friendly environment for building and iter
 - `AGENTS.md`: permanent project-level instructions for AI agents
 - `csv-src-import-examples/`: source CSV fixtures for players and stats
 - `src/`: application logic
-- `tests/`: automated tests
+  - `src/dashboard.py`: app shell — persistent menu, page routing, landing-page redirect
+  - `src/components/`: shared UI building blocks (e.g. the persistent menu, `src/components/menu.py`)
+  - `src/pages/`: one module per page, each calling `dash.register_page(...)` — see "Pages, menu, and documentation structure" below
+  - `src/data_loader.py`, `src/storage.py`: CSV loading/validation and persistent SQLite workspace storage (shared by all pages)
+- `docs/pages/`: one documentation file per page, mirroring `src/pages/`
+- `tests/common/`: tests for shared/non-page-specific code (data loading, storage, app shell)
+- `tests/pages/<page>/`: tests for one page each, mirroring `src/pages/`
 - `.vscode/mcp.json`: MCP config for browser automation
+
+## Pages, menu, and documentation structure
+
+This app is a Dash multi-page app (`Dash(use_pages=True, ...)`). Each page is:
+
+1. A module in `src/pages/<page_name>.py` that calls `dash.register_page(__name__, path=..., name=..., order=...)` and defines a `layout(**kwargs)` function (not a static layout) plus its own callbacks.
+2. Listed in the persistent menu automatically (`src/components/menu.py` renders every entry in `dash.page_registry`, ordered by `order`) — you do not need to hand-edit the menu when adding a page.
+3. Documented in a matching `docs/pages/<page-name>.md` file (kebab-case, matching the route).
+4. Tested in a matching `tests/pages/<page_name>/` directory.
+
+Current pages (this table is the source of truth for page names/order used in future feature requests — refer to pages by these names):
+
+| # | Page name | Route | Module | Docs | Tests | Status |
+|---|-----------|-------|--------|------|-------|--------|
+| 1 | Import data | `/import-data` | `src/pages/import_data.py` | `docs/pages/import-data.md` | `tests/pages/import_data/` | Implemented |
+| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` | Placeholder |
+
+**Mandatory rule: whenever you implement, change, or extend a page's functionality, update its `docs/pages/<page-name>.md` file and its `tests/pages/<page_name>/` tests in the same change.** Do not let the docs or page-specific tests drift out of sync with the code — this is as required as the general testing rules below.
+
+When adding a brand-new page: create the `src/pages/<name>.py` module (register + layout + callbacks), a `docs/pages/<name>.md` file, and a `tests/pages/<name>/` directory, and add a row to the table above (and to `docs/pages/README.md` and the root `README.md` table).
+
+### Landing page behavior
+
+`src/dashboard.py`'s `_landing_page_path()` decides where `/` redirects: to **Data table 1** if the workspace already has imported players, otherwise to **Import data**. If you add pages or change this rule, update this function, its tests in `tests/common/test_dashboard_shell.py`, and this document.
+
+### Dash Pages implementation notes
+
+- Page modules call `dash.register_page(...)` as an import-time side effect. Dash requires a `Dash(use_pages=True, ...)` app to already exist before that call succeeds, so `src/dashboard.py`'s `build_dashboard()` creates the app first and only then imports the page modules.
+- Because of this, any test that imports `src.pages.*` needs an app to already exist; `tests/conftest.py` builds one eagerly at conftest-import time so this works transparently in every test file.
 
 ## Required stack
 
@@ -51,19 +86,25 @@ The app should start from the repo root and serve the Dash dashboard locally.
   `python app.py`
 - Run all tests:
   `python -m pytest`
+- Run tests for shared/common code only:
+  `python -m pytest tests/common`
+- Run tests for one page only:
+  `python -m pytest tests/pages/import_data`
+  `python -m pytest tests/pages/data_table_1`
 - Run one test file:
-  `python -m pytest tests/test_data_loader.py`
+  `python -m pytest tests/common/test_data_loader.py`
 - Run one test by name:
-  `python -m pytest tests/test_data_loader.py::test_load_players`
+  `python -m pytest tests/common/test_data_loader.py::test_load_players`
 
 ## Architecture guardrails
 
-- Keep data loading, storage, and UI code in separate modules (`src/data_loader.py`, `src/storage.py`, `src/dashboard.py`).
+- Keep data loading, storage, and UI code in separate modules (`src/data_loader.py`, `src/storage.py`, `src/dashboard.py`, `src/pages/*`, `src/components/*`).
 - Treat CSV files in `csv-src-import-examples/` as source fixtures and keep the rest of the app data-driven.
-- Do not write one giant app file for all logic.
-- Keep callback logic thin and push heavy logic into pure Python helper functions (see `handle_workspace_action` in `src/dashboard.py`).
+- Do not write one giant app file for all logic; page-specific logic belongs in its own `src/pages/<page>.py` module.
+- Keep callback logic thin and push heavy logic into pure Python helper functions (see `handle_workspace_action` in `src/pages/import_data.py`).
 - Preserve `projected` vs `actual` as a first-class concept in the data model; the upcoming draft season will only ever have `projected` data.
 - Use pandas for merges and transformations; use Dash only for presentation and interaction at this stage (no Plotly/analysis modules yet — do not add `src/analysis.py` or `dcc.Graph` until requested).
+- The persistent menu (`src/components/menu.py`) must stay page-agnostic — it derives its entries from `dash.page_registry`, so adding a page should never require editing the menu component itself.
 
 ## Coding conventions
 
@@ -76,14 +117,15 @@ The app should start from the repo root and serve the Dash dashboard locally.
 
 ## Dashboard conventions
 
-- Current dashboard scope is limited to: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players.
-- Do not add Plotly charts, ranking/filter views, or player status-editing UI until explicitly requested — keep the current implementation focused on import/clear only.
-- Dash callbacks should stay thin wrappers around testable helper functions; avoid embedding business logic directly in `@app.callback` bodies.
+- Current app scope: page 1 ("Import data") provides 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; page 2 ("Data table 1") is a placeholder with no functionality yet.
+- Do not add Plotly charts, ranking/filter views, or player status-editing UI until explicitly requested — keep implementation focused on what's in the pages table above and in each page's `docs/pages/*.md` file.
+- Dash callbacks should stay thin wrappers around testable helper functions; avoid embedding business logic directly in `@dash.callback`/`@app.callback` bodies.
 - Avoid mixing business rules into layout code.
+- Page `layout` must be a function (not a static value) so it reflects live workspace state on every navigation.
 
 ## Persistent workspace model
 
-This app is designed around a yearly import workflow:
+This is the data model behind page 1 ("Import data", `src/pages/import_data.py`). This app is designed around a yearly import workflow:
 
 - A yearly export from the upstream NHL stats app (4 CSVs: players, forwards, defencemen, goalies) is imported into the local workspace once per season, via browser file-upload controls so the app can be used from any machine on the local network, not just localhost.
 - Every year and every `projected`/`actual` data point present in the source stats CSVs is imported and retained — not just the upcoming draft season — so multi-year, projected-vs-actual historical analysis features can be built later without re-importing. Stats are stored in `player_stats` as a long/EAV table (`player_id, year, stats_type, position, stat_name, stat_value`) rather than one wide row per year, which makes it simple to query a single stat across years or types for any player.
@@ -112,6 +154,7 @@ This repo is prepared for browser-driven UI testing using Playwright MCP.
 - When adding new modules, keep the repo layout easy for a single agent to infer without broad exploration
 - Every new feature or function must be accompanied by ongoing expansion of unit tests and smoke tests as part of implementation
 - A feature cannot be marked as implemented until all relevant tests pass and any failing or missing coverage is resolved, expanded, or adjusted
+- Whenever a page's implementation changes, update its `docs/pages/<page>.md` file and its `tests/pages/<page>/` tests in the same change (see "Pages, menu, and documentation structure" above)
 - Any completed feature must be committed and pushed before the work is considered complete
 - Local work is prohibited on `main` or `master`; only branches matching `feature*` or `bugfix*` are allowed
 

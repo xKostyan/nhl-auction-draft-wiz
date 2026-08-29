@@ -2,7 +2,7 @@
 
 A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft and auction decisions using CSV-based player and stat data.
 
-**Current implementation stage:** the app only supports importing the yearly CSV export (via browser file upload) into a local persistent workspace, and clearing that workspace to prepare for the next season. There is no ranking, analysis, or chart/visualization functionality yet.
+**Current implementation stage:** the app has a persistent top menu with 2 pages: **Import data** (fully implemented — upload CSVs, import, clear workspace) and **Data table 1** (placeholder for the future data-analysis feature). There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
 
 ## Stack
 
@@ -54,6 +54,20 @@ http://0.0.0.0:8050/
 
 Open that URL in your browser to use the app.
 
+## App structure and pages
+
+The app has a persistent menu (top-left **☰ Menu** button) with 2 entries.
+Each corresponds to one page module and one documentation page:
+
+| # | Page name | Route | Module | Docs |
+|---|-----------|-------|--------|------|
+| 1 | Import data | `/import-data` | `src/pages/import_data.py` | [docs/pages/import-data.md](docs/pages/import-data.md) |
+| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | [docs/pages/data-table-1.md](docs/pages/data-table-1.md) |
+
+Landing page (`/`) behavior: if the workspace already has imported players,
+it redirects to **Data table 1**; otherwise it redirects to **Import data**
+so you're prompted to import a season first.
+
 ## Stop the app
 
 ### Ubuntu / Linux
@@ -83,12 +97,27 @@ source .venv/bin/activate
 python -m pytest
 ```
 
+Tests are split into a `tests/common/` suite (data loading, storage, and
+app-shell/menu/routing behavior) and one directory per page under
+`tests/pages/<page>/`. Run a subset with:
+
+```bash
+python -m pytest tests/common               # shared/common tests only
+python -m pytest tests/pages/import_data     # Import data page only
+python -m pytest tests/pages/data_table_1    # Data table 1 page only
+```
+
 ## Project structure
 
 - `app.py`: entry point for the Dash app
-- `src/`: business logic and dashboard code
+- `src/dashboard.py`: app shell (persistent menu + page routing + landing-page redirect)
+- `src/components/`: shared UI building blocks (e.g. the persistent menu)
+- `src/pages/`: one module per page, each registered via `dash.register_page` — see `docs/pages/`
+- `src/data_loader.py`, `src/storage.py`: data loading/validation and persistent workspace storage
 - `csv-src-import-examples/`: sample player and stat CSVs
-- `tests/`: Python test suite
+- `tests/common/`: tests for shared/non-page-specific code
+- `tests/pages/<page>/`: tests for one page each
+- `docs/pages/`: one documentation file per page — see [docs/pages/](docs/pages/)
 - `AGENTS.md`: permanent agent instructions for Copilot and other AI tools
 - `.github/copilot-instructions.md`: Copilot-specific guidance
 - `.vscode/mcp.json`: Playwright MCP config for browser automation
@@ -103,12 +132,12 @@ Each stats file carries a `stats_type` field for `projected` vs `actual` values,
 
 **All years and both `projected`/`actual` data points found in the CSVs are imported and retained**, not just the upcoming draft season, so multi-year and projected-vs-actual historical comparisons remain possible once that analysis is built. Stats are stored per-player in a long format (one row per `year` / `stats_type` / stat name), which makes it easy to pull a single player's full history later.
 
-## Persistent workspace and yearly import flow
+## Persistent workspace and yearly import flow (Import data page)
 
-The app stores imported data in a local SQLite database under `.workspace/draft_workspace.sqlite3`.
+The app stores imported data in a local SQLite database under `.workspace/draft_workspace.sqlite3`. Full details: [docs/pages/import-data.md](docs/pages/import-data.md).
 
 Typical usage:
-1. On the dashboard, select the 4 CSV files (players, forwards, defencemen, goalies) using the upload controls — this works from any machine on the local network, not just localhost, so you can supply the files from whichever machine has them.
+1. Open the **Import data** page from the menu (or land there automatically on an empty workspace) and select the 4 CSV files (players, forwards, defencemen, goalies) using the upload controls — this works from any machine on the local network, not just localhost, so you can supply the files from whichever machine has them.
 2. Click **Import season data**. The app stores every year/stats_type data point from the CSVs, and auto-detects the current draft season from the data (the year with only `projected`, no `actual`, data yet).
 3. The workspace persists across app restarts.
 4. Click **Clear workspace** when the next season's data is ready to import, then repeat step 1.
@@ -119,6 +148,7 @@ This gives the app a durable local-only import layer without requiring an extern
 
 - Expand unit tests and smoke tests with each new feature or function
 - Do not consider a feature complete until the relevant tests pass and any coverage gaps are fixed
+- When implementing or changing a page, update its documentation file under `docs/pages/` in the same change
 - Commit and push completed work before treating it as finished
 - Only work on branches named `feature*` or `bugfix*`; never on `main` or `master`
 

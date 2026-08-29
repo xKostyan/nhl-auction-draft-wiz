@@ -9,7 +9,7 @@ This repo is a Python dashboard project for NHL auction draft planning. The stac
 - Plotly
 - pandas
 
-The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app only supports importing the yearly CSV export into the local workspace and clearing the workspace — no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested.
+The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering 2 pages — **1 - Import data** (`/import-data`, fully implemented) and **2 - Data table 1** (`/data-table-1`, placeholder) — no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
 
 ## Required project setup
 
@@ -33,10 +33,15 @@ This repo is intended to be developed with a single AI coding agent. The environ
   `python app.py`
 - Run the full test suite:
   `python -m pytest`
+- Run tests for shared/common code only:
+  `python -m pytest tests/common`
+- Run tests for one page only:
+  `python -m pytest tests/pages/import_data`
+  `python -m pytest tests/pages/data_table_1`
 - Run one test file:
-  `python -m pytest tests/test_data_loader.py`
+  `python -m pytest tests/common/test_data_loader.py`
 - Run one test by name:
-  `python -m pytest tests/test_data_loader.py::test_load_players`
+  `python -m pytest tests/common/test_data_loader.py::test_load_players`
 
 ## High-level architecture
 
@@ -61,15 +66,30 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
    - clears the workspace to prepare for the next season's import
    - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist yet — do not add it until analysis is explicitly requested)
 
-4. Dash dashboard layer
+4. Dash multi-page app shell + persistent menu
    - `src/dashboard.py`
-   - exposes only: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players
-   - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
-   - keep callback logic thin; the import/clear branching lives in the testable `handle_workspace_action` helper
+   - builds `Dash(use_pages=True, pages_folder="")`, then imports page modules (order matters: `register_page()` requires the app to exist first)
+   - mounts `src/components/menu.py`'s persistent dropdown menu (auto-derived from `dash.page_registry`, ordered by `order` — never hand-edit the menu when adding a page) plus `dash.page_container`
+   - `_landing_page_path()` redirects `/` to `/data-table-1` if the workspace has imported players, else to `/import-data`
 
-5. App entry point
+5. Pages (one module + one doc file + one test dir each — see table below)
+   - `src/pages/import_data.py` → exposes: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; import/clear branching lives in the testable `handle_workspace_action` helper
+   - `src/pages/data_table_1.py` → placeholder page, no functionality yet (future historical/analysis feature — refer to this page by name in future feature requests)
+   - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
+   - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist — do not add it until analysis is explicitly requested)
+
+6. App entry point
    - `app.py`
    - starts the Dash server on port 8050
+
+## Pages, documentation, and test structure
+
+| # | Page name | Route | Module | Docs | Tests |
+|---|-----------|-------|--------|------|-------|
+| 1 | Import data | `/import-data` | `src/pages/import_data.py` | `docs/pages/import-data.md` | `tests/pages/import_data/` |
+| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` |
+
+Non-page-specific tests (data loading, storage, app shell/menu/routing) live in `tests/common/`. Whenever you implement or change a page, update its row's doc file and test directory in the same change — see `AGENTS.md` for the full rule.
 
 ## Conventions specific to this repo
 
@@ -89,6 +109,7 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 - Do not create hidden, untracked state for app logic; keep the app deterministic and testable
 - Every new feature or function must include test and smoke-test expansion as part of the implementation
 - A feature cannot be marked as implemented until all relevant tests pass and any gaps are resolved or expanded
+- Whenever a page's implementation changes, update its `docs/pages/<page>.md` file and its `tests/pages/<page>/` tests in the same change
 - Completed work must be committed and pushed before it is considered done
 - Work must happen only on `feature*` or `bugfix*` branches; `main` and `master` are not allowed
 

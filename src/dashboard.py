@@ -1,187 +1,70 @@
+"""Top-level app shell: persistent menu + multi-page routing.
+
+Pages live under `src/pages/` and each registers itself via
+`dash.register_page` (see that package's docstring for the required
+per-page conventions). This module only wires the app shell together:
+the persistent menu, the page container, and the landing-page redirect.
+"""
+
 from __future__ import annotations
 
-import dash_ag_grid as dag
-from dash import Dash, Input, Output, State, ctx, dcc, html
+import dash
+from dash import Dash, Input, Output, callback, html
 
-from .data_loader import parse_uploaded_csv
-from .storage import (
-    clear_workspace,
-    ensure_schema,
-    get_players_for_grid,
-    get_workspace_summary,
-    import_yearly_dataset,
-)
+from .components.menu import build_menu
+from .storage import ensure_schema, get_workspace_summary
 
-UPLOAD_STYLE = {
-    "width": "100%",
-    "height": "56px",
-    "lineHeight": "56px",
-    "borderWidth": "1px",
-    "borderStyle": "dashed",
-    "borderRadius": "6px",
-    "textAlign": "center",
-}
-
-UPLOAD_FIELDS = [
-    ("upload-players", "Players CSV"),
-    ("upload-forwards", "Forwards stats CSV"),
-    ("upload-defense", "Defencemen stats CSV"),
-    ("upload-goalies", "Goalies stats CSV"),
-]
+# The id Dash's page-routing machinery uses for its internal dcc.Location.
+# Exposed as a "private" attribute by Dash itself; pinned here in one place
+# so a future Dash upgrade only needs to be reconciled in this one spot.
+_PAGES_LOCATION_ID = getattr(dash.dash, "_ID_LOCATION", "_pages_location")
 
 
-def _upload_control(upload_id: str, label: str) -> html.Div:
-    return html.Div(
-        [
-            html.Label(label),
-            dcc.Upload(
-                id=upload_id,
-                children=html.Div(["Drag and drop or ", html.A("select a CSV file")]),
-                style=UPLOAD_STYLE,
-                multiple=False,
-                accept=".csv",
-            ),
-            html.Div(id=f"{upload_id}-filename", style={"fontSize": "12px", "color": "#555", "minHeight": "18px"}),
-        ],
-        style={"marginBottom": "12px"},
-    )
+def _landing_page_path() -> str:
+    """Decide which page to redirect to from "/".
 
-
-def _initial_status_message() -> str:
-    summary = get_workspace_summary()
-    if summary["total_players"] == 0:
-        return "Workspace is empty. Import the players/forwards/defencemen/goalies CSV files to begin."
-    return f"Workspace has {summary['total_players']} players imported for season {summary['current_season']}."
-
-
-def handle_workspace_action(
-    triggered_id: str | None,
-    players_contents: str | None,
-    forwards_contents: str | None,
-    defense_contents: str | None,
-    goalies_contents: str | None,
-) -> tuple[str, list[dict]]:
-    """Run the import/clear workspace action and return (status message, grid rows).
-
-    Kept free of Dash callback machinery so it can be unit tested directly.
+    If the workspace already has imported players, land on the Data table 1
+    page; otherwise land on the Import data page so the user is prompted to
+    import a season's CSV export first.
     """
-    if triggered_id == "clear-button":
-        clear_workspace()
-        return (
-            "Workspace cleared. Import a new season's CSV export to continue.",
-            get_players_for_grid().to_dict("records"),
-        )
+    # Imported lazily: these modules call `dash.register_page(...)` at import
+    # time, which Dash only allows after a `Dash(use_pages=True, ...)` app has
+    # been instantiated (see build_dashboard()).
+    from .pages import data_table_1, import_data
 
-    if triggered_id == "import-button":
-        missing = [
-            label
-            for label, contents in (
-                ("players", players_contents),
-                ("forwards", forwards_contents),
-                ("defencemen", defense_contents),
-                ("goalies", goalies_contents),
-            )
-            if not contents
-        ]
-        if missing:
-            message = f"Please select all four CSV files before importing. Missing: {', '.join(missing)}."
-            return message, get_players_for_grid().to_dict("records")
-
-        try:
-            result = import_yearly_dataset(
-                parse_uploaded_csv(players_contents),
-                parse_uploaded_csv(forwards_contents),
-                parse_uploaded_csv(defense_contents),
-                parse_uploaded_csv(goalies_contents),
-            )
-        except ValueError as exc:
-            return f"Import failed: {exc}", get_players_for_grid().to_dict("records")
-
-        message = f"Imported {result['players_imported']} players for season {result['year']}."
-        return message, get_players_for_grid().to_dict("records")
-
-    return _initial_status_message(), get_players_for_grid().to_dict("records")
+    summary = get_workspace_summary()
+    if summary["total_players"] > 0:
+        return data_table_1.PATH
+    return import_data.PATH
 
 
 def build_dashboard() -> Dash:
-    """Create the app with only the import / clear-workspace capabilities."""
+    """Create the multi-page app: persistent menu + routed page content."""
     ensure_schema()
 
-    app = Dash(__name__)
+    app = Dash(__name__, use_pages=True, pages_folder="")
+
+    # Importing the page modules triggers their `dash.register_page(...)` calls.
+    # This must happen after the Dash(use_pages=True) app above is created.
+    from .pages import data_table_1, import_data  # noqa: F401  (side-effect import)
+
     app.layout = html.Div(
-        style={"padding": "24px", "fontFamily": "sans-serif", "maxWidth": "760px"},
+        style={"padding": "24px", "fontFamily": "sans-serif"},
         children=[
             html.H2("NHL Auction Draft Wizard"),
-            html.P(
-                "Import the yearly players / forwards / defencemen / goalies CSV export to build the "
-                "local draft workspace, or clear the workspace to prepare for a new season."
-            ),
-            *[_upload_control(upload_id, label) for upload_id, label in UPLOAD_FIELDS],
-            html.Div(
-                [
-                    html.Button("Import season data", id="import-button", n_clicks=0, style={"marginRight": "12px"}),
-                    html.Button("Clear workspace", id="clear-button", n_clicks=0),
-                ],
-                style={"margin": "16px 0"},
-            ),
-            html.Div(id="workspace-status", children=_initial_status_message(), style={"marginBottom": "16px", "fontWeight": "bold"}),
-            dag.AgGrid(
-                id="player-grid",
-                rowData=get_players_for_grid().to_dict("records"),
-                columnDefs=[
-                    {"field": "id"},
-                    {"field": "name"},
-                    {"field": "position"},
-                    {"field": "status"},
-                    {"field": "current_season"},
-                ],
-                defaultColDef={"sortable": True, "resizable": True},
-                dashGridOptions={"pagination": True, "paginationPageSize": 25},
-                style={"height": "440px", "width": "100%"},
-            ),
+            build_menu(),
+            dash.page_container,
         ],
     )
 
-    for upload_id, _ in UPLOAD_FIELDS:
-
-        def _make_filename_callback(component_id: str):
-            @app.callback(
-                Output(f"{component_id}-filename", "children"),
-                Input(component_id, "filename"),
-                prevent_initial_call=True,
-            )
-            def show_filename(filename, _component_id=component_id):
-                return f"Selected: {filename}" if filename else ""
-
-            return show_filename
-
-        _make_filename_callback(upload_id)
-
-    @app.callback(
-        Output("workspace-status", "children"),
-        Output("player-grid", "rowData"),
-        Input("import-button", "n_clicks"),
-        Input("clear-button", "n_clicks"),
-        State("upload-players", "contents"),
-        State("upload-forwards", "contents"),
-        State("upload-defense", "contents"),
-        State("upload-goalies", "contents"),
-        prevent_initial_call=True,
+    @callback(
+        Output(_PAGES_LOCATION_ID, "pathname"),
+        Input(_PAGES_LOCATION_ID, "pathname"),
+        prevent_initial_call=False,
     )
-    def handle_workspace_actions(
-        _import_clicks,
-        _clear_clicks,
-        players_contents,
-        forwards_contents,
-        defense_contents,
-        goalies_contents,
-    ):
-        return handle_workspace_action(
-            ctx.triggered_id,
-            players_contents,
-            forwards_contents,
-            defense_contents,
-            goalies_contents,
-        )
+    def redirect_root(pathname):
+        if pathname in ("/", ""):
+            return _landing_page_path()
+        return dash.no_update
 
     return app
