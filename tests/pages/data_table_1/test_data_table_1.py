@@ -12,7 +12,7 @@ from src.pages import data_table_1
 def test_page_is_registered_at_the_expected_path_and_order():
     assert data_table_1.PATH == "/data-table-1"
     assert data_table_1.NAME == "Data table 1"
-    assert data_table_1.ORDER == 1
+    assert data_table_1.ORDER == 4
 
 
 def test_layout_renders_placeholder_content_only(walk_components):

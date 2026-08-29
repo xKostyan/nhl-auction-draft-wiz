@@ -11,7 +11,7 @@ This repository is a Python dashboard project for NHL auction draft planning. Th
 
 The goal is to provide a single-agent-friendly environment for building and iterating on a draft planning dashboard without losing project context or conventions.
 
-**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering 2 pages: **1 - Import data** (`/import-data`, fully implemented) and **2 - Data table 1** (`/data-table-1`, placeholder for the future data-analysis feature). There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
+**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering five pages: **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - Data table 1** (`/data-table-1`, placeholder for the future data-analysis feature). The three position pages provide name/status draft tables only. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
 
 ## Repo layout
 
@@ -43,7 +43,10 @@ Current pages (this table is the source of truth for page names/order used in fu
 | # | Page name | Route | Module | Docs | Tests | Status |
 |---|-----------|-------|--------|------|-------|--------|
 | 1 | Import data | `/import-data` | `src/pages/import_data.py` | `docs/pages/import-data.md` | `tests/pages/import_data/` | Implemented |
-| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` | Placeholder |
+| 2 | Forwards | `/forwards` | `src/pages/forwards.py` | `docs/pages/forwards.md` | `tests/pages/forwards/` | Implemented placeholder |
+| 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | `docs/pages/defencemen.md` | `tests/pages/defencemen/` | Implemented placeholder |
+| 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` | Implemented placeholder |
+| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` | Placeholder |
 
 **Mandatory rule: whenever you implement, change, or extend a page's functionality, update its `docs/pages/<page-name>.md` file and its `tests/pages/<page_name>/` tests in the same change.** Do not let the docs or page-specific tests drift out of sync with the code — this is as required as the general testing rules below.
 
@@ -51,7 +54,7 @@ When adding a brand-new page: create the `src/pages/<name>.py` module (register 
 
 ### Landing page behavior
 
-`src/dashboard.py`'s `_landing_page_path()` decides where `/` redirects: to **Data table 1** if the workspace already has imported players, otherwise to **Import data**. If you add pages or change this rule, update this function, its tests in `tests/common/test_dashboard_shell.py`, and this document.
+`src/dashboard.py`'s `_landing_page_path()` decides where `/` redirects: to **Forwards** if the workspace already has imported players, otherwise to **Import data**. If you add pages or change this rule, update this function, its tests in `tests/common/test_dashboard_shell.py`, and this document.
 
 ### Dash Pages implementation notes
 
@@ -119,8 +122,8 @@ The app should start from the repo root and serve the Dash dashboard locally.
 
 ## Dashboard conventions
 
-- Current app scope: page 1 ("Import data") provides 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; page 2 ("Data table 1") is a placeholder with no functionality yet.
-- Do not add Plotly charts, ranking/filter views, or player status-editing UI until explicitly requested — keep implementation focused on what's in the pages table above and in each page's `docs/pages/*.md` file.
+- Current app scope: page 1 ("Import data") provides 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; pages 2-4 provide dedicated position tables with name and drafted-status checkbox columns; page 5 ("Data table 1") is a placeholder with no functionality yet.
+- Do not add Plotly charts, ranking/filter views, or player status-editing UI beyond the drafted-status controls until explicitly requested — keep implementation focused on what's in the pages table above and in each page's `docs/pages/*.md` file.
 - Dash callbacks should stay thin wrappers around testable helper functions; avoid embedding business logic directly in `@dash.callback`/`@app.callback` bodies.
 - Avoid mixing business rules into layout code.
 - Page `layout` must be a function (not a static value) so it reflects live workspace state on every navigation.
@@ -132,7 +135,7 @@ This is the data model behind page 1 ("Import data", `src/pages/import_data.py`)
 - A yearly export from the upstream NHL stats app (4 CSVs: players, forwards, defencemen, goalies) is imported into the local workspace once per season, via browser file-upload controls so the app can be used from any machine on the local network, not just localhost.
 - Every year and every `projected`/`actual` data point present in the source stats CSVs is imported and retained — not just the upcoming draft season — so multi-year, projected-vs-actual historical analysis features can be built later without re-importing. Stats are stored in `player_stats` as a long/EAV table (`player_id, year, stats_type, position, stat_name, stat_value`) rather than one wide row per year, which makes it simple to query a single stat across years or types for any player.
 - The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty, i.e. the season that hasn't started yet); no manual year entry is required. This is stored as `players.current_season` / `workspace_meta.current_season` for reference, but does not limit what history is stored.
-- Player status defaults to `available` for every imported player and is stored locally in SQLite, persisting across app restarts. Status-editing (marking drafted/keeper/unavailable) is a planned future feature and is intentionally not yet exposed in the UI.
+- Player status defaults to `available` for every imported player and is stored locally in SQLite, persisting across app restarts. Dedicated position pages expose drafted-status checkboxes; editing keeper/unavailable status remains a future feature.
 - The workspace can be reset with a clear action to allow the next season's dataset to be imported cleanly.
 
 Use `get_player_stat_history(player_id)` in `src/storage.py` to fetch a player's full long-format history (year, stats_type, stat_name, stat_value), and `get_available_stat_years()` to list years currently stored. These are the intended building blocks for future historical-analysis features — prefer extending them over re-deriving data access patterns.

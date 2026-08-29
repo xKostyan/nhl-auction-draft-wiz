@@ -8,9 +8,11 @@ from src.storage import (
     detect_draft_year,
     get_available_stat_years,
     get_player_stat_history,
+    get_players_for_position_grid,
     get_players_for_grid,
     get_workspace_summary,
     import_yearly_dataset,
+    set_player_drafted,
 )
 
 
@@ -154,3 +156,29 @@ def test_get_player_stat_history_returns_empty_frame_for_unknown_player(tmp_path
     history = get_player_stat_history(-1)
     assert history.empty
     assert list(history.columns) == ["year", "stats_type", "stat_name", "stat_value"]
+
+
+def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    forwards = get_players_for_position_grid("F")
+    assert not forwards.empty
+    assert list(forwards.columns) == ["id", "name", "drafted"]
+    assert forwards["drafted"].eq(False).all()
+
+    player_id = int(forwards.iloc[0]["id"])
+    set_player_drafted(player_id, True)
+    drafted_forwards = get_players_for_position_grid("F")
+    assert drafted_forwards.loc[drafted_forwards["id"] == player_id, "drafted"].item() is True
+
+    set_player_drafted(player_id, False)
+    available_forwards = get_players_for_position_grid("F")
+    assert available_forwards.loc[available_forwards["id"] == player_id, "drafted"].item() is False
+
+
+def test_position_grid_rejects_unknown_position(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    with pytest.raises(ValueError, match="Unsupported position"):
+        get_players_for_position_grid("X")

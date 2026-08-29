@@ -1,0 +1,27 @@
+"""Page 1 - live draft table for forwards."""
+
+from __future__ import annotations
+
+import dash
+from dash import Input, Output, callback
+
+from .position_table import build_position_layout, handle_drafted_cell_change, position_grid_id
+
+PATH = "/forwards"
+NAME = "Forwards"
+ORDER = 1
+POSITION = "F"
+GRID_ID = position_grid_id(POSITION)
+
+
+def layout(**_kwargs):
+    """Build the forwards table from current workspace state."""
+    return build_position_layout(POSITION)
+
+
+dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
+
+
+@callback(Output(GRID_ID, "rowData"), Input(GRID_ID, "cellValueChanged"), prevent_initial_call=True)
+def update_drafted_status(cell_change):
+    return handle_drafted_cell_change(POSITION, cell_change)

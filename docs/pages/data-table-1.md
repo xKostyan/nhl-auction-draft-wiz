@@ -1,6 +1,6 @@
 # Page: Data table 1
 
-- **Menu position:** 2
+- **Menu position:** 5
 - **Route:** `/data-table-1`
 - **Module:** `src/pages/data_table_1.py`
 - **Tests:** `tests/pages/data_table_1/`
@@ -17,10 +17,8 @@ for the data access points this page is expected to build on).
 
 - Renders a static placeholder message. No data, tables, filters, or charts
   are implemented yet.
-- This is also the app's landing page whenever the workspace already has
-  imported players (see [Import data](./import-data.md) and
-  `src/dashboard.py`'s `_landing_page_path()`), since that's the more useful
-  default view once a season has been imported.
+- After data is imported, the app instead lands on
+  [Forwards](./forwards.md), the first live-auction position table.
 
 ## Not yet implemented
 
