@@ -43,31 +43,32 @@ def _parse_drafted_value(value: object) -> bool:
 
 
 def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
-    """Persist the most recent drafted checkbox edit and return fresh grid rows.
+    """Persist drafted checkbox edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
-    even when exactly one cell was changed.
+    even when exactly one cell was changed. Process every event because a
+    clipboard action can update multiple status cells in one callback.
     """
     if not cell_changes:
         return get_position_rows(position)
 
-    cell_change = cell_changes[-1]
-    if not isinstance(cell_change, dict):
-        raise ValueError("Drafted status updates require an AG Grid event dictionary.")
-    if cell_change.get("colId") != "drafted":
-        return get_position_rows(position)
+    for cell_change in cell_changes:
+        if not isinstance(cell_change, dict):
+            raise ValueError("Drafted status updates require an AG Grid event dictionary.")
+        if cell_change.get("colId") != "drafted":
+            continue
 
-    row_data = cell_change.get("data") or {}
-    if not isinstance(row_data, dict):
-        raise ValueError("Drafted status updates require AG Grid row data.")
+        row_data = cell_change.get("data") or {}
+        if not isinstance(row_data, dict):
+            raise ValueError("Drafted status updates require AG Grid row data.")
 
-    player_id = _parse_player_id(row_data.get("id"))
-    drafted_value = cell_change.get("newValue")
-    if drafted_value is None:
-        drafted_value = cell_change.get("value")
-    drafted = _parse_drafted_value(drafted_value)
+        player_id = _parse_player_id(row_data.get("id"))
+        drafted_value = cell_change.get("newValue")
+        if drafted_value is None:
+            drafted_value = cell_change.get("value")
+        drafted = _parse_drafted_value(drafted_value)
 
-    set_player_drafted(player_id, drafted)
+        set_player_drafted(player_id, drafted)
     return get_position_rows(position)
 
 

@@ -116,6 +116,7 @@ Non-page-specific tests (data loading, storage, app shell/menu/routing) live in 
 - Whenever a page's implementation changes, update its `docs/pages/<page>.md` file and its `tests/pages/<page>/` tests in the same change
 - Completed work must be committed and pushed before it is considered done
 - Work must happen only on `feature*` or `bugfix*` branches; `main` and `master` are not allowed
+- Do not close, merge, discard, edit, or otherwise modify an existing pull request. The only permitted pull-request action is opening one when the user explicitly requests it.
 
 ## Persistent workspace and import rules
 

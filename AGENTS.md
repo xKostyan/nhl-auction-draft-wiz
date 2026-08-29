@@ -162,6 +162,7 @@ This repo is prepared for browser-driven UI testing using Playwright MCP.
 - Whenever a page's implementation changes, update its `docs/pages/<page>.md` file and its `tests/pages/<page>/` tests in the same change (see "Pages, menu, and documentation structure" above)
 - Any completed feature must be committed and pushed before the work is considered complete
 - Local work is prohibited on `main` or `master`; only branches matching `feature*` or `bugfix*` are allowed
+- Do not close, merge, discard, edit, or otherwise modify an existing pull request. The only permitted pull-request action is opening one when the user explicitly requests it.
 
 ## Non-goals
 
