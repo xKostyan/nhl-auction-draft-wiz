@@ -65,3 +65,25 @@ def test_checking_a_forward_accepts_dash_ag_grid_value_event(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
+
+
+def test_batch_status_edits_persist_every_forward_change(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_ids = [
+        int(row.id)
+        for row in load_players().itertuples(index=False)
+        if row.position == "F"
+    ][:2]
+    rows = handle_drafted_cell_change(
+        "F",
+        [
+            {"colId": "drafted", "value": "true", "data": {"id": str(player_id)}}
+            for player_id in player_ids
+        ],
+    )
+
+    drafted_player_ids = {row["id"] for row in rows if row["drafted"]}
+    assert set(player_ids).issubset(drafted_player_ids)
