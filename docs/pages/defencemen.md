@@ -17,7 +17,7 @@ open in its own browser tab during the draft.
   ids are retained internally for updates but are never displayed.
 - **Status** is an editable checkbox. Checking it marks the player as
   `drafted`; clearing it marks the player as `available`.
-- Each checkbox edit is persisted from AG Grid's latest JSON status-change event.
+- Each checkbox edit is persisted from AG Grid's latest JSON status-change event, using its checkbox value.
 - Drafted players remain in the table, with gray text and a light gray row
   background.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,

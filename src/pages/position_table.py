@@ -62,7 +62,10 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
         raise ValueError("Drafted status updates require AG Grid row data.")
 
     player_id = _parse_player_id(row_data.get("id"))
-    drafted = _parse_drafted_value(cell_change.get("newValue"))
+    drafted_value = cell_change.get("newValue")
+    if drafted_value is None:
+        drafted_value = cell_change.get("value")
+    drafted = _parse_drafted_value(drafted_value)
 
     set_player_drafted(player_id, drafted)
     return get_position_rows(position)

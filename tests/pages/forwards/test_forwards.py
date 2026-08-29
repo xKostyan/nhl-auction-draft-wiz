@@ -50,7 +50,7 @@ def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
     assert player["drafted"] is True
 
 
-def test_checking_a_forward_accepts_json_serialized_grid_values(tmp_path):
+def test_checking_a_forward_accepts_dash_ag_grid_value_event(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -59,7 +59,7 @@ def test_checking_a_forward_accepts_json_serialized_grid_values(tmp_path):
         int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
     )
     rows = handle_drafted_cell_change(
-        "F", [{"colId": "drafted", "newValue": "true", "data": {"id": str(player_id)}}]
+        "F", [{"colId": "drafted", "value": "true", "data": {"id": str(player_id)}}]
     )
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
