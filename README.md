@@ -101,17 +101,19 @@ The app expects 4 CSV files per yearly import:
 
 Each stats file carries a `stats_type` field for `projected` vs `actual` values, broken out per `year`. Since this app is used prior to a season starting, the current/upcoming season will only ever have `projected` data — its `actual` rows exist in the file but are always blank. The app detects the draft season automatically as the year whose `actual` rows are entirely empty.
 
+**All years and both `projected`/`actual` data points found in the CSVs are imported and retained**, not just the upcoming draft season, so multi-year and projected-vs-actual historical comparisons remain possible once that analysis is built. Stats are stored per-player in a long format (one row per `year` / `stats_type` / stat name), which makes it easy to pull a single player's full history later.
+
 ## Persistent workspace and yearly import flow
 
 The app stores imported data in a local SQLite database under `.workspace/draft_workspace.sqlite3`.
 
 Typical usage:
 1. On the dashboard, select the 4 CSV files (players, forwards, defencemen, goalies) using the upload controls — this works from any machine on the local network, not just localhost, so you can supply the files from whichever machine has them.
-2. Click **Import season data**. The app auto-detects the draft season from the data and stores it in the local workspace.
+2. Click **Import season data**. The app stores every year/stats_type data point from the CSVs, and auto-detects the current draft season from the data (the year with only `projected`, no `actual`, data yet).
 3. The workspace persists across app restarts.
 4. Click **Clear workspace** when the next season's data is ready to import, then repeat step 1.
 
-This gives the app a durable local-only import layer without requiring an external database. Player status tracking (drafted/keeper/unavailable) and draft analysis are planned for a later stage.
+This gives the app a durable local-only import layer without requiring an external database. Player status tracking (drafted/keeper/unavailable) and draft/historical analysis are planned for a later stage.
 
 ## Development workflow rules
 

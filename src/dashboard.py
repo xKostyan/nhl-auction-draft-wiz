@@ -51,7 +51,7 @@ def _initial_status_message() -> str:
     summary = get_workspace_summary()
     if summary["total_players"] == 0:
         return "Workspace is empty. Import the players/forwards/defencemen/goalies CSV files to begin."
-    return f"Workspace has {summary['total_players']} players imported for season {summary['current_year']}."
+    return f"Workspace has {summary['total_players']} players imported for season {summary['current_season']}."
 
 
 def handle_workspace_action(
@@ -133,7 +133,7 @@ def build_dashboard() -> Dash:
                     {"field": "name"},
                     {"field": "position"},
                     {"field": "status"},
-                    {"field": "imported_year"},
+                    {"field": "current_season"},
                 ],
                 defaultColDef={"sortable": True, "resizable": True},
                 dashGridOptions={"pagination": True, "paginationPageSize": 25},

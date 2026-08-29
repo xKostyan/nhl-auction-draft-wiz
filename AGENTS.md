@@ -86,10 +86,12 @@ The app should start from the repo root and serve the Dash dashboard locally.
 This app is designed around a yearly import workflow:
 
 - A yearly export from the upstream NHL stats app (4 CSVs: players, forwards, defencemen, goalies) is imported into the local workspace once per season, via browser file-upload controls so the app can be used from any machine on the local network, not just localhost.
-- The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty, i.e. the season that hasn't started yet); no manual year entry is required.
-- The imported dataset becomes the current draft workspace for that year.
+- Every year and every `projected`/`actual` data point present in the source stats CSVs is imported and retained — not just the upcoming draft season — so multi-year, projected-vs-actual historical analysis features can be built later without re-importing. Stats are stored in `player_stats` as a long/EAV table (`player_id, year, stats_type, position, stat_name, stat_value`) rather than one wide row per year, which makes it simple to query a single stat across years or types for any player.
+- The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty, i.e. the season that hasn't started yet); no manual year entry is required. This is stored as `players.current_season` / `workspace_meta.current_season` for reference, but does not limit what history is stored.
 - Player status defaults to `available` for every imported player and is stored locally in SQLite, persisting across app restarts. Status-editing (marking drafted/keeper/unavailable) is a planned future feature and is intentionally not yet exposed in the UI.
 - The workspace can be reset with a clear action to allow the next season's dataset to be imported cleanly.
+
+Use `get_player_stat_history(player_id)` in `src/storage.py` to fetch a player's full long-format history (year, stats_type, stat_name, stat_value), and `get_available_stat_years()` to list years currently stored. These are the intended building blocks for future historical-analysis features — prefer extending them over re-deriving data access patterns.
 
 The storage layer lives in `src/storage.py` and writes to `.workspace/draft_workspace.sqlite3` by default.
 

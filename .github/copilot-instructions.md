@@ -97,11 +97,14 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 This repo supports a yearly import workflow with a local persistent workspace database:
 
 - Import is done via 4 browser file-upload controls (players, forwards, defencemen, goalies CSVs) so the app can be used from any machine on the local network, not just localhost
-- The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty); no manual year entry is required
+- Every year and every `projected`/`actual` data point present in the source stats CSVs is imported and retained (not just the upcoming draft season), to support future multi-year historical analysis
+- Stats are stored long/EAV-style in `player_stats` (`player_id, year, stats_type, position, stat_name, stat_value`), so a single stat can be queried across years/types per player without reshaping wide rows
+- The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty); no manual year entry is required. It is tracked as `players.current_season` / `workspace_meta.current_season`, but does not restrict what history is stored
 - Import the upstream CSV export once per season into `.workspace/draft_workspace.sqlite3`
 - Track player state as `available`, `drafted`, `keeper`, or `unavailable` (status defaults to `available` on import; editing status is a future feature, not yet exposed in the UI)
 - Keep the workspace durable across app restarts
 - Clear the workspace before importing the next year's dataset
+- Use `get_player_stat_history(player_id)` and `get_available_stat_years()` in `src/storage.py` as the entry points for reading historical data; extend these rather than adding parallel data-access helpers
 
 The SQLite implementation lives in `src/storage.py` and should be treated as the source of truth for player availability and draft state.
 
