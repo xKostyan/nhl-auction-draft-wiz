@@ -15,9 +15,12 @@ def test_page_is_registered_at_the_expected_path_and_order():
 
 
 def test_layout_shows_a_position_specific_draft_grid(walk_components):
-    grid = next(node for node in walk_components(goalies.layout()) if isinstance(node, dag.AgGrid))
+    layout = goalies.layout()
+    grid = next(node for node in walk_components(layout) if isinstance(node, dag.AgGrid))
+    assert layout.className == "position-page"
     assert grid.id == "g-player-grid"
     assert [column["headerName"] for column in grid.columnDefs] == ["Name", "Status"]
+    assert grid.style["flex"] == "1 1 0"
 
 
 def test_checking_a_goalie_uses_the_ag_grid_event_list(tmp_path):

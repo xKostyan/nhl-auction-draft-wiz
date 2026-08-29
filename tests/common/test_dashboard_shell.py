@@ -29,6 +29,8 @@ def test_app_layout_contains_persistent_menu_and_page_container(dash_app, collec
     ids = collect_component_ids(dash_app.layout)
     assert "app-menu-toggle" in ids
     assert "app-menu-panel" in ids
+    assert dash_app.layout.className == "app-shell"
+    assert dash_app.layout.children[-1].className == "page-container"
 
 
 def test_landing_page_is_import_data_when_workspace_is_empty(tmp_path):

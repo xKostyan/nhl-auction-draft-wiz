@@ -53,11 +53,11 @@ def build_dashboard() -> Dash:
     from .pages import data_table_1, defencemen, forwards, goalies, import_data  # noqa: F401  (side-effect import)
 
     app.layout = html.Div(
-        style={"padding": "24px", "fontFamily": "sans-serif"},
+        className="app-shell",
         children=[
             html.H2("NHL Auction Draft Wizard"),
             build_menu(),
-            dash.page_container,
+            html.Div(dash.page_container, className="page-container"),
         ],
     )
 

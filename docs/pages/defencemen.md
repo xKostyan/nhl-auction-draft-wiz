@@ -15,6 +15,8 @@ open in its own browser tab during the draft.
 
 - An AG Grid table with only **Name** and **Status** columns. Player database
   ids are retained internally for updates but are never displayed.
+- The table fills the remaining browser viewport below the persistent app
+  header and menu, while retaining its own vertical scrollbar.
 - **Status** is an editable checkbox. Checking it marks the player as
   `drafted`; clearing it marks the player as `available`.
 - Each checkbox edit is persisted from AG Grid's latest JSON status-change event, using its checkbox value.

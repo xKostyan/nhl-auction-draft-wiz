@@ -20,6 +20,7 @@ def test_layout_shows_name_and_checkbox_status_columns_only(tmp_path, walk_compo
     import_yearly_dataset()
 
     grid = next(node for node in walk_components(forwards.layout()) if isinstance(node, dag.AgGrid))
+    assert forwards.layout().className == "position-page"
     assert grid.id == "f-player-grid"
     assert grid.columnDefs == [
         {"field": "name", "headerName": "Name"},
@@ -32,6 +33,7 @@ def test_layout_shows_name_and_checkbox_status_columns_only(tmp_path, walk_compo
         },
     ]
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
+    assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):

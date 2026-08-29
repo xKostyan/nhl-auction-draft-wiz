@@ -1,0 +1,30 @@
+html,
+body,
+#react-entry-point {
+    height: 100%;
+    margin: 0;
+}
+
+.app-shell {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+    padding: 24px;
+    font-family: sans-serif;
+}
+
+.page-container,
+.page-container > div,
+#_pages_content,
+.position-page {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.position-page {
+    width: 100%;
+}

@@ -75,7 +75,7 @@ def build_position_layout(position: str):
     """Build a dedicated live-draft table for one player position."""
     title = POSITION_NAMES[position]
     return html.Div(
-        style={"maxWidth": "760px"},
+        className="position-page",
         children=[
             html.H2(title),
             html.P("Check Status when a player has been drafted. Drafted players remain visible but are grayed out."),
@@ -98,7 +98,7 @@ def build_position_layout(position: str):
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }
                 },
-                style={"height": "640px", "width": "100%"},
+                style={"flex": "1 1 0", "minHeight": 0, "width": "100%"},
             ),
         ],
     )
