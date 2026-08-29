@@ -20,6 +20,28 @@ def get_position_rows(position: str) -> list[dict]:
     return get_players_for_position_grid(position).to_dict("records")
 
 
+def _parse_player_id(value: object) -> int:
+    """Convert the JSON-compatible grid row id to a database player id."""
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    if isinstance(value, str) and value.isdecimal() and int(value) > 0:
+        return int(value)
+    raise ValueError("Drafted status updates require a positive integer player id.")
+
+
+def _parse_drafted_value(value: object) -> bool:
+    """Convert the JSON-compatible checkbox value to a boolean."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized == "true":
+            return True
+        if normalized == "false":
+            return False
+    raise ValueError("Drafted status updates require a boolean checkbox value.")
+
+
 def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
     """Persist the most recent drafted checkbox edit and return fresh grid rows.
 
@@ -36,10 +58,11 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
         return get_position_rows(position)
 
     row_data = cell_change.get("data") or {}
-    player_id = row_data.get("id")
-    drafted = cell_change.get("newValue")
-    if not isinstance(player_id, int) or not isinstance(drafted, bool):
-        raise ValueError("Drafted status updates require an integer player id and a boolean value.")
+    if not isinstance(row_data, dict):
+        raise ValueError("Drafted status updates require AG Grid row data.")
+
+    player_id = _parse_player_id(row_data.get("id"))
+    drafted = _parse_drafted_value(cell_change.get("newValue"))
 
     set_player_drafted(player_id, drafted)
     return get_position_rows(position)

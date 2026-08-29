@@ -26,8 +26,6 @@ def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):
     import_yearly_dataset()
 
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "D")
-    rows = handle_drafted_cell_change(
-        "D", [{"colId": "drafted", "newValue": True, "data": {"id": player_id}}]
-    )
+    rows = handle_drafted_cell_change("D", [{"colId": "drafted", "newValue": "true", "data": {"id": str(player_id)}}])
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True

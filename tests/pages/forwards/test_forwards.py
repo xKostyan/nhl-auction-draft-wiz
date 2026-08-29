@@ -48,3 +48,18 @@ def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
 
     player = next(row for row in rows if row["id"] == player_id)
     assert player["drafted"] is True
+
+
+def test_checking_a_forward_accepts_json_serialized_grid_values(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(
+        int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
+    )
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "drafted", "newValue": "true", "data": {"id": str(player_id)}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
