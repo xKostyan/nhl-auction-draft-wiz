@@ -9,7 +9,7 @@ This repo is a Python dashboard project for NHL auction draft planning. The stac
 - Plotly
 - pandas
 
-The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering 2 pages — **1 - Import data** (`/import-data`, fully implemented) and **2 - Data table 1** (`/data-table-1`, placeholder) — no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
+The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering five pages — **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - Data table 1** (`/data-table-1`, placeholder). The position pages currently provide only player name and drafted-status checkbox tables; no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
 
 ## Required project setup
 
@@ -70,10 +70,11 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
    - `src/dashboard.py`
    - builds `Dash(use_pages=True, pages_folder="")`, then imports page modules (order matters: `register_page()` requires the app to exist first)
    - mounts `src/components/menu.py`'s persistent dropdown menu (auto-derived from `dash.page_registry`, ordered by `order` — never hand-edit the menu when adding a page) plus `dash.page_container`
-   - `_landing_page_path()` redirects `/` to `/data-table-1` if the workspace has imported players, else to `/import-data`
+   - `_landing_page_path()` redirects `/` to `/forwards` if the workspace has imported players, else to `/import-data`
 
 5. Pages (one module + one doc file + one test dir each — see table below)
    - `src/pages/import_data.py` → exposes: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; import/clear branching lives in the testable `handle_workspace_action` helper
+   - `src/pages/forwards.py`, `src/pages/defencemen.py`, `src/pages/goalies.py` → dedicated live-auction tables with player names and drafted-status checkboxes; shared layout/persistence helpers live in `src/pages/position_table.py`
    - `src/pages/data_table_1.py` → placeholder page, no functionality yet (future historical/analysis feature — refer to this page by name in future feature requests)
    - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
    - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist — do not add it until analysis is explicitly requested)
@@ -87,7 +88,10 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 | # | Page name | Route | Module | Docs | Tests |
 |---|-----------|-------|--------|------|-------|
 | 1 | Import data | `/import-data` | `src/pages/import_data.py` | `docs/pages/import-data.md` | `tests/pages/import_data/` |
-| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` |
+| 2 | Forwards | `/forwards` | `src/pages/forwards.py` | `docs/pages/forwards.md` | `tests/pages/forwards/` |
+| 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | `docs/pages/defencemen.md` | `tests/pages/defencemen/` |
+| 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` |
+| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` |
 
 Non-page-specific tests (data loading, storage, app shell/menu/routing) live in `tests/common/`. Whenever you implement or change a page, update its row's doc file and test directory in the same change — see `AGENTS.md` for the full rule.
 
@@ -122,7 +126,7 @@ This repo supports a yearly import workflow with a local persistent workspace da
 - Stats are stored long/EAV-style in `player_stats` (`player_id, year, stats_type, position, stat_name, stat_value`), so a single stat can be queried across years/types per player without reshaping wide rows
 - The draft season is auto-detected from the stats data (the year whose `actual` rows are entirely empty); no manual year entry is required. It is tracked as `players.current_season` / `workspace_meta.current_season`, but does not restrict what history is stored
 - Import the upstream CSV export once per season into `.workspace/draft_workspace.sqlite3`
-- Track player state as `available`, `drafted`, `keeper`, or `unavailable` (status defaults to `available` on import; editing status is a future feature, not yet exposed in the UI)
+- Track player state as `available`, `drafted`, `keeper`, or `unavailable` (status defaults to `available` on import; dedicated position pages expose drafted status only)
 - Keep the workspace durable across app restarts
 - Clear the workspace before importing the next year's dataset
 - Use `get_player_stat_history(player_id)` and `get_available_stat_years()` in `src/storage.py` as the entry points for reading historical data; extend these rather than adding parallel data-access helpers

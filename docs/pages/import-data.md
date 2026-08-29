@@ -41,9 +41,11 @@ season's import.
 
 ## Not yet implemented
 
-- Editing player status (drafted / keeper / unavailable) from the UI.
-- Any ranking, filtering, or analysis of the imported data — see the
+  - Any ranking, filtering, or analysis of the imported data — see the
   [Data table 1](./data-table-1.md) page for that future work.
+
+  Player drafted status is edited from the dedicated [Forwards](./forwards.md),
+  [Defencemen](./defencemen.md), and [Goalies](./goalies.md) pages.
 
 ## Related code
 

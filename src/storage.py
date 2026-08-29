@@ -302,6 +302,62 @@ def get_players_for_grid() -> pd.DataFrame:
         conn.close()
 
 
+def get_players_for_position_grid(position: str) -> pd.DataFrame:
+    """Return one position's players for the live draft table.
+
+    The player id remains in the row data so a status edit can be persisted,
+    but position pages deliberately do not render it as a visible column.
+    """
+    normalized_position = position.upper()
+    if normalized_position not in {"F", "D", "G"}:
+        raise ValueError(f"Unsupported position: {position!r}. Expected F, D, or G.")
+
+    conn = db_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT p.id, p.name, CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted
+            FROM players p
+            LEFT JOIN player_status ps ON ps.player_id = p.id
+            WHERE p.position = ?
+            ORDER BY p.name ASC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        data = [
+            {"id": int(row["id"]), "name": row["name"], "drafted": bool(row["drafted"])}
+            for row in rows
+        ]
+        return pd.DataFrame(data, columns=["id", "name", "drafted"])
+    finally:
+        conn.close()
+
+
+def set_player_drafted(player_id: int, drafted: bool) -> None:
+    """Persist whether a player has been drafted during the live auction."""
+    status = "drafted" if drafted else "available"
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update drafted status: player {player_id} does not exist.")
+
+        conn.execute("UPDATE players SET selected = ? WHERE id = ?", (int(drafted), player_id))
+        conn.execute(
+            """
+            INSERT INTO player_status (player_id, status, notes)
+            VALUES (?, ?, '')
+            ON CONFLICT(player_id) DO UPDATE SET
+                status = excluded.status,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (player_id, status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def get_player_stat_history(player_id: int) -> pd.DataFrame:
     """Return the full imported stat history for one player in long format.
 

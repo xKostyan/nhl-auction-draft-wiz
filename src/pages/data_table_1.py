@@ -12,7 +12,7 @@ from dash import html
 
 PATH = "/data-table-1"
 NAME = "Data table 1"
-ORDER = 1
+ORDER = 4
 
 
 def layout(**_kwargs):

@@ -2,7 +2,7 @@
 
 A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft and auction decisions using CSV-based player and stat data.
 
-**Current implementation stage:** the app has a persistent top menu with 2 pages: **Import data** (fully implemented — upload CSVs, import, clear workspace) and **Data table 1** (placeholder for the future data-analysis feature). There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
+**Current implementation stage:** the app has a persistent top menu with five pages: **Import data**, dedicated **Forwards**, **Defencemen**, and **Goalies** live-auction tables, plus **Data table 1** (placeholder for the future data-analysis feature). The position tables currently show player names and durable drafted-status checkboxes only. There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
 
 ## Stack
 
@@ -56,16 +56,19 @@ Open that URL in your browser to use the app.
 
 ## App structure and pages
 
-The app has a persistent menu (top-left **☰ Menu** button) with 2 entries.
+The app has a persistent menu (top-left **☰ Menu** button) with 5 entries.
 Each corresponds to one page module and one documentation page:
 
 | # | Page name | Route | Module | Docs |
 |---|-----------|-------|--------|------|
 | 1 | Import data | `/import-data` | `src/pages/import_data.py` | [docs/pages/import-data.md](docs/pages/import-data.md) |
-| 2 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | [docs/pages/data-table-1.md](docs/pages/data-table-1.md) |
+| 2 | Forwards | `/forwards` | `src/pages/forwards.py` | [docs/pages/forwards.md](docs/pages/forwards.md) |
+| 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | [docs/pages/defencemen.md](docs/pages/defencemen.md) |
+| 4 | Goalies | `/goalies` | `src/pages/goalies.py` | [docs/pages/goalies.md](docs/pages/goalies.md) |
+| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | [docs/pages/data-table-1.md](docs/pages/data-table-1.md) |
 
 Landing page (`/`) behavior: if the workspace already has imported players,
-it redirects to **Data table 1**; otherwise it redirects to **Import data**
+it redirects to **Forwards**; otherwise it redirects to **Import data**
 so you're prompted to import a season first.
 
 ## Stop the app
@@ -142,7 +145,9 @@ Typical usage:
 3. The workspace persists across app restarts.
 4. Click **Clear workspace** when the next season's data is ready to import, then repeat step 1.
 
-This gives the app a durable local-only import layer without requiring an external database. Player status tracking (drafted/keeper/unavailable) and draft/historical analysis are planned for a later stage.
+This gives the app a durable local-only import layer without requiring an external database. The dedicated position pages provide drafted-status tracking. Other player
+status types (keeper/unavailable) and draft/historical analysis are planned
+for a later stage.
 
 ## Development workflow rules
 
