@@ -20,9 +20,19 @@ def get_position_rows(position: str) -> list[dict]:
     return get_players_for_position_grid(position).to_dict("records")
 
 
-def handle_drafted_cell_change(position: str, cell_change: dict | None) -> list[dict]:
-    """Persist a drafted checkbox edit and return fresh rows for the grid."""
-    if not cell_change or cell_change.get("colId") != "drafted":
+def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
+    """Persist the most recent drafted checkbox edit and return fresh grid rows.
+
+    Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
+    even when exactly one cell was changed.
+    """
+    if not cell_changes:
+        return get_position_rows(position)
+
+    cell_change = cell_changes[-1]
+    if not isinstance(cell_change, dict):
+        raise ValueError("Drafted status updates require an AG Grid event dictionary.")
+    if cell_change.get("colId") != "drafted":
         return get_position_rows(position)
 
     row_data = cell_change.get("data") or {}

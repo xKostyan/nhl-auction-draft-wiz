@@ -2,7 +2,7 @@
 
 import dash_ag_grid as dag
 
-from src.data_loader import load_players, load_stats
+from src.data_loader import load_players
 from src.pages import forwards
 from src.pages.position_table import handle_drafted_cell_change
 from src.storage import clear_workspace, configure_storage, import_yearly_dataset
@@ -43,7 +43,7 @@ def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
         int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
     )
     rows = handle_drafted_cell_change(
-        "F", {"colId": "drafted", "newValue": True, "data": {"id": player_id}}
+        "F", [{"colId": "drafted", "newValue": True, "data": {"id": player_id}}]
     )
 
     player = next(row for row in rows if row["id"] == player_id)
