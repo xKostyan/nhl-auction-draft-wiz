@@ -22,14 +22,38 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Run the app
+## Start the app
+
+From the repo root:
 
 ```bash
 source .venv/bin/activate
 python app.py
 ```
 
-Then open the local Dash URL shown in the terminal (typically `http://localhost:8050`).
+The Dash app will start and print a URL such as:
+
+```text
+http://0.0.0.0:8050/
+```
+
+Open that URL in your browser to use the app.
+
+## Stop the app
+
+In the terminal running the app, press:
+
+```text
+Ctrl+C
+```
+
+If you started the app in a background shell, stop it with:
+
+```bash
+kill $(lsof -t -i :8050)
+```
+
+or by terminating the specific Python process from your OS process manager.
 
 ## Run tests
 
