@@ -42,6 +42,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert grid.columnDefs[2]["cellRenderer"] == "actualGpSparkline"
+    assert grid.columnDefs[2]["width"] == 110
     assert grid.style["flex"] == "1 1 0"
 
 

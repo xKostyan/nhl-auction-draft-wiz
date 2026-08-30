@@ -83,7 +83,7 @@ def _health_column_def(position: str) -> list[dict]:
             "cellRenderer": "actualGpSparkline",
             "sortable": False,
             "resizable": False,
-            "width": 132,
+            "width": 110,
         }
     ]
 

@@ -54,7 +54,7 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
             "cellRenderer": "actualGpSparkline",
             "sortable": False,
             "resizable": False,
-            "width": 132,
+            "width": 110,
         },
         {
             "field": "projected_tfp",

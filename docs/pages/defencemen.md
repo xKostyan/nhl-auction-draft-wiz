@@ -27,7 +27,7 @@ open in its own browser tab during the draft.
   most recent actual games-played seasons, ordered oldest to newest. Every bar
   shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
   yellow for 61-71, and green for 72-84; hovering a bar shows its season and
-  actual GP. Rows are 30px high; the chart cell has 1px of padding above and
+  actual GP. The column is 110px wide. Rows are 30px high; the chart cell has 1px of padding above and
   below its 28px bar area.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
