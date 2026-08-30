@@ -144,7 +144,7 @@ def build_position_layout(position: str):
                     "wrapHeaderText": True,
                 },
                 dashGridOptions={
-                    "rowHeight": 34,
+                    "rowHeight": 40,
                     "getRowStyle": {
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }

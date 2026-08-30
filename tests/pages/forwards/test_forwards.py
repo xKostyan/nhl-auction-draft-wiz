@@ -66,7 +66,7 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
         "wrapHeaderText": True,
     }
     assert grid.dangerously_allow_code is True
-    assert grid.dashGridOptions["rowHeight"] == 34
+    assert grid.dashGridOptions["rowHeight"] == 40
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
 
