@@ -106,8 +106,6 @@ def build_position_layout(position: str):
                 id=position_grid_id(position),
                 rowData=get_position_rows(position),
                 columnDefs=[
-                    {"field": "name", "headerName": "Name"},
-                    *_projected_points_column_defs(),
                     {
                         "field": "drafted",
                         "headerName": "Status",
@@ -115,7 +113,11 @@ def build_position_layout(position: str):
                         "cellRenderer": "agCheckboxCellRenderer",
                         "cellEditor": "agCheckboxCellEditor",
                     },
+                    {"field": "name", "headerName": "Player name"},
+                    *_projected_points_column_defs(),
                 ],
+                columnSize="autoSize",
+                columnSizeOptions={"skipHeader": True},
                 defaultColDef={"sortable": True, "resizable": True},
                 dashGridOptions={
                     "getRowStyle": {

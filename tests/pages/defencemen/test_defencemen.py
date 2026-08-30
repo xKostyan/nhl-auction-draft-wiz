@@ -24,11 +24,13 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert layout.className == "position-page"
     assert grid.id == "d-player-grid"
     assert [column["headerName"] for column in grid.columnDefs] == [
-        "Name",
+        "Status",
+        "Player name",
         "p TFP 2027",
         "p AFP 2027",
-        "Status",
     ]
+    assert grid.columnSize == "autoSize"
+    assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.style["flex"] == "1 1 0"
 
 

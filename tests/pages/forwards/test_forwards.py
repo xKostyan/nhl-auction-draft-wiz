@@ -28,7 +28,14 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     assert forwards.layout().className == "position-page"
     assert grid.id == "f-player-grid"
     assert grid.columnDefs == [
-        {"field": "name", "headerName": "Name"},
+        {
+            "field": "drafted",
+            "headerName": "Status",
+            "editable": True,
+            "cellRenderer": "agCheckboxCellRenderer",
+            "cellEditor": "agCheckboxCellEditor",
+        },
+        {"field": "name", "headerName": "Player name"},
         {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
@@ -39,14 +46,9 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
             "headerName": "p AFP 2027",
             "type": "numericColumn",
         },
-        {
-            "field": "drafted",
-            "headerName": "Status",
-            "editable": True,
-            "cellRenderer": "agCheckboxCellRenderer",
-            "cellEditor": "agCheckboxCellEditor",
-        },
     ]
+    assert grid.columnSize == "autoSize"
+    assert grid.columnSizeOptions == {"skipHeader": True}
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
 
