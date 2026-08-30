@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import dash_ag_grid as dag
-from dash import html
+from dash import dcc, html
 
 from ..storage import (
     get_players_for_position_grid,
@@ -20,9 +20,38 @@ def position_grid_id(position: str) -> str:
     return f"{position.lower()}-player-grid"
 
 
+def position_search_id(position: str) -> str:
+    """Return the stable component id for a position's player search."""
+    return f"{position.lower()}-player-search"
+
+
 def get_position_rows(position: str) -> list[dict]:
     """Return the current persisted player rows for one position."""
     return get_players_for_position_grid(position).to_dict("records")
+
+
+def get_position_search_options(position: str) -> list[dict]:
+    """Return searchable player options limited to one position."""
+    return [
+        {"label": row["name"], "value": row["id"]}
+        for row in sorted(get_position_rows(position), key=lambda row: row["name"].casefold())
+    ]
+
+
+def get_player_search_target(position: str, player_id: object) -> tuple[list[dict], dict | None]:
+    """Return AG Grid selection and scroll targets for a selected player."""
+    if player_id is None:
+        return [], None
+
+    selected_id = _parse_player_id(player_id)
+    for row in get_position_rows(position):
+        if row["id"] == selected_id:
+            return [{"id": selected_id}], {
+                "rowId": str(selected_id),
+                "rowPosition": "middle",
+                "column": "name",
+            }
+    raise ValueError(f"Player {selected_id} is not a {POSITION_NAMES[position].lower()} player.")
 
 
 def _projected_points_column_defs() -> list[dict]:
@@ -119,9 +148,18 @@ def build_position_layout(position: str):
         children=[
             html.H2(title),
             html.P("Check Status when a player has been drafted. Drafted players remain visible but are grayed out."),
+            dcc.Dropdown(
+                id=position_search_id(position),
+                options=get_position_search_options(position),
+                placeholder=f"Search {title.lower()}...",
+                searchable=True,
+                clearable=True,
+                className="player-search",
+            ),
             dag.AgGrid(
                 id=position_grid_id(position),
                 rowData=get_position_rows(position),
+                getRowId="params.data.id",
                 columnDefs=[
                     {
                         "field": "drafted",
@@ -145,6 +183,7 @@ def build_position_layout(position: str):
                 },
                 dashGridOptions={
                     "rowHeight": 30,
+                    "rowSelection": {"mode": "singleRow"},
                     "getRowStyle": {
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }

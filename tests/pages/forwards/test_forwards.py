@@ -3,10 +3,15 @@
 from pathlib import Path
 
 import dash_ag_grid as dag
+from dash import dcc
 
 from src.data_loader import load_players
 from src.pages import forwards
-from src.pages.position_table import get_position_rows, handle_drafted_cell_change
+from src.pages.position_table import (
+    get_player_search_target,
+    get_position_rows,
+    handle_drafted_cell_change,
+)
 from src.storage import (
     clear_workspace,
     configure_storage,
@@ -67,8 +72,32 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     }
     assert grid.dangerously_allow_code is True
     assert grid.dashGridOptions["rowHeight"] == 30
+    assert grid.dashGridOptions["rowSelection"] == {"mode": "singleRow"}
+    assert grid.getRowId == "params.data.id"
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
+
+
+def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_forward(tmp_path, walk_components):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    layout = forwards.layout()
+    search = next(node for node in walk_components(layout) if isinstance(node, dcc.Dropdown))
+    player = next(row for row in get_position_rows("F") if row["name"] == "Mikko Rantanen")
+
+    assert search.id == "f-player-search"
+    assert search.searchable is True
+    assert search.placeholder == "Search forwards..."
+    assert {option["value"] for option in search.options} == {
+        int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
+    }
+    assert forwards.focus_searched_player(player["id"]) == (
+        [{"id": player["id"]}],
+        {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
+    )
+    assert get_player_search_target("F", None) == ([], None)
 
 
 def test_rows_include_current_season_projected_fantasy_points(tmp_path):

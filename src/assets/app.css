@@ -28,3 +28,9 @@ body,
 .position-page {
     width: 100%;
 }
+
+.player-search {
+    flex: 0 0 auto;
+    margin-bottom: 16px;
+    max-width: 420px;
+}

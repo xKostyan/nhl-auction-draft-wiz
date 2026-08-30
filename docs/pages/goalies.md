@@ -23,6 +23,9 @@ open in its own browser tab during the draft.
   header row as needed; cell values do not wrap.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
+- A searchable typeahead above the table suggests only goalies as you type.
+  Selecting a suggestion (or confirming an exact full name) selects and
+  centers that player in the table.
 - **Status** is an editable checkbox. Checking it marks the player as
   `drafted`; clearing it marks the player as `available`.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
