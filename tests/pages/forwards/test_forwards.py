@@ -59,6 +59,12 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
+    assert grid.defaultColDef == {
+        "autoHeaderHeight": True,
+        "resizable": True,
+        "sortable": True,
+        "wrapHeaderText": True,
+    }
     assert grid.dangerously_allow_code is True
     assert grid.dashGridOptions["rowHeight"] == 34
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]

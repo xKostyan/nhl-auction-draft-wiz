@@ -137,7 +137,12 @@ def build_position_layout(position: str):
                 columnSize="autoSize",
                 columnSizeOptions={"skipHeader": True},
                 dangerously_allow_code=True,
-                defaultColDef={"sortable": True, "resizable": True},
+                defaultColDef={
+                    "autoHeaderHeight": True,
+                    "resizable": True,
+                    "sortable": True,
+                    "wrapHeaderText": True,
+                },
                 dashGridOptions={
                     "rowHeight": 34,
                     "getRowStyle": {

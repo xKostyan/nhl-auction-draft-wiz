@@ -20,7 +20,8 @@ open in its own browser tab during the draft.
   upcoming draft season. Player database ids are retained internally for
   updates but are never displayed.
 - Columns auto-size from their cell contents; header text does not determine
-  their default width.
+  their default width. All column headers wrap to multiple lines and grow the
+  header row as needed; cell values do not wrap.
 - **Health (actual GP)** is an inline vertical-bar chart of up to the five
   most recent actual games-played seasons, ordered oldest to newest. Every bar
   shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
