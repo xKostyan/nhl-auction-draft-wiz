@@ -26,13 +26,13 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert [column["headerName"] for column in grid.columnDefs] == [
         "Status",
         "Player name",
+        "Health (actual GP)",
         "p TFP 2027",
         "p AFP 2027",
-        "Health (actual GP)",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
-    assert grid.columnDefs[-1]["cellRenderer"] == "actualGpSparkline"
+    assert grid.columnDefs[2]["cellRenderer"] == "actualGpSparkline"
     assert grid.style["flex"] == "1 1 0"
 
 

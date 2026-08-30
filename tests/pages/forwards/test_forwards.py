@@ -39,6 +39,14 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
         },
         {"field": "name", "headerName": "Player name"},
         {
+            "field": "actual_gp_history",
+            "headerName": "Health (actual GP)",
+            "cellRenderer": "actualGpSparkline",
+            "sortable": False,
+            "resizable": False,
+            "width": 132,
+        },
+        {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
             "type": "numericColumn",
@@ -47,14 +55,6 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
             "field": "projected_afp",
             "headerName": "p AFP 2027",
             "type": "numericColumn",
-        },
-        {
-            "field": "actual_gp_history",
-            "headerName": "Health (actual GP)",
-            "cellRenderer": "actualGpSparkline",
-            "sortable": False,
-            "resizable": False,
-            "width": 132,
         },
     ]
     assert grid.columnSize == "autoSize"
