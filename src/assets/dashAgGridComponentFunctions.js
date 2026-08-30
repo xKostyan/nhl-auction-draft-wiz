@@ -29,7 +29,7 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             gap: "3px",
             height: "28px",
             justifyContent: "center",
-            padding: "0 4px"
+            padding: "1px 4px"
         }
     }, bars);
 };

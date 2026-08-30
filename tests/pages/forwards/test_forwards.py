@@ -113,6 +113,7 @@ def test_health_renderer_returns_react_bars_with_four_availability_colors():
     assert "#ef6c00" in renderer
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
+    assert 'padding: "1px 4px"' in renderer
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
