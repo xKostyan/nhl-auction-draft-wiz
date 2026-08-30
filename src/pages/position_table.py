@@ -162,7 +162,7 @@ def build_position_layout(position: str):
                 columnDefs=[
                     {
                         "field": "drafted",
-                        "headerName": "Status",
+                        "headerName": "#",
                         "editable": True,
                         "cellRenderer": "agCheckboxCellRenderer",
                         "cellEditor": "agCheckboxCellEditor",

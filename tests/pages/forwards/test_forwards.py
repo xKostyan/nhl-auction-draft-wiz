@@ -42,7 +42,7 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     assert grid.columnDefs == [
         {
             "field": "drafted",
-            "headerName": "Status",
+            "headerName": "#",
             "editable": True,
             "cellRenderer": "agCheckboxCellRenderer",
             "cellEditor": "agCheckboxCellEditor",

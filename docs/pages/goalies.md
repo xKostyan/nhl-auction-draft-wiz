@@ -14,7 +14,7 @@ open in its own browser tab during the draft.
 ## UI and behavior
 
 - The page header contains only the page title and player search control.
-- An AG Grid table with **Status**, **Player name**, **p TFP `<upcoming year>`**,
+- An AG Grid table with **#**, **Player name**, **p TFP `<upcoming year>`**,
   and **p AFP `<upcoming year>`** columns, in that order. `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
   both sourced from the detected upcoming draft season. Player database ids are
@@ -27,7 +27,7 @@ open in its own browser tab during the draft.
 - A searchable typeahead above the table suggests only goalies as you type.
   Selecting a suggestion (or confirming an exact full name) selects and
   centers that player in the table.
-- **Status** is an editable checkbox. Checking it marks the player as
+- **#** is an editable checkbox. Checking it marks the player as
   `drafted`; clearing it marks the player as `available`.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
   including every change in a batched update.
