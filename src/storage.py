@@ -303,12 +303,13 @@ def get_players_for_grid() -> pd.DataFrame:
 
 
 def get_players_for_position_grid(position: str) -> pd.DataFrame:
-    """Return one position's players and current-season projected points.
+    """Return one position's players, projected points, and actual GP history.
 
     The player id remains in the row data so a status edit can be persisted,
     but position pages deliberately do not render it as a visible column. The
     projected total and per-game fantasy points are selected from the player's
-    detected current season, rather than a hard-coded year.
+    detected current season, rather than a hard-coded year. Skater rows also
+    include the five most recent seasons with an actual games-played value.
     """
     normalized_position = position.upper()
     if normalized_position not in {"F", "D", "G"}:
@@ -344,6 +345,24 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             """,
             (normalized_position,),
         ).fetchall()
+        gp_rows = conn.execute(
+            """
+            SELECT player_id, year, stat_value
+            FROM player_stats
+            WHERE position = ? AND stats_type = 'actual' AND stat_name = 'GP'
+            ORDER BY player_id ASC, year DESC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        actual_gp_by_player: dict[int, list[dict[str, int | float]]] = {}
+        for row in gp_rows:
+            player_id = int(row["player_id"])
+            actual_gp_by_player.setdefault(player_id, [])
+            if len(actual_gp_by_player[player_id]) < 5:
+                actual_gp_by_player[player_id].append(
+                    {"year": int(row["year"]), "games_played": float(row["stat_value"])}
+                )
+
         data = [
             {
                 "id": int(row["id"]),
@@ -351,12 +370,20 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                 "drafted": bool(row["drafted"]),
                 "projected_tfp": row["projected_tfp"],
                 "projected_afp": row["projected_afp"],
+                "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
             }
             for row in rows
         ]
         return pd.DataFrame(
             data,
-            columns=["id", "name", "drafted", "projected_tfp", "projected_afp"],
+            columns=[
+                "id",
+                "name",
+                "drafted",
+                "projected_tfp",
+                "projected_afp",
+                "actual_gp_history",
+            ],
         )
     finally:
         conn.close()

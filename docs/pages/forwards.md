@@ -20,6 +20,11 @@ open in its own browser tab during the draft.
   retained internally for updates but are never displayed.
 - Columns auto-size from their cell contents; header text does not determine
   their default width.
+- **Health (actual GP)** is an inline vertical-bar chart of up to the five
+  most recent actual games-played seasons, ordered oldest to newest. Every bar
+  shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
+  yellow for 61-71, and green for 72-84; hovering a bar shows its season and
+  actual GP.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - **Status** is an editable checkbox. Checking it marks the player as

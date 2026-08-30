@@ -12,6 +12,7 @@ from ..storage import (
 )
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
+SKATER_POSITIONS = {"F", "D"}
 
 
 def position_grid_id(position: str) -> str:
@@ -39,6 +40,22 @@ def _projected_points_column_defs() -> list[dict]:
             "headerName": f"p AFP {year_label}",
             "type": "numericColumn",
         },
+    ]
+
+
+def _health_column_def(position: str) -> list[dict]:
+    """Return the actual-GP health sparkline column for skater tables."""
+    if position not in SKATER_POSITIONS:
+        return []
+    return [
+        {
+            "field": "actual_gp_history",
+            "headerName": "Health (actual GP)",
+            "cellRenderer": "actualGpSparkline",
+            "sortable": False,
+            "resizable": False,
+            "width": 132,
+        }
     ]
 
 
@@ -115,11 +132,14 @@ def build_position_layout(position: str):
                     },
                     {"field": "name", "headerName": "Player name"},
                     *_projected_points_column_defs(),
+                    *_health_column_def(position),
                 ],
                 columnSize="autoSize",
                 columnSizeOptions={"skipHeader": True},
+                dangerously_allow_code=True,
                 defaultColDef={"sortable": True, "resizable": True},
                 dashGridOptions={
+                    "rowHeight": 34,
                     "getRowStyle": {
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }

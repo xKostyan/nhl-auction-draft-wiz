@@ -46,9 +46,19 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
             "headerName": "p AFP 2027",
             "type": "numericColumn",
         },
+        {
+            "field": "actual_gp_history",
+            "headerName": "Health (actual GP)",
+            "cellRenderer": "actualGpSparkline",
+            "sortable": False,
+            "resizable": False,
+            "width": 132,
+        },
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
+    assert grid.dangerously_allow_code is True
+    assert grid.dashGridOptions["rowHeight"] == 34
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
 
@@ -62,6 +72,24 @@ def test_rows_include_current_season_projected_fantasy_points(tmp_path):
     assert row["projected_tfp"] == 322.65
     assert row["projected_afp"] == 4.54
     assert get_workspace_value("current_season") == "2027"
+
+
+def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    history = next(
+        row["actual_gp_history"]
+        for row in get_position_rows("F")
+        if row["name"] == "Mikko Rantanen"
+    )
+    assert history == [
+        {"year": 2026, "games_played": 64.0},
+        {"year": 2025, "games_played": 82.0},
+        {"year": 2024, "games_played": 80.0},
+        {"year": 2023, "games_played": 82.0},
+    ]
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):

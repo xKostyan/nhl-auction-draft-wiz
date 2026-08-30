@@ -31,6 +31,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
+    assert all(column["field"] != "actual_gp_history" for column in grid.columnDefs)
     assert grid.style["flex"] == "1 1 0"
 
 
