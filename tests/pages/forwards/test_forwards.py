@@ -33,6 +33,11 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
 
     grid = next(node for node in walk_components(forwards.layout()) if isinstance(node, dag.AgGrid))
     assert forwards.layout().className == "position-page"
+    assert not any(
+        getattr(node, "children", None)
+        == "Check Status when a player has been drafted. Drafted players remain visible but are grayed out."
+        for node in forwards.layout().children
+    )
     assert grid.id == "f-player-grid"
     assert grid.columnDefs == [
         {

@@ -147,7 +147,6 @@ def build_position_layout(position: str):
         className="position-page",
         children=[
             html.H2(title),
-            html.P("Check Status when a player has been drafted. Drafted players remain visible but are grayed out."),
             dcc.Dropdown(
                 id=position_search_id(position),
                 options=get_position_search_options(position),

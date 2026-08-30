@@ -13,6 +13,7 @@ open in its own browser tab during the draft.
 
 ## UI and behavior
 
+- The page header contains only the page title and player search control.
 - An AG Grid table with **Status**, **Player name**, **Health (actual GP)**,
   **p TFP `<upcoming year>`**, and **p AFP `<upcoming year>`** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
