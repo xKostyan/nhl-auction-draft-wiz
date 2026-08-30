@@ -167,7 +167,7 @@ def build_position_layout(position: str):
                         "sortable": False,
                         "resizable": False,
                         "suppressMenu": True,
-                        "width": 32,
+                        "width": 20,
                     },
                     {
                         "field": "drafted",

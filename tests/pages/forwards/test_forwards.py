@@ -47,7 +47,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "sortable": False,
             "resizable": False,
             "suppressMenu": True,
-            "width": 32,
+            "width": 20,
         },
         {
             "field": "drafted",
