@@ -121,6 +121,7 @@ python -m pytest tests/pages/data_table_1    # Data table 1 page only
 - `tests/common/`: tests for shared/non-page-specific code
 - `tests/pages/<page>/`: tests for one page each
 - `docs/pages/`: one documentation file per page — see [docs/pages/](docs/pages/)
+- `docs/sparklines.md`: reusable Dash AG Grid inline-chart implementation guide
 - `AGENTS.md`: permanent agent instructions for Copilot and other AI tools
 - `.github/copilot-instructions.md`: Copilot-specific guidance
 - `.vscode/mcp.json`: Playwright MCP config for browser automation

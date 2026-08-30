@@ -5,9 +5,14 @@ from __future__ import annotations
 import dash_ag_grid as dag
 from dash import html
 
-from ..storage import get_players_for_position_grid, set_player_drafted
+from ..storage import (
+    get_players_for_position_grid,
+    get_workspace_value,
+    set_player_drafted,
+)
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
+SKATER_POSITIONS = {"F", "D"}
 
 
 def position_grid_id(position: str) -> str:
@@ -18,6 +23,40 @@ def position_grid_id(position: str) -> str:
 def get_position_rows(position: str) -> list[dict]:
     """Return the current persisted player rows for one position."""
     return get_players_for_position_grid(position).to_dict("records")
+
+
+def _projected_points_column_defs() -> list[dict]:
+    """Return projected fantasy-point columns labeled for the draft season."""
+    current_season = get_workspace_value("current_season")
+    year_label = current_season if current_season and current_season != "0" else "upcoming"
+    return [
+        {
+            "field": "projected_tfp",
+            "headerName": f"p TFP {year_label}",
+            "type": "numericColumn",
+        },
+        {
+            "field": "projected_afp",
+            "headerName": f"p AFP {year_label}",
+            "type": "numericColumn",
+        },
+    ]
+
+
+def _health_column_def(position: str) -> list[dict]:
+    """Return the actual-GP health sparkline column for skater tables."""
+    if position not in SKATER_POSITIONS:
+        return []
+    return [
+        {
+            "field": "actual_gp_history",
+            "headerName": "Health (actual GP)",
+            "cellRenderer": "actualGpSparkline",
+            "sortable": False,
+            "resizable": False,
+            "width": 132,
+        }
+    ]
 
 
 def _parse_player_id(value: object) -> int:
@@ -84,7 +123,6 @@ def build_position_layout(position: str):
                 id=position_grid_id(position),
                 rowData=get_position_rows(position),
                 columnDefs=[
-                    {"field": "name", "headerName": "Name"},
                     {
                         "field": "drafted",
                         "headerName": "Status",
@@ -92,9 +130,21 @@ def build_position_layout(position: str):
                         "cellRenderer": "agCheckboxCellRenderer",
                         "cellEditor": "agCheckboxCellEditor",
                     },
+                    {"field": "name", "headerName": "Player name"},
+                    *_health_column_def(position),
+                    *_projected_points_column_defs(),
                 ],
-                defaultColDef={"sortable": True, "resizable": True},
+                columnSize="autoSize",
+                columnSizeOptions={"skipHeader": True},
+                dangerously_allow_code=True,
+                defaultColDef={
+                    "autoHeaderHeight": True,
+                    "resizable": True,
+                    "sortable": True,
+                    "wrapHeaderText": True,
+                },
                 dashGridOptions={
+                    "rowHeight": 30,
                     "getRowStyle": {
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }
