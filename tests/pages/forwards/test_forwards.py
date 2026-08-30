@@ -51,7 +51,7 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
         {
             "field": "actual_gp_history",
             "headerName": "Health (actual GP)",
-            "cellRenderer": {"function": "actualGpSparkline(params)"},
+            "cellRenderer": "actualGpSparkline",
             "sortable": False,
             "resizable": False,
             "width": 132,
@@ -95,8 +95,12 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
 
 
 def test_health_renderer_returns_react_bars_with_four_availability_colors():
-    renderer = (Path(__file__).parents[3] / "assets" / "dashAgGridFunctions.js").read_text()
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
 
+    assert "dashAgGridComponentFunctions" in renderer
+    assert "dashAgGridFunctions" not in renderer
     assert "React.createElement" in renderer
     assert "document.createElement" not in renderer
     assert "#d32f2f" in renderer

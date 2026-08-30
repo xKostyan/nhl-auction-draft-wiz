@@ -1,7 +1,8 @@
-var dagfuncs = window.dashAgGridFunctions = window.dashAgGridFunctions || {};
+var dagcomponentfuncs = window.dashAgGridComponentFunctions =
+    window.dashAgGridComponentFunctions || {};
 
-dagfuncs.actualGpSparkline = function (params) {
-    var history = Array.isArray(params.value) ? params.value : [];
+dagcomponentfuncs.actualGpSparkline = function (props) {
+    var history = Array.isArray(props.value) ? props.value : [];
     var bars = history.slice().reverse().map(function (season) {
         var gamesPlayed = Math.max(0, Math.min(84, Number(season.games_played) || 0));
         var percentage = gamesPlayed / 84 * 100;

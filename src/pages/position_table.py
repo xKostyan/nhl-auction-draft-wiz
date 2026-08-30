@@ -51,7 +51,7 @@ def _health_column_def(position: str) -> list[dict]:
         {
             "field": "actual_gp_history",
             "headerName": "Health (actual GP)",
-            "cellRenderer": {"function": "actualGpSparkline(params)"},
+            "cellRenderer": "actualGpSparkline",
             "sortable": False,
             "resizable": False,
             "width": 132,
