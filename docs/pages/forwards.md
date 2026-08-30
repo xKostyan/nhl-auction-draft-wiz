@@ -13,8 +13,11 @@ open in its own browser tab during the draft.
 
 ## UI and behavior
 
-- An AG Grid table with only **Name** and **Status** columns. Player database
-  ids are retained internally for updates but are never displayed.
+- An AG Grid table with **Name**, **p TFP `<upcoming year>`**, **p AFP
+  `<upcoming year>`**, and **Status** columns. `p TFP` is the projected Total
+  Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
+  both sourced from the detected upcoming draft season. Player database ids are
+  retained internally for updates but are never displayed.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - **Status** is an editable checkbox. Checking it marks the player as
@@ -28,7 +31,8 @@ open in its own browser tab during the draft.
 
 ## Not yet implemented
 
-- Position-specific stats columns, filters, rankings, and player-detail views.
+- Additional position-specific stats columns, filters, rankings, and
+  player-detail views.
 
 ## Related code
 

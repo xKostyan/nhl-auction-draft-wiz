@@ -4,8 +4,13 @@ import dash_ag_grid as dag
 
 from src.data_loader import load_players
 from src.pages import forwards
-from src.pages.position_table import handle_drafted_cell_change
-from src.storage import clear_workspace, configure_storage, import_yearly_dataset
+from src.pages.position_table import get_position_rows, handle_drafted_cell_change
+from src.storage import (
+    clear_workspace,
+    configure_storage,
+    get_workspace_value,
+    import_yearly_dataset,
+)
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -14,7 +19,7 @@ def test_page_is_registered_at_the_expected_path_and_order():
     assert forwards.ORDER == 1
 
 
-def test_layout_shows_name_and_checkbox_status_columns_only(tmp_path, walk_components):
+def test_layout_shows_current_season_projected_points_and_checkbox_status_columns(tmp_path, walk_components):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -25,6 +30,16 @@ def test_layout_shows_name_and_checkbox_status_columns_only(tmp_path, walk_compo
     assert grid.columnDefs == [
         {"field": "name", "headerName": "Name"},
         {
+            "field": "projected_tfp",
+            "headerName": "p TFP 2027",
+            "type": "numericColumn",
+        },
+        {
+            "field": "projected_afp",
+            "headerName": "p AFP 2027",
+            "type": "numericColumn",
+        },
+        {
             "field": "drafted",
             "headerName": "Status",
             "editable": True,
@@ -34,6 +49,17 @@ def test_layout_shows_name_and_checkbox_status_columns_only(tmp_path, walk_compo
     ]
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
+
+
+def test_rows_include_current_season_projected_fantasy_points(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    row = next(row for row in get_position_rows("F") if row["name"] == "Mikko Rantanen")
+    assert row["projected_tfp"] == 322.65
+    assert row["projected_afp"] == 4.54
+    assert get_workspace_value("current_season") == "2027"
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):

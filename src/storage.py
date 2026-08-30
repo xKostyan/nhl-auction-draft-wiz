@@ -303,10 +303,12 @@ def get_players_for_grid() -> pd.DataFrame:
 
 
 def get_players_for_position_grid(position: str) -> pd.DataFrame:
-    """Return one position's players for the live draft table.
+    """Return one position's players and current-season projected points.
 
     The player id remains in the row data so a status edit can be persisted,
-    but position pages deliberately do not render it as a visible column.
+    but position pages deliberately do not render it as a visible column. The
+    projected total and per-game fantasy points are selected from the player's
+    detected current season, rather than a hard-coded year.
     """
     normalized_position = position.upper()
     if normalized_position not in {"F", "D", "G"}:
@@ -316,19 +318,46 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
     try:
         rows = conn.execute(
             """
-            SELECT p.id, p.name, CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted
+            SELECT
+                p.id,
+                p.name,
+                CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
+                MAX(
+                    CASE
+                        WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP'
+                        THEN stats.stat_value
+                    END
+                ) AS projected_tfp,
+                MAX(
+                    CASE
+                        WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP_AVG'
+                        THEN stats.stat_value
+                    END
+                ) AS projected_afp
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
+            LEFT JOIN player_stats stats
+                ON stats.player_id = p.id AND stats.year = p.current_season
             WHERE p.position = ?
+            GROUP BY p.id, p.name, ps.status
             ORDER BY p.name ASC
             """,
             (normalized_position,),
         ).fetchall()
         data = [
-            {"id": int(row["id"]), "name": row["name"], "drafted": bool(row["drafted"])}
+            {
+                "id": int(row["id"]),
+                "name": row["name"],
+                "drafted": bool(row["drafted"]),
+                "projected_tfp": row["projected_tfp"],
+                "projected_afp": row["projected_afp"],
+            }
             for row in rows
         ]
-        return pd.DataFrame(data, columns=["id", "name", "drafted"])
+        return pd.DataFrame(
+            data,
+            columns=["id", "name", "drafted", "projected_tfp", "projected_afp"],
+        )
     finally:
         conn.close()
 

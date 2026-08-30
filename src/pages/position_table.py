@@ -5,7 +5,11 @@ from __future__ import annotations
 import dash_ag_grid as dag
 from dash import html
 
-from ..storage import get_players_for_position_grid, set_player_drafted
+from ..storage import (
+    get_players_for_position_grid,
+    get_workspace_value,
+    set_player_drafted,
+)
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 
@@ -18,6 +22,24 @@ def position_grid_id(position: str) -> str:
 def get_position_rows(position: str) -> list[dict]:
     """Return the current persisted player rows for one position."""
     return get_players_for_position_grid(position).to_dict("records")
+
+
+def _projected_points_column_defs() -> list[dict]:
+    """Return projected fantasy-point columns labeled for the draft season."""
+    current_season = get_workspace_value("current_season")
+    year_label = current_season if current_season and current_season != "0" else "upcoming"
+    return [
+        {
+            "field": "projected_tfp",
+            "headerName": f"p TFP {year_label}",
+            "type": "numericColumn",
+        },
+        {
+            "field": "projected_afp",
+            "headerName": f"p AFP {year_label}",
+            "type": "numericColumn",
+        },
+    ]
 
 
 def _parse_player_id(value: object) -> int:
@@ -85,6 +107,7 @@ def build_position_layout(position: str):
                 rowData=get_position_rows(position),
                 columnDefs=[
                     {"field": "name", "headerName": "Name"},
+                    *_projected_points_column_defs(),
                     {
                         "field": "drafted",
                         "headerName": "Status",

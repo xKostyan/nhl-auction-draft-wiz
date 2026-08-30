@@ -165,8 +165,16 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
 
     forwards = get_players_for_position_grid("F")
     assert not forwards.empty
-    assert list(forwards.columns) == ["id", "name", "drafted"]
+    assert list(forwards.columns) == [
+        "id",
+        "name",
+        "drafted",
+        "projected_tfp",
+        "projected_afp",
+    ]
     assert forwards["drafted"].eq(False).all()
+    assert forwards["projected_tfp"].notna().any()
+    assert forwards["projected_afp"].notna().any()
 
     player_id = int(forwards.iloc[0]["id"])
     set_player_drafted(player_id, True)

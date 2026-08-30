@@ -14,12 +14,21 @@ def test_page_is_registered_at_the_expected_path_and_order():
     assert defencemen.ORDER == 2
 
 
-def test_layout_shows_a_position_specific_draft_grid(walk_components):
+def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
     layout = defencemen.layout()
     grid = next(node for node in walk_components(layout) if isinstance(node, dag.AgGrid))
     assert layout.className == "position-page"
     assert grid.id == "d-player-grid"
-    assert [column["headerName"] for column in grid.columnDefs] == ["Name", "Status"]
+    assert [column["headerName"] for column in grid.columnDefs] == [
+        "Name",
+        "p TFP 2027",
+        "p AFP 2027",
+        "Status",
+    ]
     assert grid.style["flex"] == "1 1 0"
 
 
