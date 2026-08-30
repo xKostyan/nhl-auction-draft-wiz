@@ -1,5 +1,7 @@
 """Tests for the dedicated forwards draft table."""
 
+from pathlib import Path
+
 import dash_ag_grid as dag
 
 from src.data_loader import load_players
@@ -90,6 +92,17 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
         {"year": 2024, "games_played": 80.0},
         {"year": 2023, "games_played": 82.0},
     ]
+
+
+def test_health_renderer_returns_react_bars_with_four_availability_colors():
+    renderer = (Path(__file__).parents[3] / "assets" / "dashAgGridFunctions.js").read_text()
+
+    assert "React.createElement" in renderer
+    assert "document.createElement" not in renderer
+    assert "#d32f2f" in renderer
+    assert "#ef6c00" in renderer
+    assert "#f9a825" in renderer
+    assert "#388e3c" in renderer
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
