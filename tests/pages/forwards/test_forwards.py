@@ -162,7 +162,8 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
-    assert "props.setValue(!drafted)" in renderer
+    assert "var available = !drafted" in renderer
+    assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
 
 

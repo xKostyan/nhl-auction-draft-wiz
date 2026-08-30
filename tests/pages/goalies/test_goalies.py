@@ -1,5 +1,7 @@
 """Tests for the dedicated goalies draft table."""
 
+from pathlib import Path
+
 import dash_ag_grid as dag
 from dash import dcc
 
@@ -76,3 +78,11 @@ def test_checking_a_goalie_uses_the_ag_grid_event_list(tmp_path):
     rows = handle_drafted_cell_change("G", [{"colId": "drafted", "value": "true", "data": {"id": str(player_id)}}])
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
+
+
+def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert "props.setValue(available)" in renderer

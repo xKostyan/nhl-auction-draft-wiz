@@ -39,8 +39,8 @@ open in its own browser tab during the draft.
   centers that player in the table.
 - The **highlight** circle is light gray by default and green for the selected
   player. It is updated by player search and can be clicked to select a player.
-- **#** is a clickable switch. Turning it on marks the player as `drafted`;
-  turning it off marks the player as `available`.
+- **#** is a clickable availability switch. On means the player is available
+  for the draft; off means the player is `drafted`.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row

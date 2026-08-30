@@ -36,16 +36,17 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
 
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
     var drafted = Boolean(props.value);
+    var available = !drafted;
 
     return React.createElement("button", {
-        "aria-label": drafted ? "Mark player as available" : "Mark player as drafted",
-        "aria-pressed": drafted,
+        "aria-label": available ? "Mark player as drafted" : "Mark player as available",
+        "aria-pressed": available,
         onClick: function (event) {
             event.stopPropagation();
-            props.setValue(!drafted);
+            props.setValue(available);
         },
         style: {
-            backgroundColor: drafted ? "#388e3c" : "#bdbdbd",
+            backgroundColor: available ? "#388e3c" : "#bdbdbd",
             border: "none",
             borderRadius: "10px",
             cursor: "pointer",
@@ -53,7 +54,7 @@ dagcomponentfuncs.draftedSwitchRenderer = function (props) {
             padding: "2px",
             width: "32px"
         },
-        title: drafted ? "Drafted" : "Available",
+        title: available ? "Available" : "Drafted",
         type: "button"
     }, React.createElement("span", {
         style: {
@@ -61,7 +62,7 @@ dagcomponentfuncs.draftedSwitchRenderer = function (props) {
             borderRadius: "50%",
             display: "block",
             height: "14px",
-            transform: drafted ? "translateX(14px)" : "translateX(0)",
+            transform: available ? "translateX(14px)" : "translateX(0)",
             transition: "transform 120ms ease",
             width: "14px"
         }

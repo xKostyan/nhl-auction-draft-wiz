@@ -1,5 +1,7 @@
 """Tests for the dedicated defencemen draft table."""
 
+from pathlib import Path
+
 import dash_ag_grid as dag
 from dash import dcc
 
@@ -78,3 +80,12 @@ def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):
     rows = handle_drafted_cell_change("D", [{"colId": "drafted", "value": "true", "data": {"id": str(player_id)}}])
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
+
+
+def test_drafted_switch_is_visually_on_only_for_available_players():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert "var available = !drafted" in renderer
+    assert 'backgroundColor: available ? "#388e3c" : "#bdbdbd"' in renderer
