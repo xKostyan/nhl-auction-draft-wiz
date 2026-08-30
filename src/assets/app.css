@@ -34,3 +34,7 @@ body,
     margin-bottom: 16px;
     max-width: 420px;
 }
+
+.centered-column-header .ag-header-cell-label {
+    justify-content: center;
+}

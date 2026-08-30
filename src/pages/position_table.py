@@ -176,6 +176,7 @@ def build_position_layout(position: str):
                 dangerously_allow_code=True,
                 defaultColDef={
                     "autoHeaderHeight": True,
+                    "headerClass": "centered-column-header",
                     "resizable": True,
                     "sortable": True,
                     "wrapHeaderText": True,

@@ -20,8 +20,8 @@ open in its own browser tab during the draft.
   both sourced from the detected upcoming draft season. Player database ids are
   retained internally for updates but are never displayed.
 - Columns auto-size from their cell contents; header text does not determine
-  their default width. All column headers wrap to multiple lines and grow the
-  header row as needed; cell values do not wrap.
+  their default width. All column headers are centered, wrap to multiple lines,
+  and grow the header row as needed; cell values do not wrap.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only goalies as you type.

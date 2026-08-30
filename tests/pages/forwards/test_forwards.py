@@ -71,6 +71,7 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.defaultColDef == {
         "autoHeaderHeight": True,
+        "headerClass": "centered-column-header",
         "resizable": True,
         "sortable": True,
         "wrapHeaderText": True,
