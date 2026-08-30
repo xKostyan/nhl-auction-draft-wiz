@@ -53,6 +53,9 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "field": "drafted",
             "headerName": "#",
             "cellRenderer": "draftedSwitchRenderer",
+            "cellStyle": {"paddingLeft": "2px", "paddingRight": "2px"},
+            "resizable": False,
+            "width": 26,
         },
         {"field": "name", "headerName": "Player name"},
         {

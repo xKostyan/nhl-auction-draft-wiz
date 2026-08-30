@@ -41,7 +41,8 @@ open in its own browser tab during the draft.
   selected player. It is updated by player search and can be clicked to select
   a player.
 - **#** is a clickable availability switch. On means the player is available
-  for the draft; off means the player is `drafted`.
+  for the draft; off means the player is `drafted`. Its 26px column cannot be
+  resized.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row

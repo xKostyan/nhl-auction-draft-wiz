@@ -48,11 +48,11 @@ dagcomponentfuncs.draftedSwitchRenderer = function (props) {
         style: {
             backgroundColor: available ? "#388e3c" : "#bdbdbd",
             border: "none",
-            borderRadius: "10px",
+            borderRadius: "8px",
             cursor: "pointer",
-            height: "18px",
+            height: "14px",
             padding: "2px",
-            width: "32px"
+            width: "22px"
         },
         title: available ? "Available" : "Drafted",
         type: "button"
@@ -61,10 +61,10 @@ dagcomponentfuncs.draftedSwitchRenderer = function (props) {
             backgroundColor: "#fff",
             borderRadius: "50%",
             display: "block",
-            height: "14px",
-            transform: available ? "translateX(14px)" : "translateX(0)",
+            height: "10px",
+            transform: available ? "translateX(8px)" : "translateX(0)",
             transition: "transform 120ms ease",
-            width: "14px"
+            width: "10px"
         }
     }));
 };
