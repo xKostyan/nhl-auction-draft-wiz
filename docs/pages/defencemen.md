@@ -14,7 +14,8 @@ open in its own browser tab during the draft.
 ## UI and behavior
 
 - The page header contains only the page title and player search control.
-- An AG Grid table with **#**, **Player name**, **Health (actual GP)**,
+- An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
+  name**, **Health (actual GP)**,
   **p TFP `<upcoming year>`**, and **p AFP `<upcoming year>`** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
   projected Average Fantasy Points per game, both sourced from the detected
@@ -36,8 +37,10 @@ open in its own browser tab during the draft.
 - A searchable typeahead above the table suggests only defencemen as you type.
   Selecting a suggestion (or confirming an exact full name) selects and
   centers that player in the table.
-- **#** is an editable checkbox. Checking it marks the player as
-  `drafted`; clearing it marks the player as `available`.
+- The **highlight** circle is light gray by default and green for the selected
+  player. It is updated by player search and can be clicked to select a player.
+- **#** is a clickable switch. Turning it on marks the player as `drafted`;
+  turning it off marks the player as `available`.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row

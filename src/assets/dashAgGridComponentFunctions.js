@@ -33,3 +33,75 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
         }
     }, bars);
 };
+
+dagcomponentfuncs.draftedSwitchRenderer = function (props) {
+    var drafted = Boolean(props.value);
+
+    return React.createElement("button", {
+        "aria-label": drafted ? "Mark player as available" : "Mark player as drafted",
+        "aria-pressed": drafted,
+        onClick: function (event) {
+            event.stopPropagation();
+            props.setValue(!drafted);
+        },
+        style: {
+            backgroundColor: drafted ? "#388e3c" : "#bdbdbd",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            height: "18px",
+            padding: "2px",
+            width: "32px"
+        },
+        title: drafted ? "Drafted" : "Available",
+        type: "button"
+    }, React.createElement("span", {
+        style: {
+            backgroundColor: "#fff",
+            borderRadius: "50%",
+            display: "block",
+            height: "14px",
+            transform: drafted ? "translateX(14px)" : "translateX(0)",
+            transition: "transform 120ms ease",
+            width: "14px"
+        }
+    }));
+};
+
+dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
+    var selection = React.useState(props.node.isSelected());
+    var selected = selection[0];
+    var setSelected = selection[1];
+
+    React.useEffect(function () {
+        var updateSelection = function () {
+            setSelected(props.node.isSelected());
+        };
+
+        props.node.addEventListener("rowSelected", updateSelection);
+        updateSelection();
+        return function () {
+            props.node.removeEventListener("rowSelected", updateSelection);
+        };
+    }, [props.node]);
+
+    return React.createElement("button", {
+        "aria-label": selected ? "Player highlighted" : "Highlight player",
+        "aria-pressed": selected,
+        onClick: function (event) {
+            event.stopPropagation();
+            props.node.setSelected(!selected, true);
+        },
+        style: {
+            backgroundColor: selected ? "#388e3c" : "#d3d3d3",
+            border: "none",
+            borderRadius: "50%",
+            cursor: "pointer",
+            height: "14px",
+            padding: "0",
+            width: "14px"
+        },
+        title: selected ? "Highlighted player" : "Highlight player",
+        type: "button"
+    });
+};

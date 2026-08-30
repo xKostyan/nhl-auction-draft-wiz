@@ -161,11 +161,18 @@ def build_position_layout(position: str):
                 getRowId="params.data.id",
                 columnDefs=[
                     {
+                        "field": "search_focus",
+                        "headerName": "",
+                        "cellRenderer": "searchFocusCircleRenderer",
+                        "sortable": False,
+                        "resizable": False,
+                        "suppressMenu": True,
+                        "width": 32,
+                    },
+                    {
                         "field": "drafted",
                         "headerName": "#",
-                        "editable": True,
-                        "cellRenderer": "agCheckboxCellRenderer",
-                        "cellEditor": "agCheckboxCellEditor",
+                        "cellRenderer": "draftedSwitchRenderer",
                     },
                     {"field": "name", "headerName": "Player name"},
                     *_health_column_def(position),
@@ -183,7 +190,11 @@ def build_position_layout(position: str):
                 },
                 dashGridOptions={
                     "rowHeight": 30,
-                    "rowSelection": {"mode": "singleRow"},
+                    "rowSelection": {
+                        "mode": "singleRow",
+                        "checkboxes": False,
+                        "headerCheckbox": False,
+                    },
                     "getRowStyle": {
                         "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                     }

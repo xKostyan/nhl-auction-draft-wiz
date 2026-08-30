@@ -30,6 +30,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     )
     assert grid.id == "g-player-grid"
     assert [column["headerName"] for column in grid.columnDefs] == [
+        "",
         "#",
         "Player name",
         "p TFP 2027",
@@ -41,6 +42,8 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert all(column["field"] != "actual_gp_history" for column in grid.columnDefs)
+    assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
+    assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
     assert grid.style["flex"] == "1 1 0"
 
 

@@ -26,7 +26,7 @@ def test_page_is_registered_at_the_expected_path_and_order():
     assert forwards.ORDER == 1
 
 
-def test_layout_shows_current_season_projected_points_and_checkbox_status_columns(tmp_path, walk_components):
+def test_layout_shows_current_season_projected_points_and_switch_status_columns(tmp_path, walk_components):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -41,11 +41,18 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     assert grid.id == "f-player-grid"
     assert grid.columnDefs == [
         {
+            "field": "search_focus",
+            "headerName": "",
+            "cellRenderer": "searchFocusCircleRenderer",
+            "sortable": False,
+            "resizable": False,
+            "suppressMenu": True,
+            "width": 32,
+        },
+        {
             "field": "drafted",
             "headerName": "#",
-            "editable": True,
-            "cellRenderer": "agCheckboxCellRenderer",
-            "cellEditor": "agCheckboxCellEditor",
+            "cellRenderer": "draftedSwitchRenderer",
         },
         {"field": "name", "headerName": "Player name"},
         {
@@ -78,7 +85,11 @@ def test_layout_shows_current_season_projected_points_and_checkbox_status_column
     }
     assert grid.dangerously_allow_code is True
     assert grid.dashGridOptions["rowHeight"] == 30
-    assert grid.dashGridOptions["rowSelection"] == {"mode": "singleRow"}
+    assert grid.dashGridOptions["rowSelection"] == {
+        "mode": "singleRow",
+        "checkboxes": False,
+        "headerCheckbox": False,
+    }
     assert grid.getRowId == "params.data.id"
     assert "drafted" in grid.dashGridOptions["getRowStyle"]["function"]
     assert grid.style == {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
@@ -135,7 +146,7 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
     ]
 
 
-def test_health_renderer_returns_react_bars_with_four_availability_colors():
+def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circle():
     renderer = (
         Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
     ).read_text()
@@ -149,6 +160,10 @@ def test_health_renderer_returns_react_bars_with_four_availability_colors():
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
     assert 'padding: "1px 4px"' in renderer
+    assert "draftedSwitchRenderer" in renderer
+    assert "searchFocusCircleRenderer" in renderer
+    assert "props.setValue(!drafted)" in renderer
+    assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
