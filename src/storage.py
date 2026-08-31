@@ -303,13 +303,15 @@ def get_players_for_grid() -> pd.DataFrame:
 
 
 def get_players_for_position_grid(position: str) -> pd.DataFrame:
-    """Return one position's players, projected points, and actual GP history.
+    """Return one position's players, projected points, and chart histories.
 
     The player id remains in the row data so a status edit can be persisted,
     but position pages deliberately do not render it as a visible column. The
     projected total and per-game fantasy points are selected from the player's
     detected current season, rather than a hard-coded year. Skater rows also
     include the five most recent seasons with an actual games-played value.
+    Goalie rows include projected and actual game starts for every stored
+    goalie season, defaulting missing values to zero.
     """
     normalized_position = position.upper()
     if normalized_position not in {"F", "D", "G"}:
@@ -363,27 +365,71 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                     {"year": int(row["year"]), "games_played": float(row["stat_value"])}
                 )
 
-        data = [
-            {
-                "id": int(row["id"]),
-                "name": row["name"],
-                "drafted": bool(row["drafted"]),
-                "projected_tfp": row["projected_tfp"],
-                "projected_afp": row["projected_afp"],
-                "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
+        data = []
+        for row in rows:
+            data.append(
+                {
+                    "id": int(row["id"]),
+                    "name": row["name"],
+                    "drafted": bool(row["drafted"]),
+                    "projected_tfp": row["projected_tfp"],
+                    "projected_afp": row["projected_afp"],
+                    "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
+                }
+            )
+
+        if normalized_position == "G":
+            year_rows = conn.execute(
+                """
+                SELECT DISTINCT year
+                FROM player_stats
+                WHERE position = ?
+                UNION
+                SELECT DISTINCT current_season AS year
+                FROM players
+                WHERE position = ?
+                ORDER BY year ASC
+                """,
+                (normalized_position, normalized_position),
+            ).fetchall()
+            game_start_years = [int(row["year"]) for row in year_rows]
+            game_start_rows = conn.execute(
+                """
+                SELECT player_id, year, stats_type, stat_value
+                FROM player_stats
+                WHERE position = ? AND stat_name = 'GS'
+                ORDER BY player_id ASC, year ASC
+                """,
+                (normalized_position,),
+            ).fetchall()
+            game_starts_by_player = {
+                row["id"]: {
+                    year: {"year": year, "projected": 0.0, "actual": 0.0}
+                    for year in game_start_years
+                }
+                for row in data
             }
-            for row in rows
+            for row in game_start_rows:
+                player_history = game_starts_by_player.get(int(row["player_id"]))
+                if player_history is not None:
+                    player_history[int(row["year"])][row["stats_type"]] = float(row["stat_value"])
+
+            for row in data:
+                row["game_starts_history"] = list(game_starts_by_player[row["id"]].values())
+
+        columns = [
+            "id",
+            "name",
+            "drafted",
+            "projected_tfp",
+            "projected_afp",
+            "actual_gp_history",
         ]
+        if normalized_position == "G":
+            columns.append("game_starts_history")
         return pd.DataFrame(
             data,
-            columns=[
-                "id",
-                "name",
-                "drafted",
-                "projected_tfp",
-                "projected_afp",
-                "actual_gp_history",
-            ],
+            columns=columns,
         )
     finally:
         conn.close()

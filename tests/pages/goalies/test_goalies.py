@@ -36,6 +36,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "",
         "#",
         "Player name",
+        "Game Starts",
         "p TFP 2027",
         "p AFP 2027",
     ]
@@ -46,6 +47,8 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert all(column["field"] != "actual_gp_history" for column in grid.columnDefs)
+    assert grid.columnDefs[3]["cellRenderer"] == "goalieGameStartsChart"
+    assert grid.columnDefs[3]["width"] == 160
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
@@ -75,6 +78,22 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_goalie(t
     )
 
 
+def test_goalie_rows_include_projected_and_actual_game_starts_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    row = next(row for row in get_position_rows("G") if row["id"] == 3634)
+
+    assert row["game_starts_history"] == [
+        {"year": 2023, "projected": 45.0, "actual": 36.0},
+        {"year": 2024, "projected": 0.0, "actual": 26.0},
+        {"year": 2025, "projected": 0.0, "actual": 20.0},
+        {"year": 2026, "projected": 0.0, "actual": 24.0},
+        {"year": 2027, "projected": 0.0, "actual": 0.0},
+    ]
+
+
 def test_checking_a_goalie_uses_the_ag_grid_event_list(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -92,3 +111,8 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     ).read_text()
 
     assert "props.setValue(available)" in renderer
+    assert "goalieGameStartsChart" in renderer
+    assert "var scaleMaximum = 70" in renderer
+    assert 'stroke: "#1565c0"' in renderer
+    assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer
+    assert 'fontSize: "9px"' in renderer

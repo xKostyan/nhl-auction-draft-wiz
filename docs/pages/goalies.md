@@ -15,7 +15,7 @@ open in its own browser tab during the draft.
 
 - The page header contains only the page title and player search control.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **p TFP `<upcoming year>`**,
+  name**, **Game Starts**, **p TFP `<upcoming year>`**,
   and **p AFP `<upcoming year>`** columns, in that order. `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
   both sourced from the detected upcoming draft season. Player database ids are
@@ -26,6 +26,13 @@ open in its own browser tab during the draft.
   controls, and inline graphs are vertically centered. Cell text is 16px
   (2px larger than the default table value size).
 - Rows are 60px high to accommodate current and future inline player graphs.
+- **Game Starts** is a 160px inline combination chart covering every goalie
+  season in the imported workspace, including the upcoming season. A blue line
+  shows projected game starts and bars show actual game starts; either missing
+  value is displayed as zero. The chart's scale is fixed at 0-70. Actual bars
+  are red below 30 starts, yellow from 30 through 42 starts, and green above
+  42 starts. Every actual bar shows its value in 9px text, inside taller bars
+  or immediately above shorter bars; hovering a year shows both values.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only goalies as you type.

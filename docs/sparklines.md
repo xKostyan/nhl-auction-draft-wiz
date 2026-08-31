@@ -36,3 +36,11 @@ tests for the column definition, row-data shape, and renderer registration.
 It accepts up to five historical actual-GP values and renders oldest to newest
 on a fixed 0-84 scale. Its color bands are red for 0-50 GP, orange for 51-60,
 yellow for 61-71, and green for 72-84.
+
+## Existing goalie game-starts chart
+
+`goalieGameStartsChart` implements the goalie **Game Starts** column. It
+receives every imported goalie season, with absent projected or actual values
+normalized to zero. It draws projected starts as a blue line and actual starts
+as 0-70-scale bars with a 9px value label. Actual bars are red below 30 starts,
+yellow from 30 through 42, and green above 42.

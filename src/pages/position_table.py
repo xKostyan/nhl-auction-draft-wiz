@@ -89,6 +89,22 @@ def _health_column_def(position: str) -> list[dict]:
     ]
 
 
+def _game_starts_column_def(position: str) -> list[dict]:
+    """Return the projected-line and actual-bar game-starts chart for goalies."""
+    if position != "G":
+        return []
+    return [
+        {
+            "field": "game_starts_history",
+            "headerName": "Game Starts",
+            "cellRenderer": "goalieGameStartsChart",
+            "sortable": False,
+            "resizable": False,
+            "width": 160,
+        }
+    ]
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -185,6 +201,7 @@ def build_position_layout(position: str):
                     },
                     {"field": "name", "headerName": "Player name"},
                     *_health_column_def(position),
+                    *_game_starts_column_def(position),
                     *_projected_points_column_defs(),
                 ],
                 columnSize="autoSize",
