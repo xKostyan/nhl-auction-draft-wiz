@@ -87,7 +87,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         "wrapHeaderText": True,
     }
     assert grid.dangerously_allow_code is True
-    assert grid.dashGridOptions["rowHeight"] == 30
+    assert grid.dashGridOptions["rowHeight"] == 60
     assert grid.dashGridOptions["rowSelection"] == {
         "mode": "singleRow",
         "checkboxes": False,

@@ -192,7 +192,7 @@ def build_position_layout(position: str):
                     "wrapHeaderText": True,
                 },
                 dashGridOptions={
-                    "rowHeight": 30,
+                    "rowHeight": 60,
                     "rowSelection": {
                         "mode": "singleRow",
                         "checkboxes": False,
