@@ -99,8 +99,9 @@ def _game_starts_column_def(position: str) -> list[dict]:
             "headerName": "Game Starts",
             "cellRenderer": "goalieGameStartsChart",
             "sortable": False,
-            "resizable": False,
-            "width": 160,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
         }
     ]
 
