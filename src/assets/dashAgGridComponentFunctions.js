@@ -106,7 +106,8 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
             gap: "2px",
             height: "calc(100% - 10px)",
             padding: "1px 4px",
-            position: "relative"
+            position: "relative",
+            width: "100%"
         }
     }, [
         React.createElement("svg", {

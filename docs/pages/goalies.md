@@ -33,7 +33,8 @@ open in its own browser tab during the draft.
   are red below 30 starts, yellow from 30 through 42 starts, and green above
   42 starts. Every actual bar shows its value in 9px text, inside taller bars
   or immediately above shorter bars; hovering a year shows both values. This
-  column can be resized from its default width.
+  column can be resized from its default width, and the chart expands to use
+  its full available width.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only goalies as you type.
