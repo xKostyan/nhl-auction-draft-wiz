@@ -95,3 +95,4 @@ def test_drafted_switch_is_visually_on_only_for_available_players():
 
     assert "var available = !drafted" in renderer
     assert 'backgroundColor: available ? "#388e3c" : "#bdbdbd"' in renderer
+    assert 'height: "calc(100% - 10px)"' in renderer

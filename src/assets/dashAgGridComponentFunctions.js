@@ -28,7 +28,7 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             boxSizing: "border-box",
             display: "flex",
             gap: "3px",
-            height: "100%",
+            height: "calc(100% - 10px)",
             justifyContent: "center",
             padding: "1px 4px"
         }

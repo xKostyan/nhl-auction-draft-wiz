@@ -30,8 +30,9 @@ open in its own browser tab during the draft.
   most recent actual games-played seasons, ordered oldest to newest. Every bar
   shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
   yellow for 61-71, and green for 72-84; hovering a bar shows its season and
-  actual GP. The column is 110px wide and vertically fills the centered cell.
-  Rows are 60px high to accommodate current and future inline player graphs.
+  actual GP. The column is 110px wide and is vertically centered in a 50px
+  chart area, leaving 5px clearance above and below. Rows are 60px high to
+  accommodate current and future inline player graphs.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

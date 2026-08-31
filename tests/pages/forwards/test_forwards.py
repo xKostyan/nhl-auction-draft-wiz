@@ -170,7 +170,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
     assert 'boxSizing: "border-box"' in renderer
-    assert 'height: "100%"' in renderer
+    assert 'height: "calc(100% - 10px)"' in renderer
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
