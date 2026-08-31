@@ -25,9 +25,10 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
     return React.createElement("div", {
         style: {
             alignItems: "end",
+            boxSizing: "border-box",
             display: "flex",
             gap: "3px",
-            height: "28px",
+            height: "100%",
             justifyContent: "center",
             padding: "1px 4px"
         }

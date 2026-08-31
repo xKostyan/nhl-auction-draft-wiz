@@ -13,6 +13,7 @@ from ..storage import (
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
+VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
 
 
 def position_grid_id(position: str) -> str:
@@ -173,7 +174,11 @@ def build_position_layout(position: str):
                         "field": "drafted",
                         "headerName": "#",
                         "cellRenderer": "draftedSwitchRenderer",
-                        "cellStyle": {"paddingLeft": "2px", "paddingRight": "2px"},
+                        "cellStyle": {
+                            **VERTICALLY_CENTERED_CELL_STYLE,
+                            "paddingLeft": "2px",
+                            "paddingRight": "2px",
+                        },
                         "resizable": False,
                         "width": 26,
                     },
@@ -186,6 +191,7 @@ def build_position_layout(position: str):
                 dangerously_allow_code=True,
                 defaultColDef={
                     "autoHeaderHeight": True,
+                    "cellStyle": VERTICALLY_CENTERED_CELL_STYLE,
                     "headerClass": "centered-column-header",
                     "resizable": True,
                     "sortable": True,

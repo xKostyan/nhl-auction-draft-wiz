@@ -44,6 +44,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["headerClass"] == "centered-column-header"
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
+    assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert grid.columnDefs[3]["cellRenderer"] == "actualGpSparkline"
     assert grid.columnDefs[3]["width"] == 110
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"

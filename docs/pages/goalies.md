@@ -22,7 +22,8 @@ open in its own browser tab during the draft.
   retained internally for updates but are never displayed.
 - Columns auto-size from their cell contents; header text does not determine
   their default width. All column headers are centered, wrap to multiple lines,
-  and grow the header row as needed; cell values do not wrap.
+  and grow the header row as needed; cell values do not wrap. Cell values,
+  controls, and inline graphs are vertically centered.
 - Rows are 60px high to accommodate current and future inline player graphs.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.

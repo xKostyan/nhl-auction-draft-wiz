@@ -53,7 +53,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "field": "drafted",
             "headerName": "#",
             "cellRenderer": "draftedSwitchRenderer",
-            "cellStyle": {"paddingLeft": "2px", "paddingRight": "2px"},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "paddingLeft": "2px",
+                "paddingRight": "2px",
+            },
             "resizable": False,
             "width": 26,
         },
@@ -81,6 +86,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
     assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.defaultColDef == {
         "autoHeaderHeight": True,
+        "cellStyle": {"alignItems": "center", "display": "flex"},
         "headerClass": "centered-column-header",
         "resizable": True,
         "sortable": True,
@@ -162,6 +168,8 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#ef6c00" in renderer
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
+    assert 'boxSizing: "border-box"' in renderer
+    assert 'height: "100%"' in renderer
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer

@@ -23,13 +23,14 @@ open in its own browser tab during the draft.
   updates but are never displayed.
 - Columns auto-size from their cell contents; header text does not determine
   their default width. All column headers are centered, wrap to multiple lines,
-  and grow the header row as needed; cell values do not wrap.
+  and grow the header row as needed; cell values do not wrap. Cell values,
+  controls, and inline graphs are vertically centered.
 - **Health (actual GP)** is an inline vertical-bar chart of up to the five
   most recent actual games-played seasons, ordered oldest to newest. Every bar
   shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
   yellow for 61-71, and green for 72-84; hovering a bar shows its season and
-  actual GP. The column is 110px wide. Rows are 60px high to accommodate
-  current and future inline player graphs.
+  actual GP. The column is 110px wide and vertically fills the centered cell.
+  Rows are 60px high to accommodate current and future inline player graphs.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app
