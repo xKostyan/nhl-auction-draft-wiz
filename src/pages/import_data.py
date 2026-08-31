@@ -135,6 +135,7 @@ def layout(**_kwargs):
             html.Div(id="workspace-status", children=_initial_status_message(), style={"marginBottom": "16px", "fontWeight": "bold"}),
             dag.AgGrid(
                 id="player-grid",
+                className="table-values-large",
                 rowData=get_players_for_grid().to_dict("records"),
                 columnDefs=[
                     {"field": "id"},

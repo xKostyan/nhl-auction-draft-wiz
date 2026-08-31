@@ -38,3 +38,7 @@ body,
 .centered-column-header .ag-header-cell-label {
     justify-content: center;
 }
+
+.table-values-large .ag-cell {
+    font-size: 16px;
+}

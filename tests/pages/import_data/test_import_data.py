@@ -35,6 +35,9 @@ def test_layout_exposes_upload_import_and_clear_controls(tmp_path, collect_compo
     ):
         assert expected_id in ids
 
+    grid = next(node for node in walk_components(layout) if getattr(node, "id", None) == "player-grid")
+    assert grid.className == "table-values-large"
+
     # This page has no charts/graphs yet.
     assert not any(isinstance(node, dcc.Graph) for node in walk_components(layout))
 

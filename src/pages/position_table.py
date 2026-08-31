@@ -158,6 +158,7 @@ def build_position_layout(position: str):
             ),
             dag.AgGrid(
                 id=position_grid_id(position),
+                className="table-values-large",
                 rowData=get_position_rows(position),
                 getRowId="params.data.id",
                 columnDefs=[
