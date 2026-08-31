@@ -62,7 +62,6 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
         var percentage = actual / scaleMaximum * 100;
         var color = actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c";
-        var labelInsideBar = actual >= 15;
 
         return React.createElement("div", {
             key: season.year,
@@ -87,12 +86,12 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
             React.createElement("span", {
                 key: "label",
                 style: {
-                    bottom: labelInsideBar ? "calc(" + percentage + "% - 10px)" : percentage + "%",
-                    color: labelInsideBar ? "#fff" : "#333",
+                    bottom: "50%",
+                    color: "#333",
                     fontSize: "9px",
                     left: "50%",
                     position: "absolute",
-                    transform: "translateX(-50%)",
+                    transform: "translate(-50%, 50%)",
                     whiteSpace: "nowrap",
                     zIndex: "2"
                 }

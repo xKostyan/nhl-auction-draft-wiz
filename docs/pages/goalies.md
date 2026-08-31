@@ -31,9 +31,8 @@ open in its own browser tab during the draft.
   shows projected game starts and bars show actual game starts; either missing
   value is displayed as zero. The chart's scale is fixed at 0-70. Actual bars
   are red below 30 starts, yellow from 30 through 42 starts, and green above
-  42 starts. Every actual bar shows its value in 9px text, inside taller bars
-  or immediately above shorter bars and above the chart marks; hovering a year
-  shows both values. This
+  42 starts. Every actual bar has a 9px value label centered vertically over
+  the chart and above the chart marks; hovering a year shows both values. This
   column can be resized from its default width, and the chart expands to use
   its full available width.
 - The table fills the remaining browser viewport below the persistent app
