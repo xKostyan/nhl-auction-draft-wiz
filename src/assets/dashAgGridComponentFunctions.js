@@ -93,7 +93,8 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
                     left: "50%",
                     position: "absolute",
                     transform: "translateX(-50%)",
-                    whiteSpace: "nowrap"
+                    whiteSpace: "nowrap",
+                    zIndex: "2"
                 }
             }, String(actual))
         ]);

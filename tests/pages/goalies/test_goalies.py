@@ -119,3 +119,4 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer
     assert 'fontSize: "9px"' in renderer
     assert 'width: "100%"' in renderer
+    assert 'zIndex: "2"' in renderer
