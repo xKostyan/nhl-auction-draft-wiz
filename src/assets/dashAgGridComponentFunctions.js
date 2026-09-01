@@ -134,7 +134,7 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
 
 dagcomponentfuncs.averagePerformanceChart = function (props) {
     var history = Array.isArray(props.value) ? props.value : [];
-    var scaleMaximum = props.cellRendererParams.scaleMaximum;
+    var scaleMaximum = props.scaleMaximum;
     var pointCount = history.length;
     var linePoints = history.map(function (season, index) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));

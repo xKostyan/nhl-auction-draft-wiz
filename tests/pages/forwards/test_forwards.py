@@ -202,6 +202,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "searchFocusCircleRenderer" in renderer
     assert "averagePerformanceChart" in renderer
     assert "scaleMaximum === 6" in renderer
+    assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
