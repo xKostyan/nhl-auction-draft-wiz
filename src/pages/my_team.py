@@ -201,7 +201,7 @@ def build_my_team_update(
     return (
         *(snapshot[current_table] for current_table in TABLES),
         *(
-            build_my_team_table_heading(current_table, snapshot=snapshot)
+            build_my_team_table_heading(current_table, snapshot=snapshot).children
             for current_table in TABLES
         ),
         build_projection_chart(snapshot=snapshot),

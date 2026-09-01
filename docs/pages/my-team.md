@@ -56,7 +56,8 @@ membership flag is stored in the workspace and survives restarts.
   left-click outside it. **Add to My Team** is omitted because it is redundant
   here. Every table, heading, and chart refreshes from one snapshot after an
   edit, so automatic F/D/Utility/Bench placement remains consistent without
-  an unused full position-page reload.
+  an unused full position-page reload. Heading updates replace only their
+  contents, preserving the page layout across repeated roster edits.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
 - Each page render creates one roster snapshot, which is reused by all table

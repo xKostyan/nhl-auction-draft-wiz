@@ -302,3 +302,6 @@ def test_my_team_update_refreshes_all_tables_after_removal(tmp_path):
     forward_rows, _, utility_rows, *_ = update
     assert any(row["id"] == promoted_player_id for row in forward_rows)
     assert all(row.get("id") != promoted_player_id for row in utility_rows)
+    forward_heading_children = update[len(my_team.TABLES)]
+    assert len(forward_heading_children) == 3
+    assert all(isinstance(child, html.Span) for child in forward_heading_children)
