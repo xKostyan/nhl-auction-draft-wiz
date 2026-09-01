@@ -249,6 +249,8 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
     assert "playerNameContextMenuRenderer" in renderer
+    assert "props.node.setData(Object.assign({}, props.data" in renderer
+    assert 'on_my_team: action === "add-to-my-team"' in renderer
     assert "props.setData({ action: action, timestamp: Date.now() })" in renderer
     assert "ReactDOM.createPortal" in renderer
     assert 'position: "fixed"' in renderer

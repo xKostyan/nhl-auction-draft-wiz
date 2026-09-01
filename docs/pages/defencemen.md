@@ -71,6 +71,8 @@ open in its own browser tab during the draft.
   from My Team** only removes that roster membership. The menu is displayed
   above the grid and closes when you left-click outside it; the table reloads
   immediately after an action without affecting later Tags or Notes edits.
+  The highlight circle changes to light blue immediately when membership is
+  added, and back to gray when it is removed.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,
   so drafted state survives app restarts.
 

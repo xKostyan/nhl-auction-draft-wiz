@@ -350,6 +350,11 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var runAction = function (action, event) {
         event.preventDefault();
         event.stopPropagation();
+        if (action === "add-to-my-team" || action === "remove-from-my-team") {
+            props.node.setData(Object.assign({}, props.data, {
+                on_my_team: action === "add-to-my-team"
+            }));
+        }
         // setData emits Dash AG Grid's cellRendererData prop with this row's id.
         props.setData({ action: action, timestamp: Date.now() });
         setMenuOpen(false);
