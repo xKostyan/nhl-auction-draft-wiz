@@ -31,8 +31,9 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     clear_workspace()
     import_yearly_dataset()
 
-    grids = [node for node in walk_components(my_team.layout()) if isinstance(node, dag.AgGrid)]
-    chart = next(node for node in walk_components(my_team.layout()) if isinstance(node, dcc.Graph))
+    page_layout = my_team.layout()
+    grids = [node for node in walk_components(page_layout) if isinstance(node, dag.AgGrid)]
+    chart = next(node for node in walk_components(page_layout) if isinstance(node, dcc.Graph))
 
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
@@ -40,6 +41,12 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.figure.data[0].marker.colors == ("#ff8533", "#5cd65c", "#33adff", "#cc33ff")
     assert chart.figure.data[0].domain.x == (0.1, 0.9)
     assert chart.figure.data[1].hole == 0.84
+    assert chart.figure.layout.height == 300
+    assert chart.className == "my-team-projection-chart"
+    bench_and_chart = page_layout.children[-1]
+    assert bench_and_chart.className == "my-team-bench-and-chart"
+    assert isinstance(bench_and_chart.children[0], type(page_layout.children[1]))
+    assert bench_and_chart.children[1] is chart
 
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",
@@ -50,8 +57,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     ]
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
     assert [len(grid.rowData) for grid in grids] == [9, 5, 2, 2, 4]
-    assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [40, 40, 40, 40, 40]
-    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "130px", "130px", "210px"]
+    assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [50, 50, 50, 50, 50]
+    assert [grid.style["height"] for grid in grids] == ["500px", "300px", "150px", "150px", "250px"]
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)

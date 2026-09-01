@@ -732,7 +732,7 @@ def build_my_team_grid(
             "wrapHeaderText": True,
         },
         dashGridOptions={
-            "rowHeight": 40,
+            "rowHeight": 50,
             "rowSelection": {
                 "mode": "singleRow",
                 "checkboxes": False,
@@ -747,7 +747,7 @@ def build_my_team_grid(
         },
         style={
             "flex": "0 0 auto",
-            "height": f"{config['slots'] * 40 + 50}px",
+            "height": f"{config['slots'] * 50 + 50}px",
             "minHeight": 0,
             "width": "100%",
         },

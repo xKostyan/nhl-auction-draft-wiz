@@ -91,7 +91,7 @@ def build_projection_chart(*, snapshot: dict[str, list[dict]] | None = None) -> 
     )
     figure.update_layout(
         annotations=[{"text": f"Projected TFP<br><b>{grand_total:.2f}</b>", "showarrow": False, "font": {"size": 18}}],
-        height=460,
+        height=300,
         margin={"l": 20, "r": 20, "t": 20, "b": 20},
         showlegend=False,
     )
@@ -152,11 +152,6 @@ def layout(**_kwargs):
         className="my-team-page",
         children=[
             html.H2("My Team"),
-            dcc.Graph(
-                id=CHART_ID,
-                figure=build_projection_chart(snapshot=snapshot),
-                config={"displayModeBar": False},
-            ),
             *[
                 html.Section(
                     className="my-team-position",
@@ -169,7 +164,29 @@ def layout(**_kwargs):
                     ],
                 )
                 for table in TABLES
+                if table != "bench"
             ],
+            html.Div(
+                className="my-team-bench-and-chart",
+                children=[
+                    html.Section(
+                        className="my-team-position",
+                        children=[
+                            html.H3(
+                                get_my_team_table_title("bench", snapshot=snapshot),
+                                id=title_id("bench"),
+                            ),
+                            build_my_team_grid("bench", snapshot=snapshot),
+                        ],
+                    ),
+                    dcc.Graph(
+                        id=CHART_ID,
+                        className="my-team-projection-chart",
+                        figure=build_projection_chart(snapshot=snapshot),
+                        config={"displayModeBar": False},
+                    ),
+                ],
+            ),
         ],
     )
 
