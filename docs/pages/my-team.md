@@ -38,10 +38,10 @@ membership flag is stored in the workspace and survives restarts.
   `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
   projected TFP, showing projected starts for the detected draft season.
-- Each heading has aligned columns for its table title, **Projection for
-  YEAR:** label, and projected-TFP total. Forwards, Defencemen, Utility, and
-  Goalies show a total; Bench intentionally remains title-only. Missing player
-  projections count as zero.
+- Each heading has aligned columns for its table title, **Projection:** label,
+  and projected-TFP total. Forwards, Defencemen, Utility, and Goalies show a
+  total; Bench intentionally remains title-only. Missing player projections
+  count as zero.
 - The **Goalies** heading estimates projected TFP from 90% of each goalie's
   projected starts multiplied by projected AFP, capped at 140 combined starts.
   Active goalie slots are allocated first, then the highest-AFP Bench goalie,

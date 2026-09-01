@@ -234,8 +234,7 @@ def get_my_team_table_heading(
     if table == "bench":
         return title, "", ""
 
-    year = get_workspace_value("current_season") or "upcoming"
-    projection_label = f"Projection for {year}:"
+    projection_label = "Projection:"
     if table == "G":
         projection = get_my_team_goalie_projection(snapshot=snapshot)
         if projection["available_starts"] < 140:
