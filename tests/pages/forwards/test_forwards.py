@@ -86,7 +86,21 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "field": "tags",
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
-            "cellRendererParams": {"availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"]},
+            "cellRendererParams": {
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+                "tagColors": {
+                    "PP1": "green",
+                    "PK1": "green",
+                    "Line1": "green",
+                    "PP2": "yellow",
+                    "PK2": "yellow",
+                    "Line2": "yellow",
+                    "Starter": "green",
+                    "1A": "green",
+                    "1B": "yellow",
+                    "Backup": "red",
+                },
+            },
             "sortable": False,
             "resizable": True,
             "suppressAutoSize": True,
@@ -216,6 +230,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "playerTagsRenderer" in renderer
     assert "#a5d6a7" in renderer
     assert "#fff59d" in renderer
+    assert "#ef9a9a" in renderer
     assert "Close tag editor" in renderer
     assert '}, "Done")' in renderer
     assert 'justifyContent: "flex-start"' in renderer

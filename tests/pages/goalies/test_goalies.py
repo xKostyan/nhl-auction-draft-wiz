@@ -65,6 +65,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     }
     assert grid.columnDefs[5]["headerName"] == "Tags"
     assert grid.columnDefs[5]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[5]["cellRendererParams"]["availableTags"] == ["Starter", "Backup", "1A", "1B"]
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
@@ -147,6 +148,7 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "Close tag editor" in renderer
     assert 'justifyContent: "flex-start"' in renderer
+    assert 'tagColor === "red"' in renderer
     assert "var scaleMaximum = 70" in renderer
     assert 'stroke: "#1565c0"' in renderer
     assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer

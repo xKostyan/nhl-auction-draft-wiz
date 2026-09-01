@@ -81,12 +81,29 @@ def ensure_schema() -> None:
             """
             CREATE TABLE IF NOT EXISTS player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
                 PRIMARY KEY (player_id, tag),
                 FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
             )
             """
         )
+        existing_tag_table = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'player_tags'"
+        ).fetchone()
+        if existing_tag_table and "'Starter'" not in existing_tag_table["sql"]:
+            conn.execute("ALTER TABLE player_tags RENAME TO player_tags_legacy")
+            conn.execute(
+                """
+                CREATE TABLE player_tags (
+                    player_id INTEGER NOT NULL,
+                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                    PRIMARY KEY (player_id, tag),
+                    FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
+                )
+                """
+            )
+            conn.execute("INSERT INTO player_tags (player_id, tag) SELECT player_id, tag FROM player_tags_legacy")
+            conn.execute("DROP TABLE player_tags_legacy")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_stats (
@@ -531,7 +548,7 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
 
 def set_player_tags(player_id: int, tags: list[str]) -> None:
     """Replace a player's persistent set of recognized draft-planning tags."""
-    allowed_tags = {"PP1", "PP2", "PK1", "PK2", "Line1", "Line2"}
+    allowed_tags = {"PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "Starter", "Backup", "1A", "1B"}
     if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
         raise ValueError("Player tags must be a list of tag names.")
     if len(tags) != len(set(tags)) or any(tag not in allowed_tags for tag in tags):

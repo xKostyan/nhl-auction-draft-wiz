@@ -205,20 +205,26 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
 dagcomponentfuncs.playerTagsRenderer = function (props) {
     var selectedTags = Array.isArray(props.value) ? props.value : [];
     var availableTags = Array.isArray(props.availableTags) ? props.availableTags : [];
+    var tagColors = props.tagColors || {};
     var editingState = React.useState(false);
     var editing = editingState[0];
     var setEditing = editingState[1];
 
     var tagChip = function (tag, selected, onClick) {
-        var tierOne = tag.endsWith("1");
+        var tagColor = tagColors[tag] || "yellow";
+        var colors = tagColor === "green"
+            ? { active: "#a5d6a7", border: "#66bb6a" }
+            : tagColor === "red"
+                ? { active: "#ef9a9a", border: "#e57373" }
+                : { active: "#fff59d", border: "#fbc02d" };
         return React.createElement("button", {
             "aria-label": (selected ? "Remove " : "Add ") + tag + " tag",
             "aria-pressed": selected,
             key: tag,
             onClick: onClick,
             style: {
-                backgroundColor: selected ? (tierOne ? "#a5d6a7" : "#fff59d") : "#f5f5f5",
-                border: "1px solid " + (tierOne ? "#66bb6a" : "#fbc02d"),
+                backgroundColor: selected ? colors.active : "#f5f5f5",
+                border: "1px solid " + colors.border,
                 borderRadius: "3px",
                 color: "#333",
                 cursor: "pointer",

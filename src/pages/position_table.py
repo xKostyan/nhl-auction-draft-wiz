@@ -15,7 +15,23 @@ from ..storage import (
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
 VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
-PLAYER_TAGS = ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"]
+PLAYER_TAGS = {
+    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+    "G": ["Starter", "Backup", "1A", "1B"],
+}
+TAG_COLORS = {
+    "PP1": "green",
+    "PK1": "green",
+    "Line1": "green",
+    "PP2": "yellow",
+    "PK2": "yellow",
+    "Line2": "yellow",
+    "Starter": "green",
+    "1A": "green",
+    "1B": "yellow",
+    "Backup": "red",
+}
 
 
 def position_grid_id(position: str) -> str:
@@ -124,14 +140,14 @@ def _average_performance_column_def(position: str) -> list[dict]:
     ]
 
 
-def _tags_column_def() -> list[dict]:
+def _tags_column_def(position: str) -> list[dict]:
     """Return the editable persistent player tags column."""
     return [
         {
             "field": "tags",
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
-            "cellRendererParams": {"availableTags": PLAYER_TAGS},
+            "cellRendererParams": {"availableTags": PLAYER_TAGS[position], "tagColors": TAG_COLORS},
             "sortable": False,
             "resizable": True,
             "suppressAutoSize": True,
@@ -162,11 +178,11 @@ def _parse_drafted_value(value: object) -> bool:
     raise ValueError("Drafted status updates require a boolean checkbox value.")
 
 
-def _parse_player_tags(value: object) -> list[str]:
+def _parse_player_tags(position: str, value: object) -> list[str]:
     """Validate a JSON-compatible tag list emitted by the grid renderer."""
     if not isinstance(value, list) or any(not isinstance(tag, str) for tag in value):
         raise ValueError("Player tag updates require a list of tag names.")
-    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS for tag in value):
+    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS[position] for tag in value):
         raise ValueError("Player tag updates require unique recognized tag names.")
     return value
 
@@ -199,7 +215,7 @@ def handle_player_cell_change(position: str, cell_changes: list[dict] | None) ->
         if column_id == "drafted":
             set_player_drafted(player_id, _parse_drafted_value(value))
         else:
-            set_player_tags(player_id, _parse_player_tags(value))
+            set_player_tags(player_id, _parse_player_tags(position, value))
     return get_position_rows(position)
 
 
@@ -252,7 +268,7 @@ def build_position_layout(position: str):
                     *_health_column_def(position),
                     *_game_starts_column_def(position),
                     *_average_performance_column_def(position),
-                    *_tags_column_def(),
+                    *_tags_column_def(position),
                     *_projected_points_column_defs(),
                 ],
                 columnSize="autoSize",
