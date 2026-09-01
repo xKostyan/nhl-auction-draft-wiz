@@ -83,30 +83,6 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "width": 150,
         },
         {
-            "field": "tags",
-            "headerName": "Tags",
-            "cellRenderer": "playerTagsRenderer",
-            "cellRendererParams": {
-                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
-                "tagColors": {
-                    "PP1": "green",
-                    "PK1": "green",
-                    "Line1": "green",
-                    "PP2": "yellow",
-                    "PK2": "yellow",
-                    "Line2": "yellow",
-                    "Starter": "green",
-                    "1A": "green",
-                    "1B": "yellow",
-                    "Backup": "red",
-                },
-            },
-            "sortable": False,
-            "resizable": True,
-            "suppressAutoSize": True,
-            "width": 160,
-        },
-        {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
             "type": "numericColumn",
@@ -115,6 +91,41 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "field": "projected_afp",
             "headerName": "p AFP 2027",
             "type": "numericColumn",
+        },
+        {
+            "field": "tags",
+            "headerName": "Tags",
+            "cellRenderer": "playerTagsRenderer",
+            "cellRendererParams": {
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+                "tagColors": {
+                    "PP1": "green", "PK1": "green", "Line1": "green",
+                    "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
+                    "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
+                },
+            },
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 160,
+        },
+        {
+            "field": "notes",
+            "headerName": "Notes",
+            "cellEditor": "agLargeTextCellEditor",
+            "cellEditorPopup": True,
+            "cellEditorParams": {"maxLength": 1000, "rows": 4, "cols": 30},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "lineHeight": "18px",
+                "whiteSpace": "normal",
+            },
+            "editable": True,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 220,
+            "wrapText": True,
         },
     ]
     assert grid.columnSize == "autoSize"
@@ -304,3 +315,16 @@ def test_tag_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["tags"] == ["Line2", "PP1"]
+
+
+def test_note_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "notes", "value": "Top power-play unit.", "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."

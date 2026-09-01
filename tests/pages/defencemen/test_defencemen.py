@@ -38,9 +38,10 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "Player name",
         "Health (actual GP)",
         "Average Performance",
-        "Tags",
         "p TFP 2027",
         "p AFP 2027",
+        "Tags",
+        "Notes",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
@@ -60,8 +61,11 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "suppressAutoSize": True,
         "width": 150,
     }
-    assert grid.columnDefs[5]["headerName"] == "Tags"
-    assert grid.columnDefs[5]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[7]["headerName"] == "Tags"
+    assert grid.columnDefs[7]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[8]["headerName"] == "Notes"
+    assert grid.columnDefs[8]["editable"] is True
+    assert grid.columnDefs[8]["wrapText"] is True
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

@@ -15,8 +15,9 @@ open in its own browser tab during the draft.
 
 - The page header contains only the page title and player search control.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Game Starts**, **Average Performance**, **Tags**, **p TFP `<upcoming year>`**,
-  and **p AFP `<upcoming year>`** columns, in that order. `p TFP` is the projected Total
+  name**, **Game Starts**, **Average Performance**, **p TFP `<upcoming year>`**,
+  **p AFP `<upcoming year>`**, **Tags**, and **Notes** columns, in that order.
+  `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
   both sourced from the detected upcoming draft season. Player database ids are
   retained internally for updates but are never displayed.
@@ -37,6 +38,9 @@ open in its own browser tab during the draft.
   are left-aligned. Always-visible selected tags use 11px text; the picker
   buttons use 9px text. `Starter` and `1A` use a green hue, `1B` uses a yellow
   hue, and `Backup` uses a red hue; selections persist in the workspace.
+- **Notes** is the last, resizable 220px column. Click a cell to open a
+  multi-line text editor; saved notes wrap within the cell and persist in the
+  workspace.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
   shows projected game starts and bars show actual game starts; either missing

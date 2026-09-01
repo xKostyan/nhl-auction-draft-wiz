@@ -356,6 +356,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                 p.id,
                 p.name,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
+                COALESCE(ps.notes, '') AS notes,
                 MAX(
                     CASE
                         WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP'
@@ -403,6 +404,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                     "id": int(row["id"]),
                     "name": row["name"],
                     "drafted": bool(row["drafted"]),
+                    "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
                     "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
@@ -510,6 +512,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             "actual_gp_history",
             "average_performance_history",
             "tags",
+            "notes",
         ]
         if normalized_position == "G":
             columns.append("game_starts_history")
@@ -563,6 +566,25 @@ def set_player_tags(player_id: int, tags: list[str]) -> None:
         conn.executemany(
             "INSERT INTO player_tags (player_id, tag) VALUES (?, ?)",
             [(player_id, tag) for tag in sorted(tags)],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_notes(player_id: int, notes: str) -> None:
+    """Persist a player's free-form draft preparation notes."""
+    if not isinstance(notes, str):
+        raise ValueError("Player notes must be text.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update notes: player {player_id} does not exist.")
+        conn.execute(
+            "UPDATE player_status SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE player_id = ?",
+            (notes, player_id),
         )
         conn.commit()
     finally:

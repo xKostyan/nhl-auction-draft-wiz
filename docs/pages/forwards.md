@@ -15,8 +15,9 @@ open in its own browser tab during the draft.
 
 - The page header contains only the page title and player search control.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Health (actual GP)**, **Average Performance**, **Tags**,
-  **p TFP `<upcoming year>`**, and **p AFP `<upcoming year>`** columns, in
+  name**, **Health (actual GP)**, **Average Performance**,
+  **p TFP `<upcoming year>`**, **p AFP `<upcoming year>`**, **Tags**, and
+  **Notes** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
   projected Average Fantasy Points per game, both sourced from the detected
   upcoming draft season. Player database ids are retained internally for
@@ -44,6 +45,9 @@ open in its own browser tab during the draft.
   close it. Tags are left-aligned. Always-visible selected tags use 11px text;
   the picker buttons use 9px text. `1` tags use a green hue and `2` tags use a
   yellow hue; selections persist in the workspace.
+- **Notes** is the last, resizable 220px column. Click a cell to open a
+  multi-line text editor; saved notes wrap within the cell and persist in the
+  workspace.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

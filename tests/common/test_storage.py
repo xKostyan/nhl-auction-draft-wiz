@@ -13,6 +13,7 @@ from src.storage import (
     get_workspace_summary,
     import_yearly_dataset,
     set_player_drafted,
+    set_player_notes,
     set_player_tags,
 )
 
@@ -175,6 +176,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "actual_gp_history",
         "average_performance_history",
         "tags",
+        "notes",
     ]
     assert forwards["drafted"].eq(False).all()
     assert forwards["projected_tfp"].notna().any()
@@ -182,6 +184,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     assert forwards["actual_gp_history"].map(bool).any()
     assert forwards["average_performance_history"].map(bool).all()
     assert forwards["tags"].map(lambda tags: tags == []).all()
+    assert forwards["notes"].eq("").all()
 
     player_id = int(forwards.iloc[0]["id"])
     set_player_drafted(player_id, True)
@@ -191,6 +194,10 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_tags(player_id, ["PP1", "Line2"])
     tagged_forwards = get_players_for_position_grid("F")
     assert tagged_forwards.loc[tagged_forwards["id"] == player_id, "tags"].item() == ["Line2", "PP1"]
+
+    set_player_notes(player_id, "Top-line role; monitor injury.")
+    noted_forwards = get_players_for_position_grid("F")
+    assert noted_forwards.loc[noted_forwards["id"] == player_id, "notes"].item() == "Top-line role; monitor injury."
 
     set_player_drafted(player_id, False)
     available_forwards = get_players_for_position_grid("F")

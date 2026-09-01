@@ -9,6 +9,7 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     set_player_drafted,
+    set_player_notes,
     set_player_tags,
 )
 
@@ -156,6 +157,30 @@ def _tags_column_def(position: str) -> list[dict]:
     ]
 
 
+def _notes_column_def() -> list[dict]:
+    """Return the editable wrapped player notes column."""
+    return [
+        {
+            "field": "notes",
+            "headerName": "Notes",
+            "cellEditor": "agLargeTextCellEditor",
+            "cellEditorPopup": True,
+            "cellEditorParams": {"maxLength": 1000, "rows": 4, "cols": 30},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "lineHeight": "18px",
+                "whiteSpace": "normal",
+            },
+            "editable": True,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 220,
+            "wrapText": True,
+        }
+    ]
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -201,7 +226,7 @@ def handle_player_cell_change(position: str, cell_changes: list[dict] | None) ->
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
         column_id = cell_change.get("colId")
-        if column_id not in {"drafted", "tags"}:
+        if column_id not in {"drafted", "notes", "tags"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -214,8 +239,12 @@ def handle_player_cell_change(position: str, cell_changes: list[dict] | None) ->
             value = cell_change.get("value")
         if column_id == "drafted":
             set_player_drafted(player_id, _parse_drafted_value(value))
-        else:
+        elif column_id == "tags":
             set_player_tags(player_id, _parse_player_tags(position, value))
+        elif not isinstance(value, str):
+            raise ValueError("Player note updates require text.")
+        else:
+            set_player_notes(player_id, value)
     return get_position_rows(position)
 
 
@@ -268,8 +297,9 @@ def build_position_layout(position: str):
                     *_health_column_def(position),
                     *_game_starts_column_def(position),
                     *_average_performance_column_def(position),
-                    *_tags_column_def(position),
                     *_projected_points_column_defs(),
+                    *_tags_column_def(position),
+                    *_notes_column_def(),
                 ],
                 columnSize="autoSize",
                 columnSizeOptions={"skipHeader": True},
