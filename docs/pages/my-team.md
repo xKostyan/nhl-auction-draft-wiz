@@ -26,6 +26,9 @@ membership flag is stored in the workspace and survives restarts.
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it.
+- The **Forwards**, **Defencemen**, and **Utility** headings show each table's
+  current projected TFP sum for the detected draft season. Goalies and Bench
+  do not show a total.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove

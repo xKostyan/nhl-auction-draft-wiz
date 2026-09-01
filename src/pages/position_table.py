@@ -124,6 +124,28 @@ def get_my_team_table_rows(table: str) -> list[dict]:
     return _fill_my_team_slots(table, table_rows)
 
 
+def get_my_team_projected_tfp_total(table: str) -> float:
+    """Return the projected total fantasy points for a scored My Team table."""
+    if table not in {"F", "D", "utility"}:
+        raise ValueError(f"My Team table {table!r} does not have a projected TFP total.")
+    return sum(
+        float(row["projected_tfp"])
+        for row in get_my_team_table_rows(table)
+        if not row.get("is_empty_slot") and row["projected_tfp"] is not None
+    )
+
+
+def get_my_team_table_title(table: str) -> str:
+    """Return a My Team section title, including skater projected TFP totals."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+    title = MY_TEAM_TABLES[table]["title"]
+    if table not in {"F", "D", "utility"}:
+        return title
+    year = get_workspace_value("current_season") or "upcoming"
+    return f"{title} - p TFP {year}: {get_my_team_projected_tfp_total(table):.2f}"
+
+
 def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
     """Add stable indices and visible vacancy rows to a fixed My Team table."""
     table_config = MY_TEAM_TABLES[table]

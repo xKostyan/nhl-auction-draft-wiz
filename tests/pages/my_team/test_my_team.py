@@ -7,6 +7,8 @@ from src.pages import my_team
 from src.pages.position_table import (
     MY_TEAM_SLOT_COUNTS,
     get_my_team_table_rows,
+    get_my_team_projected_tfp_total,
+    get_my_team_table_title,
     get_position_grid_rows,
     get_position_rows,
     handle_player_context_action,
@@ -68,6 +70,23 @@ def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path)
         my_team_only=True,
     )
     assert get_position_rows("G", my_team_only=True) == []
+
+
+def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+
+    handle_player_context_action(
+        "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
+    )
+
+    forward = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
+    assert get_my_team_projected_tfp_total("F") == forward["projected_tfp"]
+    assert get_my_team_table_title("F") == f"Forwards - p TFP 2027: {forward['projected_tfp']:.2f}"
+    assert get_my_team_table_title("G") == "Goalies"
+    assert get_my_team_table_title("bench") == "Bench"
 
 
 def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):
