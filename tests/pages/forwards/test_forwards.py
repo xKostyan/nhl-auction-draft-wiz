@@ -39,6 +39,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         for node in forwards.layout().children
     )
     assert grid.id == "f-player-grid"
+    assert grid.className == "table-values-large"
     assert grid.columnDefs == [
         {
             "field": "search_focus",
@@ -53,7 +54,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "field": "drafted",
             "headerName": "#",
             "cellRenderer": "draftedSwitchRenderer",
-            "cellStyle": {"paddingLeft": "2px", "paddingRight": "2px"},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "paddingLeft": "2px",
+                "paddingRight": "2px",
+            },
             "resizable": False,
             "width": 26,
         },
@@ -67,6 +73,16 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "width": 110,
         },
         {
+            "field": "average_performance_history",
+            "headerName": "Average Performance",
+            "cellRenderer": "averagePerformanceChart",
+            "cellRendererParams": {"scaleMaximum": 6},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
+        },
+        {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
             "type": "numericColumn",
@@ -76,18 +92,55 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "p AFP 2027",
             "type": "numericColumn",
         },
+        {
+            "field": "tags",
+            "headerName": "Tags",
+            "cellRenderer": "playerTagsRenderer",
+            "cellRendererParams": {
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+                "tagColors": {
+                    "PP1": "green", "PK1": "green", "Line1": "green",
+                    "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
+                    "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
+                },
+            },
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 160,
+        },
+        {
+            "field": "notes",
+            "headerName": "Notes",
+            "cellEditor": "agLargeTextCellEditor",
+            "cellEditorPopup": True,
+            "cellEditorParams": {"maxLength": 1000, "rows": 4, "cols": 30},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "fontSize": "14px",
+                "lineHeight": "18px",
+                "whiteSpace": "normal",
+            },
+            "editable": True,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 220,
+            "wrapText": True,
+        },
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.defaultColDef == {
         "autoHeaderHeight": True,
+        "cellStyle": {"alignItems": "center", "display": "flex"},
         "headerClass": "centered-column-header",
         "resizable": True,
         "sortable": True,
         "wrapHeaderText": True,
     }
     assert grid.dangerously_allow_code is True
-    assert grid.dashGridOptions["rowHeight"] == 30
+    assert grid.dashGridOptions["rowHeight"] == 60
     assert grid.dashGridOptions["rowSelection"] == {
         "mode": "singleRow",
         "checkboxes": False,
@@ -149,6 +202,22 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
     ]
 
 
+def test_forward_rows_include_average_performance_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    history = next(
+        row["average_performance_history"]
+        for row in get_position_rows("F")
+        if row["name"] == "Mikko Rantanen"
+    )
+
+    assert [season["year"] for season in history] == [2023, 2024, 2025, 2026, 2027]
+    assert history[-1]["projected"] == 4.54
+    assert history[-1]["actual"] == 0.0
+
+
 def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circle():
     renderer = (
         Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
@@ -162,9 +231,22 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#ef6c00" in renderer
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
+    assert 'boxSizing: "border-box"' in renderer
+    assert 'height: "calc(100% - 10px)"' in renderer
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
+    assert "averagePerformanceChart" in renderer
+    assert "scaleMaximum === 6" in renderer
+    assert "var scaleMaximum = props.scaleMaximum" in renderer
+    assert "playerTagsRenderer" in renderer
+    assert "#a5d6a7" in renderer
+    assert "#fff59d" in renderer
+    assert "#ef9a9a" in renderer
+    assert '}, "11px")' in renderer
+    assert "Close tag editor" in renderer
+    assert '}, "Done")' in renderer
+    assert 'justifyContent: "flex-start"' in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
@@ -221,3 +303,29 @@ def test_batch_status_edits_persist_every_forward_change(tmp_path):
 
     drafted_player_ids = {row["id"] for row in rows if row["drafted"]}
     assert set(player_ids).issubset(drafted_player_ids)
+
+
+def test_tag_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "tags", "value": ["PP1", "Line2"], "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == ["Line2", "PP1"]
+
+
+def test_note_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "notes", "value": "Top power-play unit.", "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."

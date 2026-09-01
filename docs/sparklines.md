@@ -36,3 +36,21 @@ tests for the column definition, row-data shape, and renderer registration.
 It accepts up to five historical actual-GP values and renders oldest to newest
 on a fixed 0-84 scale. Its color bands are red for 0-50 GP, orange for 51-60,
 yellow for 61-71, and green for 72-84.
+
+## Existing goalie game-starts chart
+
+`goalieGameStartsChart` implements the goalie **Game Starts** column. It
+receives every imported goalie season, with absent projected or actual values
+normalized to zero. It draws projected starts as a blue line and actual starts
+as 0-70-scale bars with a 9px value label. Actual bars are red below 30 starts,
+yellow from 30 through 42, and green above 42.
+
+## Existing average-performance chart
+
+`averagePerformanceChart` implements the **Average Performance** column on
+every position page. It uses the same projected-line/actual-bar presentation
+as the goalie game-starts chart, with absent values normalized to zero. The
+fixed range is 0-6 for skaters and 0-12 for goalies. Skater actual bars are
+red through 3.1, orange through 3.5, yellow through 3.9, and green above 3.9;
+goalie actual bars are red below 7.0, orange through 7.5, yellow through 8.0,
+and green above 8.0.

@@ -9,10 +9,30 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     set_player_drafted,
+    set_player_notes,
+    set_player_tags,
 )
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
+VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
+PLAYER_TAGS = {
+    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+    "G": ["Starter", "Backup", "1A", "1B"],
+}
+TAG_COLORS = {
+    "PP1": "green",
+    "PK1": "green",
+    "Line1": "green",
+    "PP2": "yellow",
+    "PK2": "yellow",
+    "Line2": "yellow",
+    "Starter": "green",
+    "1A": "green",
+    "1B": "yellow",
+    "Backup": "red",
+}
 
 
 def position_grid_id(position: str) -> str:
@@ -88,6 +108,80 @@ def _health_column_def(position: str) -> list[dict]:
     ]
 
 
+def _game_starts_column_def(position: str) -> list[dict]:
+    """Return the projected-line and actual-bar game-starts chart for goalies."""
+    if position != "G":
+        return []
+    return [
+        {
+            "field": "game_starts_history",
+            "headerName": "Game Starts",
+            "cellRenderer": "goalieGameStartsChart",
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
+        }
+    ]
+
+
+def _average_performance_column_def(position: str) -> list[dict]:
+    """Return projected-line and actual-bar average-performance chart settings."""
+    return [
+        {
+            "field": "average_performance_history",
+            "headerName": "Average Performance",
+            "cellRenderer": "averagePerformanceChart",
+            "cellRendererParams": {"scaleMaximum": 12 if position == "G" else 6},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
+        }
+    ]
+
+
+def _tags_column_def(position: str) -> list[dict]:
+    """Return the editable persistent player tags column."""
+    return [
+        {
+            "field": "tags",
+            "headerName": "Tags",
+            "cellRenderer": "playerTagsRenderer",
+            "cellRendererParams": {"availableTags": PLAYER_TAGS[position], "tagColors": TAG_COLORS},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 160,
+        }
+    ]
+
+
+def _notes_column_def() -> list[dict]:
+    """Return the editable wrapped player notes column."""
+    return [
+        {
+            "field": "notes",
+            "headerName": "Notes",
+            "cellEditor": "agLargeTextCellEditor",
+            "cellEditorPopup": True,
+            "cellEditorParams": {"maxLength": 1000, "rows": 4, "cols": 30},
+            "cellStyle": {
+                "alignItems": "center",
+                "display": "flex",
+                "fontSize": "14px",
+                "lineHeight": "18px",
+                "whiteSpace": "normal",
+            },
+            "editable": True,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 220,
+            "wrapText": True,
+        }
+    ]
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -110,8 +204,17 @@ def _parse_drafted_value(value: object) -> bool:
     raise ValueError("Drafted status updates require a boolean checkbox value.")
 
 
-def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
-    """Persist drafted checkbox edits and return fresh grid rows.
+def _parse_player_tags(position: str, value: object) -> list[str]:
+    """Validate a JSON-compatible tag list emitted by the grid renderer."""
+    if not isinstance(value, list) or any(not isinstance(tag, str) for tag in value):
+        raise ValueError("Player tag updates require a list of tag names.")
+    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS[position] for tag in value):
+        raise ValueError("Player tag updates require unique recognized tag names.")
+    return value
+
+
+def handle_player_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
+    """Persist drafted and tag cell edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
     even when exactly one cell was changed. Process every event because a
@@ -123,7 +226,8 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
     for cell_change in cell_changes:
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
-        if cell_change.get("colId") != "drafted":
+        column_id = cell_change.get("colId")
+        if column_id not in {"drafted", "notes", "tags"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -131,13 +235,21 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
             raise ValueError("Drafted status updates require AG Grid row data.")
 
         player_id = _parse_player_id(row_data.get("id"))
-        drafted_value = cell_change.get("newValue")
-        if drafted_value is None:
-            drafted_value = cell_change.get("value")
-        drafted = _parse_drafted_value(drafted_value)
-
-        set_player_drafted(player_id, drafted)
+        value = cell_change.get("newValue")
+        if value is None:
+            value = cell_change.get("value")
+        if column_id == "drafted":
+            set_player_drafted(player_id, _parse_drafted_value(value))
+        elif column_id == "tags":
+            set_player_tags(player_id, _parse_player_tags(position, value))
+        elif not isinstance(value, str):
+            raise ValueError("Player note updates require text.")
+        else:
+            set_player_notes(player_id, value)
     return get_position_rows(position)
+
+
+handle_drafted_cell_change = handle_player_cell_change
 
 
 def build_position_layout(position: str):
@@ -157,6 +269,7 @@ def build_position_layout(position: str):
             ),
             dag.AgGrid(
                 id=position_grid_id(position),
+                className="table-values-large",
                 rowData=get_position_rows(position),
                 getRowId="params.data.id",
                 columnDefs=[
@@ -173,26 +286,35 @@ def build_position_layout(position: str):
                         "field": "drafted",
                         "headerName": "#",
                         "cellRenderer": "draftedSwitchRenderer",
-                        "cellStyle": {"paddingLeft": "2px", "paddingRight": "2px"},
+                        "cellStyle": {
+                            **VERTICALLY_CENTERED_CELL_STYLE,
+                            "paddingLeft": "2px",
+                            "paddingRight": "2px",
+                        },
                         "resizable": False,
                         "width": 26,
                     },
                     {"field": "name", "headerName": "Player name"},
                     *_health_column_def(position),
+                    *_game_starts_column_def(position),
+                    *_average_performance_column_def(position),
                     *_projected_points_column_defs(),
+                    *_tags_column_def(position),
+                    *_notes_column_def(),
                 ],
                 columnSize="autoSize",
                 columnSizeOptions={"skipHeader": True},
                 dangerously_allow_code=True,
                 defaultColDef={
                     "autoHeaderHeight": True,
+                    "cellStyle": VERTICALLY_CENTERED_CELL_STYLE,
                     "headerClass": "centered-column-header",
                     "resizable": True,
                     "sortable": True,
                     "wrapHeaderText": True,
                 },
                 dashGridOptions={
-                    "rowHeight": 30,
+                    "rowHeight": 60,
                     "rowSelection": {
                         "mode": "singleRow",
                         "checkboxes": False,

@@ -31,24 +31,52 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         for node in layout.children
     )
     assert grid.id == "g-player-grid"
+    assert grid.className == "table-values-large"
     assert [column["headerName"] for column in grid.columnDefs] == [
         "",
         "#",
         "Player name",
+        "Game Starts",
+        "Average Performance",
         "p TFP 2027",
         "p AFP 2027",
+        "Tags",
+        "Notes",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.defaultColDef["headerClass"] == "centered-column-header"
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
+    assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert all(column["field"] != "actual_gp_history" for column in grid.columnDefs)
+    assert grid.columnDefs[3]["cellRenderer"] == "goalieGameStartsChart"
+    assert grid.columnDefs[3]["width"] == 150
+    assert grid.columnDefs[3]["resizable"] is True
+    assert grid.columnDefs[3]["suppressAutoSize"] is True
+    assert grid.columnDefs[4] == {
+        "field": "average_performance_history",
+        "headerName": "Average Performance",
+        "cellRenderer": "averagePerformanceChart",
+        "cellRendererParams": {"scaleMaximum": 12},
+        "sortable": False,
+        "resizable": True,
+        "suppressAutoSize": True,
+        "width": 150,
+    }
+    assert grid.columnDefs[7]["headerName"] == "Tags"
+    assert grid.columnDefs[7]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[7]["cellRendererParams"]["availableTags"] == ["Starter", "Backup", "1A", "1B"]
+    assert grid.columnDefs[8]["headerName"] == "Notes"
+    assert grid.columnDefs[8]["editable"] is True
+    assert grid.columnDefs[8]["wrapText"] is True
+    assert grid.columnDefs[8]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
     assert grid.columnDefs[1]["resizable"] is False
     assert grid.columnDefs[1]["width"] == 26
+    assert grid.dashGridOptions["rowHeight"] == 60
     assert grid.style["flex"] == "1 1 0"
 
 
@@ -72,6 +100,36 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_goalie(t
     )
 
 
+def test_goalie_rows_include_projected_and_actual_game_starts_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    row = next(row for row in get_position_rows("G") if row["id"] == 3634)
+
+    assert row["game_starts_history"] == [
+        {"year": 2023, "projected": 45.0, "actual": 36.0},
+        {"year": 2024, "projected": 0.0, "actual": 26.0},
+        {"year": 2025, "projected": 0.0, "actual": 20.0},
+        {"year": 2026, "projected": 0.0, "actual": 24.0},
+        {"year": 2027, "projected": 0.0, "actual": 0.0},
+    ]
+
+
+def test_goalie_rows_include_average_performance_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    row = next(row for row in get_position_rows("G") if row["id"] == 3634)
+
+    assert row["average_performance_history"][-1] == {
+        "year": 2027,
+        "projected": 0.0,
+        "actual": 0.0,
+    }
+
+
 def test_checking_a_goalie_uses_the_ag_grid_event_list(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -89,3 +147,22 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     ).read_text()
 
     assert "props.setValue(available)" in renderer
+    assert "goalieGameStartsChart" in renderer
+    assert "averagePerformanceChart" in renderer
+    assert "scaleMaximum === 6" in renderer
+    assert "var scaleMaximum = props.scaleMaximum" in renderer
+    assert "Close tag editor" in renderer
+    assert 'justifyContent: "flex-start"' in renderer
+    assert 'tagColor === "red"' in renderer
+    assert '}, "11px")' in renderer
+    assert "var scaleMaximum = 70" in renderer
+    assert 'stroke: "#1565c0"' in renderer
+    assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer
+    assert 'fontSize: "9px"' in renderer
+    assert 'bottom: "50%"' in renderer
+    assert 'transform: "translate(-50%, 50%)"' in renderer
+    assert 'width: "100%"' in renderer
+    assert 'zIndex: "2"' in renderer
+    assert 'gap: "1px"' in renderer
+    assert 'left: "10%"' in renderer
+    assert 'right: "10%"' in renderer

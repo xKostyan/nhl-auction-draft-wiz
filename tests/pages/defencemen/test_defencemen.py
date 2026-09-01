@@ -31,26 +31,48 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         for node in layout.children
     )
     assert grid.id == "d-player-grid"
+    assert grid.className == "table-values-large"
     assert [column["headerName"] for column in grid.columnDefs] == [
         "",
         "#",
         "Player name",
         "Health (actual GP)",
+        "Average Performance",
         "p TFP 2027",
         "p AFP 2027",
+        "Tags",
+        "Notes",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
     assert grid.defaultColDef["headerClass"] == "centered-column-header"
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
+    assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert grid.columnDefs[3]["cellRenderer"] == "actualGpSparkline"
     assert grid.columnDefs[3]["width"] == 110
+    assert grid.columnDefs[4] == {
+        "field": "average_performance_history",
+        "headerName": "Average Performance",
+        "cellRenderer": "averagePerformanceChart",
+        "cellRendererParams": {"scaleMaximum": 6},
+        "sortable": False,
+        "resizable": True,
+        "suppressAutoSize": True,
+        "width": 150,
+    }
+    assert grid.columnDefs[7]["headerName"] == "Tags"
+    assert grid.columnDefs[7]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[8]["headerName"] == "Notes"
+    assert grid.columnDefs[8]["editable"] is True
+    assert grid.columnDefs[8]["wrapText"] is True
+    assert grid.columnDefs[8]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
     assert grid.columnDefs[1]["resizable"] is False
     assert grid.columnDefs[1]["width"] == 26
+    assert grid.dashGridOptions["rowHeight"] == 60
     assert grid.style["flex"] == "1 1 0"
 
 
@@ -92,3 +114,7 @@ def test_drafted_switch_is_visually_on_only_for_available_players():
 
     assert "var available = !drafted" in renderer
     assert 'backgroundColor: available ? "#388e3c" : "#bdbdbd"' in renderer
+    assert 'height: "calc(100% - 10px)"' in renderer
+    assert "Close tag editor" in renderer
+    assert 'justifyContent: "flex-start"' in renderer
+    assert '}, "11px")' in renderer

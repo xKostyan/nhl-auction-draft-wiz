@@ -79,6 +79,33 @@ def ensure_schema() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS player_tags (
+                player_id INTEGER NOT NULL,
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                PRIMARY KEY (player_id, tag),
+                FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
+            )
+            """
+        )
+        existing_tag_table = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'player_tags'"
+        ).fetchone()
+        if existing_tag_table and "'Starter'" not in existing_tag_table["sql"]:
+            conn.execute("ALTER TABLE player_tags RENAME TO player_tags_legacy")
+            conn.execute(
+                """
+                CREATE TABLE player_tags (
+                    player_id INTEGER NOT NULL,
+                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                    PRIMARY KEY (player_id, tag),
+                    FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
+                )
+                """
+            )
+            conn.execute("INSERT INTO player_tags (player_id, tag) SELECT player_id, tag FROM player_tags_legacy")
+            conn.execute("DROP TABLE player_tags_legacy")
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS player_stats (
                 player_id INTEGER NOT NULL,
                 year INTEGER NOT NULL,
@@ -133,6 +160,7 @@ def clear_workspace() -> None:
     conn = db_connection()
     try:
         conn.execute("DELETE FROM player_stats")
+        conn.execute("DELETE FROM player_tags")
         conn.execute("DELETE FROM player_status")
         conn.execute("DELETE FROM players")
         conn.execute("DELETE FROM workspace_meta")
@@ -231,6 +259,7 @@ def import_yearly_dataset(
     conn = db_connection()
     try:
         conn.execute("DELETE FROM player_stats")
+        conn.execute("DELETE FROM player_tags")
         conn.execute("DELETE FROM player_status")
         conn.execute("DELETE FROM players")
 
@@ -303,13 +332,17 @@ def get_players_for_grid() -> pd.DataFrame:
 
 
 def get_players_for_position_grid(position: str) -> pd.DataFrame:
-    """Return one position's players, projected points, and actual GP history.
+    """Return one position's players, projected points, and chart histories.
 
     The player id remains in the row data so a status edit can be persisted,
     but position pages deliberately do not render it as a visible column. The
     projected total and per-game fantasy points are selected from the player's
     detected current season, rather than a hard-coded year. Skater rows also
     include the five most recent seasons with an actual games-played value.
+    Goalie rows include projected and actual game starts for every stored
+    goalie season, defaulting missing values to zero. All position rows
+    include projected and actual average fantasy points for every stored
+    season, also defaulting missing values to zero.
     """
     normalized_position = position.upper()
     if normalized_position not in {"F", "D", "G"}:
@@ -323,6 +356,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                 p.id,
                 p.name,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
+                COALESCE(ps.notes, '') AS notes,
                 MAX(
                     CASE
                         WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP'
@@ -363,27 +397,128 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                     {"year": int(row["year"]), "games_played": float(row["stat_value"])}
                 )
 
-        data = [
-            {
-                "id": int(row["id"]),
-                "name": row["name"],
-                "drafted": bool(row["drafted"]),
-                "projected_tfp": row["projected_tfp"],
-                "projected_afp": row["projected_afp"],
-                "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
+        data = []
+        for row in rows:
+            data.append(
+                {
+                    "id": int(row["id"]),
+                    "name": row["name"],
+                    "drafted": bool(row["drafted"]),
+                    "notes": row["notes"],
+                    "projected_tfp": row["projected_tfp"],
+                    "projected_afp": row["projected_afp"],
+                    "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
+                }
+            )
+
+        if normalized_position == "G":
+            year_rows = conn.execute(
+                """
+                SELECT DISTINCT year
+                FROM player_stats
+                WHERE position = ?
+                UNION
+                SELECT DISTINCT current_season AS year
+                FROM players
+                WHERE position = ?
+                ORDER BY year ASC
+                """,
+                (normalized_position, normalized_position),
+            ).fetchall()
+            game_start_years = [int(row["year"]) for row in year_rows]
+            game_start_rows = conn.execute(
+                """
+                SELECT player_id, year, stats_type, stat_value
+                FROM player_stats
+                WHERE position = ? AND stat_name = 'GS'
+                ORDER BY player_id ASC, year ASC
+                """,
+                (normalized_position,),
+            ).fetchall()
+            game_starts_by_player = {
+                row["id"]: {
+                    year: {"year": year, "projected": 0.0, "actual": 0.0}
+                    for year in game_start_years
+                }
+                for row in data
             }
-            for row in rows
+            for row in game_start_rows:
+                player_history = game_starts_by_player.get(int(row["player_id"]))
+                if player_history is not None:
+                    player_history[int(row["year"])][row["stats_type"]] = float(row["stat_value"])
+
+            for row in data:
+                row["game_starts_history"] = list(game_starts_by_player[row["id"]].values())
+
+        year_rows = conn.execute(
+            """
+            SELECT DISTINCT year
+            FROM player_stats
+            WHERE position = ?
+            UNION
+            SELECT DISTINCT current_season AS year
+            FROM players
+            WHERE position = ?
+            ORDER BY year ASC
+            """,
+            (normalized_position, normalized_position),
+        ).fetchall()
+        average_performance_years = [int(row["year"]) for row in year_rows]
+        average_performance_rows = conn.execute(
+            """
+            SELECT player_id, year, stats_type, stat_value
+            FROM player_stats
+            WHERE position = ? AND stat_name = 'FP_AVG'
+            ORDER BY player_id ASC, year ASC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        average_performance_by_player = {
+            row["id"]: {
+                year: {"year": year, "projected": 0.0, "actual": 0.0}
+                for year in average_performance_years
+            }
+            for row in data
+        }
+        for row in average_performance_rows:
+            player_history = average_performance_by_player.get(int(row["player_id"]))
+            if player_history is not None:
+                player_history[int(row["year"])][row["stats_type"]] = float(row["stat_value"])
+
+        for row in data:
+            row["average_performance_history"] = list(average_performance_by_player[row["id"]].values())
+
+        tag_rows = conn.execute(
+            """
+            SELECT player_id, tag
+            FROM player_tags
+            WHERE player_id IN (SELECT id FROM players WHERE position = ?)
+            ORDER BY player_id ASC, tag ASC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        tags_by_player: dict[int, list[str]] = {}
+        for row in tag_rows:
+            tags_by_player.setdefault(int(row["player_id"]), []).append(str(row["tag"]))
+        for row in data:
+            row["tags"] = tags_by_player.get(row["id"], [])
+
+        columns = [
+            "id",
+            "name",
+            "drafted",
+            "projected_tfp",
+            "projected_afp",
+            "actual_gp_history",
+            "average_performance_history",
+            "tags",
+            "notes",
         ]
+        if normalized_position == "G":
+            columns.append("game_starts_history")
         return pd.DataFrame(
             data,
-            columns=[
-                "id",
-                "name",
-                "drafted",
-                "projected_tfp",
-                "projected_afp",
-                "actual_gp_history",
-            ],
+            columns=columns,
         )
     finally:
         conn.close()
@@ -408,6 +543,48 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
                 updated_at = CURRENT_TIMESTAMP
             """,
             (player_id, status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_tags(player_id: int, tags: list[str]) -> None:
+    """Replace a player's persistent set of recognized draft-planning tags."""
+    allowed_tags = {"PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "Starter", "Backup", "1A", "1B"}
+    if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+        raise ValueError("Player tags must be a list of tag names.")
+    if len(tags) != len(set(tags)) or any(tag not in allowed_tags for tag in tags):
+        raise ValueError("Player tags must be unique recognized tag names.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update tags: player {player_id} does not exist.")
+        conn.execute("DELETE FROM player_tags WHERE player_id = ?", (player_id,))
+        conn.executemany(
+            "INSERT INTO player_tags (player_id, tag) VALUES (?, ?)",
+            [(player_id, tag) for tag in sorted(tags)],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_notes(player_id: int, notes: str) -> None:
+    """Persist a player's free-form draft preparation notes."""
+    if not isinstance(notes, str):
+        raise ValueError("Player notes must be text.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update notes: player {player_id} does not exist.")
+        conn.execute(
+            "UPDATE player_status SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE player_id = ?",
+            (notes, player_id),
         )
         conn.commit()
     finally:
