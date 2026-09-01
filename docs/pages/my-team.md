@@ -16,7 +16,7 @@ the workspace and survives restarts.
 ## UI and behavior
 
 - The page has one fixed-size table per position: 9 forward slots, 5
-  defencemen slots, and 4 goalie slots. Every slot has an unlabeled numeric
+  defencemen slots, and 2 goalie slots. Every slot has an unlabeled numeric
   index; vacant slots are visibly styled and labeled **Empty slot**.
 - My Team rows are 40px high. Tables retain the same player data, inline
   charts, Tags, and Notes as their matching position page.

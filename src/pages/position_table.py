@@ -34,7 +34,7 @@ TAG_COLORS = {
     "1B": "yellow",
     "Backup": "red",
 }
-MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 4}
+MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 2}
 
 
 def position_grid_id(position: str) -> str:

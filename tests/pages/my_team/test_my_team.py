@@ -30,9 +30,9 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         "my-team-f-player-grid", "my-team-d-player-grid", "my-team-g-player-grid"
     ]
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
-    assert [len(grid.rowData) for grid in grids] == [9, 5, 4]
+    assert [len(grid.rowData) for grid in grids] == [9, 5, 2]
     assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [40, 40, 40]
-    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "210px"]
+    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "130px"]
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
