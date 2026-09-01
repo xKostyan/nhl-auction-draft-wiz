@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import dash_ag_grid as dag
 from dash import dcc, html
 
@@ -128,11 +130,15 @@ def get_my_team_projected_tfp_total(table: str) -> float:
     """Return the projected total fantasy points for a scored My Team table."""
     if table not in {"F", "D", "utility"}:
         raise ValueError(f"My Team table {table!r} does not have a projected TFP total.")
-    return sum(
-        float(row["projected_tfp"])
-        for row in get_my_team_table_rows(table)
-        if not row.get("is_empty_slot") and row["projected_tfp"] is not None
-    )
+    total = 0.0
+    for row in get_my_team_table_rows(table):
+        value = row.get("projected_tfp")
+        if row.get("is_empty_slot") or value is None:
+            continue
+        numeric_value = float(value)
+        if math.isfinite(numeric_value):
+            total += numeric_value
+    return total
 
 
 def get_my_team_table_title(table: str) -> str:

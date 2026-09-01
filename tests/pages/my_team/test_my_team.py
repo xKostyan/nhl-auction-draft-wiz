@@ -1,6 +1,7 @@
 """Tests for the My Team page."""
 
 import dash_ag_grid as dag
+import src.pages.position_table as position_table
 
 from src.data_loader import load_players
 from src.pages import my_team
@@ -87,6 +88,21 @@ def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
     assert get_my_team_table_title("F") == f"Forwards - p TFP 2027: {forward['projected_tfp']:.2f}"
     assert get_my_team_table_title("G") == "Goalies"
     assert get_my_team_table_title("bench") == "Bench"
+
+
+def test_projected_tfp_total_treats_missing_values_as_zero(monkeypatch):
+    monkeypatch.setattr(
+        position_table,
+        "get_my_team_table_rows",
+        lambda _table: [
+            {"projected_tfp": 100.0},
+            {"projected_tfp": float("nan")},
+            {"projected_tfp": None},
+            {"is_empty_slot": True, "projected_tfp": None},
+        ],
+    )
+
+    assert get_my_team_projected_tfp_total("F") == 100.0
 
 
 def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):
