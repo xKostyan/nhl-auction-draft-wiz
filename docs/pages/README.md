@@ -10,7 +10,7 @@ the relevant file in this directory whenever a page's behavior changes.
 | 2 | Forwards | `/forwards` | [forwards.md](forwards.md) |
 | 3 | Defencemen | `/defencemen` | [defencemen.md](defencemen.md) |
 | 4 | Goalies | `/goalies` | [goalies.md](goalies.md) |
-| 5 | Data table 1 | `/data-table-1` | [data-table-1.md](data-table-1.md) |
+| 5 | My Team | `/my-team` | [my-team.md](my-team.md) |
 
 See the root [README.md](../../README.md) for setup/run instructions, and
 [AGENTS.md](../../AGENTS.md) for the AI-agent rules that govern how these

@@ -14,13 +14,16 @@ open in its own browser tab during the draft.
 ## UI and behavior
 
 - The page header contains only the page title and player search control.
+- The table header and menu entry use the goalie purple `#cc33ff`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Game Starts**, **Average Performance**, **p TFP `<upcoming year>`**,
+  name**, **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
   **p AFP `<upcoming year>`**, **Tags**, and **Notes** columns, in that order.
   `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
   both sourced from the detected upcoming draft season. Player database ids are
   retained internally for updates but are never displayed.
+- **p GS** shows the player's projected game starts for the detected upcoming
+  draft season.
 - Columns auto-size from their cell contents; header text does not determine
   their default width. All column headers are centered, wrap to multiple lines,
   and grow the header row as needed; cell values do not wrap. Cell values,
@@ -56,9 +59,9 @@ open in its own browser tab during the draft.
 - A searchable typeahead above the table suggests only goalies as you type.
   Selecting a suggestion (or confirming an exact full name) selects and
   centers that player in the table.
-- The 20px **highlight** circle is light gray by default and green for the
-  selected player. It is updated by player search and can be clicked to select
-  a player.
+- The 20px **highlight** circle is light gray by default, light blue for an
+  unselected player on **My Team**, and green for the selected player. It is
+  updated by player search and can be clicked to select a player.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
@@ -66,6 +69,17 @@ open in its own browser tab during the draft.
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row
   background.
+- Right-click a **Player name** for a custom menu. **Clear Tags** and **Clear
+  Notes** remove those persisted values. **Add to My Team** persistently adds
+  the player to the My Team roster (and marks them drafted), while **Remove
+  from My Team** only removes that roster membership. The menu is displayed
+  above the grid and closes when you left-click outside it; the table reloads
+  immediately after an action without affecting later Tags or Notes edits.
+  The highlight circle changes to light blue immediately when membership is
+  added, and back to gray when it is removed.
+- **Add to My Team** is disabled with an explanatory tooltip when the player
+  cannot fit within the fixed roster and Bench composition limits. A stale add
+  attempt displays the same reason above the table.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,
   so drafted state survives app restarts.
 

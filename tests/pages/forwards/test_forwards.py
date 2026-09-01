@@ -11,6 +11,8 @@ from src.pages.position_table import (
     get_player_search_target,
     get_position_rows,
     handle_drafted_cell_change,
+    handle_player_context_action,
+    handle_player_grid_update,
 )
 from src.storage import (
     clear_workspace,
@@ -39,7 +41,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         for node in forwards.layout().children
     )
     assert grid.id == "f-player-grid"
-    assert grid.className == "table-values-large"
+    assert grid.className == "table-values-large position-f"
     assert grid.columnDefs == [
         {
             "field": "search_focus",
@@ -63,7 +65,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "resizable": False,
             "width": 26,
         },
-        {"field": "name", "headerName": "Player name"},
+        {
+            "field": "name",
+            "headerName": "Player name",
+            "cellRenderer": "playerNameContextMenuRenderer",
+            "cellRendererParams": {"allowAddToMyTeam": True},
+        },
         {
             "field": "actual_gp_history",
             "headerName": "Health (actual GP)",
@@ -236,10 +243,20 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
+    assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
     assert "averagePerformanceChart" in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
+    assert "playerNameContextMenuRenderer" in renderer
+    assert "props.node.setData(Object.assign({}, props.data" in renderer
+    assert 'on_my_team: action === "add-to-my-team"' in renderer
+    assert "props.setData({ action: action, timestamp: Date.now() })" in renderer
+    assert "ReactDOM.createPortal" in renderer
+    assert 'position: "fixed"' in renderer
+    assert 'zIndex: "10000"' in renderer
+    assert 'document.addEventListener("mousedown", closeOnOutsideLeftClick)' in renderer
+    assert "event.button === 0" in renderer
     assert "#a5d6a7" in renderer
     assert "#fff59d" in renderer
     assert "#ef9a9a" in renderer
@@ -249,7 +266,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'justifyContent: "flex-start"' in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
-    assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
+    assert 'backgroundColor: selected ? "#388e3c" : onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
 
 
 def test_checking_a_forward_marks_it_drafted_and_keeps_it_in_the_grid(tmp_path):
@@ -329,3 +346,61 @@ def test_note_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."
+
+
+def test_player_context_actions_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    handle_drafted_cell_change("F", [
+        {"colId": "tags", "value": ["PP1"], "data": {"id": player_id}},
+        {"colId": "notes", "value": "Keep", "data": {"id": player_id}},
+    ])
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-tags"}})
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-notes"}})
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+
+    player = next(row for row in get_position_rows("F") if row["id"] == player_id)
+    assert player["tags"] == []
+    assert player["notes"] == ""
+    assert player["drafted"] is True
+
+
+def test_cell_edit_is_not_blocked_by_a_previous_context_action(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+
+    rows = handle_player_grid_update(
+        "F",
+        [{"colId": "tags", "value": ["PP1"], "data": {"id": player_id}}],
+        {"rowId": player_id, "value": {"action": "clear-tags"}},
+        "cellValueChanged",
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == ["PP1"]
+
+
+def test_context_event_is_dispatched_without_reapplying_on_later_cell_edits(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+
+    handle_player_grid_update(
+        "F",
+        None,
+        {"rowId": player_id, "value": {"action": "clear-notes"}},
+        "cellRendererData",
+    )
+    rows = handle_player_grid_update(
+        "F",
+        [{"colId": "notes", "value": "New note", "data": {"id": player_id}}],
+        {"rowId": player_id, "value": {"action": "clear-notes"}},
+        "cellValueChanged",
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["notes"] == "New note"

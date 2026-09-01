@@ -16,6 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB_PATH = ROOT / ".workspace" / "draft_workspace.sqlite3"
 
 _DB_PATH = DEFAULT_DB_PATH
+MY_TEAM_PRIMARY_SLOTS = {"F": 9, "D": 5, "G": 2}
+MY_TEAM_UTILITY_SLOTS = 2
+MY_TEAM_BENCH_SKATER_SLOTS = 3
+MY_TEAM_BENCH_GOALIE_SLOTS = 2
+MY_TEAM_BENCH_TOTAL_SLOTS = 4
+
+
+class MyTeamCapacityError(ValueError):
+    """Raised when an added player cannot fit within the configured roster."""
 
 
 def configure_storage(path: str | Path | None = None) -> Path:
@@ -61,11 +70,20 @@ def ensure_schema() -> None:
                 name TEXT NOT NULL,
                 position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
                 selected INTEGER NOT NULL DEFAULT 0,
+                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
                 current_season INTEGER NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+        player_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(players)").fetchall()
+        }
+        if "on_my_team" not in player_columns:
+            conn.execute(
+                "ALTER TABLE players ADD COLUMN on_my_team INTEGER NOT NULL DEFAULT 0 "
+                "CHECK(on_my_team IN (0, 1))"
+            )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_status (
@@ -331,7 +349,7 @@ def get_players_for_grid() -> pd.DataFrame:
         conn.close()
 
 
-def get_players_for_position_grid(position: str) -> pd.DataFrame:
+def get_players_for_position_grid(position: str, *, my_team_only: bool = False) -> pd.DataFrame:
     """Return one position's players, projected points, and chart histories.
 
     The player id remains in the row data so a status edit can be persisted,
@@ -350,11 +368,14 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
 
     conn = db_connection()
     try:
+        add_error = _my_team_add_error(conn, normalized_position)
         rows = conn.execute(
             """
             SELECT
                 p.id,
                 p.name,
+                p.position,
+                p.on_my_team,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
                 COALESCE(ps.notes, '') AS notes,
                 MAX(
@@ -368,16 +389,22 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                         WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP_AVG'
                         THEN stats.stat_value
                     END
-                ) AS projected_afp
+                ) AS projected_afp,
+                MAX(
+                    CASE
+                        WHEN stats.stats_type = 'projected' AND stats.stat_name = 'GS'
+                        THEN stats.stat_value
+                    END
+                ) AS projected_gs
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
-            WHERE p.position = ?
-            GROUP BY p.id, p.name, ps.status
+            WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
+            GROUP BY p.id, p.name, p.position, p.on_my_team, ps.status
             ORDER BY p.name ASC
             """,
-            (normalized_position,),
+            (normalized_position, int(my_team_only)),
         ).fetchall()
         gp_rows = conn.execute(
             """
@@ -403,10 +430,16 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
                 {
                     "id": int(row["id"]),
                     "name": row["name"],
+                    "position": row["position"],
+                    "on_my_team": bool(row["on_my_team"]),
+                    "my_team_add_error": "Player is already on My Team."
+                    if row["on_my_team"]
+                    else add_error,
                     "drafted": bool(row["drafted"]),
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
+                    "projected_gs": row["projected_gs"] if normalized_position == "G" else None,
                     "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
                 }
             )
@@ -492,10 +525,12 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             """
             SELECT player_id, tag
             FROM player_tags
-            WHERE player_id IN (SELECT id FROM players WHERE position = ?)
+            WHERE player_id IN (
+                SELECT id FROM players WHERE position = ? AND (? = 0 OR on_my_team = 1)
+            )
             ORDER BY player_id ASC, tag ASC
             """,
-            (normalized_position,),
+            (normalized_position, int(my_team_only)),
         ).fetchall()
         tags_by_player: dict[int, list[str]] = {}
         for row in tag_rows:
@@ -506,6 +541,9 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
         columns = [
             "id",
             "name",
+            "position",
+            "on_my_team",
+            "my_team_add_error",
             "drafted",
             "projected_tfp",
             "projected_afp",
@@ -515,6 +553,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             "notes",
         ]
         if normalized_position == "G":
+            columns.append("projected_gs")
             columns.append("game_starts_history")
         return pd.DataFrame(
             data,
@@ -547,6 +586,66 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
+    """Persist whether a player belongs to the user's drafted team.
+
+    Adding a player to My Team also marks them drafted: the My Team view is a
+    subset of the live-auction roster whose members are necessarily drafted.
+    Removing them leaves their draft status unchanged.
+    """
+    if not isinstance(on_my_team, bool):
+        raise ValueError("My Team updates require a boolean value.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id, position, on_my_team FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update My Team: player {player_id} does not exist.")
+
+        if on_my_team and not player["on_my_team"]:
+            add_error = _my_team_add_error(conn, str(player["position"]))
+            if add_error:
+                raise MyTeamCapacityError(add_error)
+
+        conn.execute("UPDATE players SET on_my_team = ? WHERE id = ?", (int(on_my_team), player_id))
+        if on_my_team:
+            conn.execute("UPDATE players SET selected = 1 WHERE id = ?", (player_id,))
+            conn.execute(
+                """
+                INSERT INTO player_status (player_id, status, notes)
+                VALUES (?, 'drafted', '')
+                ON CONFLICT(player_id) DO UPDATE SET
+                    status = 'drafted',
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (player_id,),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _my_team_add_error(conn: sqlite3.Connection, position: str) -> str | None:
+    """Return why a position cannot be added to the fixed automatic roster."""
+    rows = conn.execute(
+        "SELECT position, COUNT(*) AS count FROM players WHERE on_my_team = 1 GROUP BY position"
+    ).fetchall()
+    counts = {str(row["position"]): int(row["count"]) for row in rows}
+    counts[position] = counts.get(position, 0) + 1
+    skater_overflow = max(0, counts.get("F", 0) - MY_TEAM_PRIMARY_SLOTS["F"]) + max(
+        0, counts.get("D", 0) - MY_TEAM_PRIMARY_SLOTS["D"]
+    )
+    bench_skaters = max(0, skater_overflow - MY_TEAM_UTILITY_SLOTS)
+    bench_goalies = max(0, counts.get("G", 0) - MY_TEAM_PRIMARY_SLOTS["G"])
+    if bench_goalies > MY_TEAM_BENCH_GOALIE_SLOTS:
+        return "My Team has reached its maximum of 2 bench goalies."
+    if bench_skaters > MY_TEAM_BENCH_SKATER_SLOTS:
+        return "My Team has reached its maximum of 3 bench skaters."
+    if bench_skaters + bench_goalies > MY_TEAM_BENCH_TOTAL_SLOTS:
+        return "My Team Bench has reached its maximum of 4 players."
+    return None
 
 
 def set_player_tags(player_id: int, tags: list[str]) -> None:

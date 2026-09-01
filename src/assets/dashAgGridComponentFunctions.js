@@ -2,6 +2,9 @@ var dagcomponentfuncs = window.dashAgGridComponentFunctions =
     window.dashAgGridComponentFunctions || {};
 
 dagcomponentfuncs.actualGpSparkline = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var bars = history.slice().reverse().map(function (season) {
         var gamesPlayed = Math.max(0, Math.min(84, Number(season.games_played) || 0));
@@ -36,6 +39,9 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
 };
 
 dagcomponentfuncs.goalieGameStartsChart = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var scaleMaximum = 70;
     var pointCount = history.length;
@@ -133,6 +139,9 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
 };
 
 dagcomponentfuncs.averagePerformanceChart = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var scaleMaximum = props.scaleMaximum;
     var pointCount = history.length;
@@ -206,6 +215,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
     var selectedTags = Array.isArray(props.value) ? props.value : [];
     var availableTags = Array.isArray(props.availableTags) ? props.availableTags : [];
     var tagColors = props.tagColors || {};
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
     var editingState = React.useState(false);
     var editing = editingState[0];
     var setEditing = editingState[1];
@@ -235,6 +245,10 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             type: "button"
         }, tag);
     };
+
+    if (isEmptySlot) {
+        return null;
+    }
 
     return React.createElement("div", {
         onClick: function (event) {
@@ -306,6 +320,109 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             }, "+"));
 };
 
+dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
+    var menuState = React.useState(false);
+    var menuOpen = menuState[0];
+    var setMenuOpen = menuState[1];
+    var menuPositionState = React.useState({ left: 0, top: 0 });
+    var menuPosition = menuPositionState[0];
+    var setMenuPosition = menuPositionState[1];
+    var menuRef = React.useRef(null);
+    var allowAddToMyTeam = Boolean(props.allowAddToMyTeam);
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
+    var addToMyTeamError = props.data && props.data.my_team_add_error;
+
+    React.useEffect(function () {
+        if (!menuOpen) {
+            return undefined;
+        }
+
+        var closeOnOutsideLeftClick = function (event) {
+            if (event.button === 0 && menuRef.current && !menuRef.current.contains(event.target)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", closeOnOutsideLeftClick);
+        return function () {
+            document.removeEventListener("mousedown", closeOnOutsideLeftClick);
+        };
+    }, [menuOpen]);
+
+    var runAction = function (action, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (action === "add-to-my-team" || action === "remove-from-my-team") {
+            props.node.setData(Object.assign({}, props.data, {
+                on_my_team: action === "add-to-my-team"
+            }));
+        }
+        // setData emits Dash AG Grid's cellRendererData prop with this row's id.
+        props.setData({ action: action, timestamp: Date.now() });
+        setMenuOpen(false);
+    };
+    var menuAction = function (label, action, disabled, title) {
+        return React.createElement("button", {
+            disabled: Boolean(disabled),
+            key: action,
+            onClick: function (event) { runAction(action, event); },
+            style: {
+                backgroundColor: disabled ? "#f2f2f2" : "#fff",
+                border: "none",
+                color: disabled ? "#888" : "#222",
+                cursor: disabled ? "not-allowed" : "pointer",
+                display: "block",
+                padding: "6px 10px",
+                textAlign: "left",
+                width: "100%"
+            },
+            title: title || label,
+            type: "button"
+        }, label);
+    };
+
+    return React.createElement("div", {
+        onContextMenu: function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (isEmptySlot) {
+                return;
+            }
+            setMenuPosition({ left: event.clientX, top: event.clientY });
+            setMenuOpen(true);
+        },
+        style: { position: "relative", width: "100%" }
+    }, [
+        React.createElement("span", { key: "name" }, props.value),
+        !isEmptySlot && menuOpen ? ReactDOM.createPortal(React.createElement("div", {
+            key: "menu",
+            ref: menuRef,
+            role: "menu",
+            onContextMenu: function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            },
+            style: {
+                backgroundColor: "#fff",
+                border: "1px solid #999",
+                borderRadius: "4px",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+                left: menuPosition.left + "px",
+                minWidth: "155px",
+                position: "fixed",
+                top: menuPosition.top + "px",
+                zIndex: "10000"
+            }
+        }, [
+            menuAction("Clear Tags", "clear-tags"),
+            menuAction("Clear Notes", "clear-notes"),
+            allowAddToMyTeam ? menuAction(
+                "Add to My Team", "add-to-my-team", Boolean(addToMyTeamError), addToMyTeamError
+            ) : null,
+            menuAction("Remove from My Team", "remove-from-my-team")
+        ]), document.body) : null
+    ]);
+};
+
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
     var drafted = Boolean(props.value);
     var available = !drafted;
@@ -358,15 +475,22 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
         };
     }, [props.node]);
 
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
+
+    var onMyTeam = Boolean(props.data && props.data.on_my_team);
     return React.createElement("button", {
-        "aria-label": selected ? "Player highlighted" : "Highlight player",
+        "aria-label": selected
+            ? "Player highlighted"
+            : onMyTeam ? "Player is on My Team" : "Highlight player",
         "aria-pressed": selected,
         onClick: function (event) {
             event.stopPropagation();
             props.node.setSelected(!selected, true);
         },
         style: {
-            backgroundColor: selected ? "#388e3c" : "#d3d3d3",
+            backgroundColor: selected ? "#388e3c" : onMyTeam ? "#90caf9" : "#d3d3d3",
             border: "none",
             borderRadius: "50%",
             cursor: "pointer",
@@ -374,7 +498,7 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
             padding: "0",
             width: "14px"
         },
-        title: selected ? "Highlighted player" : "Highlight player",
+        title: selected ? "Highlighted player" : onMyTeam ? "On My Team" : "Highlight player",
         type: "button"
     });
 };

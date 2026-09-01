@@ -9,7 +9,7 @@ This repo is a Python dashboard project for NHL auction draft planning. The stac
 - Plotly
 - pandas
 
-The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering five pages — **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - Data table 1** (`/data-table-1`, placeholder). The position pages currently provide only player name and drafted-status checkbox tables; no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
+The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering five pages — **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - My Team** (`/my-team`). My Team shows the persisted roster subset in three tables; no ranking/analysis logic or Plotly charts exist yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
 
 ## Required project setup
 
@@ -37,7 +37,7 @@ This repo is intended to be developed with a single AI coding agent. The environ
   `python -m pytest tests/common`
 - Run tests for one page only:
   `python -m pytest tests/pages/import_data`
-  `python -m pytest tests/pages/data_table_1`
+  `python -m pytest tests/pages/my_team`
 - Run one test file:
   `python -m pytest tests/common/test_data_loader.py`
 - Run one test by name:
@@ -70,12 +70,12 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
    - `src/dashboard.py`
    - builds `Dash(use_pages=True, pages_folder="")`, then imports page modules (order matters: `register_page()` requires the app to exist first)
    - mounts `src/components/menu.py`'s persistent dropdown menu (auto-derived from `dash.page_registry`, ordered by `order` — never hand-edit the menu when adding a page) plus `dash.page_container`
-   - `_landing_page_path()` redirects `/` to `/forwards` if the workspace has imported players, else to `/import-data`
+   - `_landing_page_path()` redirects `/` to `/my-team` if the workspace has imported players, else to `/import-data`
 
 5. Pages (one module + one doc file + one test dir each — see table below)
    - `src/pages/import_data.py` → exposes: 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; import/clear branching lives in the testable `handle_workspace_action` helper
    - `src/pages/forwards.py`, `src/pages/defencemen.py`, `src/pages/goalies.py` → dedicated live-auction tables with player names and drafted-status checkboxes; shared layout/persistence helpers live in `src/pages/position_table.py`
-   - `src/pages/data_table_1.py` → placeholder page, no functionality yet (future historical/analysis feature — refer to this page by name in future feature requests)
+   - `src/pages/my_team.py` → persisted roster subset in separate forwards, defencemen, and goalies tables
    - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
    - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist — do not add it until analysis is explicitly requested)
 
@@ -91,7 +91,7 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 | 2 | Forwards | `/forwards` | `src/pages/forwards.py` | `docs/pages/forwards.md` | `tests/pages/forwards/` |
 | 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | `docs/pages/defencemen.md` | `tests/pages/defencemen/` |
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` |
-| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` |
+| 5 | My Team | `/my-team` | `src/pages/my_team.py` | `docs/pages/my-team.md` | `tests/pages/my_team/` |
 
 Non-page-specific tests (data loading, storage, app shell/menu/routing) live in `tests/common/`. Whenever you implement or change a page, update its row's doc file and test directory in the same change — see `AGENTS.md` for the full rule.
 

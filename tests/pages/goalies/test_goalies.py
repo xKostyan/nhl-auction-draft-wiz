@@ -31,13 +31,16 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         for node in layout.children
     )
     assert grid.id == "g-player-grid"
-    assert grid.className == "table-values-large"
+    assert grid.className == "table-values-large position-g"
+    assert grid.columnDefs[2]["cellRenderer"] == "playerNameContextMenuRenderer"
+    assert grid.columnDefs[2]["cellRendererParams"] == {"allowAddToMyTeam": True}
     assert [column["headerName"] for column in grid.columnDefs] == [
         "",
         "#",
         "Player name",
         "Game Starts",
         "Average Performance",
+        "p GS",
         "p TFP 2027",
         "p AFP 2027",
         "Tags",
@@ -64,13 +67,14 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "suppressAutoSize": True,
         "width": 150,
     }
-    assert grid.columnDefs[7]["headerName"] == "Tags"
-    assert grid.columnDefs[7]["cellRenderer"] == "playerTagsRenderer"
-    assert grid.columnDefs[7]["cellRendererParams"]["availableTags"] == ["Starter", "Backup", "1A", "1B"]
-    assert grid.columnDefs[8]["headerName"] == "Notes"
-    assert grid.columnDefs[8]["editable"] is True
-    assert grid.columnDefs[8]["wrapText"] is True
-    assert grid.columnDefs[8]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[5] == {"field": "projected_gs", "headerName": "p GS", "type": "numericColumn"}
+    assert grid.columnDefs[8]["headerName"] == "Tags"
+    assert grid.columnDefs[8]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[8]["cellRendererParams"]["availableTags"] == ["Starter", "Backup", "1A", "1B"]
+    assert grid.columnDefs[9]["headerName"] == "Notes"
+    assert grid.columnDefs[9]["editable"] is True
+    assert grid.columnDefs[9]["wrapText"] is True
+    assert grid.columnDefs[9]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

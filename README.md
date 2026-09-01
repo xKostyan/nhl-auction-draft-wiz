@@ -2,7 +2,7 @@
 
 A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft and auction decisions using CSV-based player and stat data.
 
-**Current implementation stage:** the app has a persistent top menu with five pages: **Import data**, dedicated **Forwards**, **Defencemen**, and **Goalies** live-auction tables, plus **Data table 1** (placeholder for the future data-analysis feature). The position tables currently show player names and durable drafted-status checkboxes only. There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
+**Current implementation stage:** the app has a persistent top menu with five pages: **Import data**, dedicated **Forwards**, **Defencemen**, and **Goalies** live-auction tables, plus **My Team**. My Team shows the persisted subset of players added to the user's roster. There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
 
 ## Stack
 
@@ -65,10 +65,10 @@ Each corresponds to one page module and one documentation page:
 | 2 | Forwards | `/forwards` | `src/pages/forwards.py` | [docs/pages/forwards.md](docs/pages/forwards.md) |
 | 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | [docs/pages/defencemen.md](docs/pages/defencemen.md) |
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | [docs/pages/goalies.md](docs/pages/goalies.md) |
-| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | [docs/pages/data-table-1.md](docs/pages/data-table-1.md) |
+| 5 | My Team | `/my-team` | `src/pages/my_team.py` | [docs/pages/my-team.md](docs/pages/my-team.md) |
 
 Landing page (`/`) behavior: if the workspace already has imported players,
-it redirects to **Forwards**; otherwise it redirects to **Import data**
+it redirects to **My Team**; otherwise it redirects to **Import data**
 so you're prompted to import a season first.
 
 ## Stop the app
@@ -107,7 +107,7 @@ app-shell/menu/routing behavior) and one directory per page under
 ```bash
 python -m pytest tests/common               # shared/common tests only
 python -m pytest tests/pages/import_data     # Import data page only
-python -m pytest tests/pages/data_table_1    # Data table 1 page only
+python -m pytest tests/pages/my_team         # My Team page only
 ```
 
 ## Project structure

@@ -25,6 +25,17 @@ body,
     min-height: 0;
 }
 
+.my-team-page {
+    overflow-y: auto;
+    width: 100%;
+}
+
+.my-team-position {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
 .position-page {
     width: 100%;
 }
@@ -41,4 +52,23 @@ body,
 
 .table-values-large .ag-cell {
     font-size: 16px;
+}
+
+.position-f .ag-header,
+.my-team-table-F .ag-header {
+    background-color: #ff8533;
+}
+
+.position-d .ag-header,
+.my-team-table-D .ag-header {
+    background-color: #5cd65c;
+}
+
+.position-g .ag-header,
+.my-team-table-G .ag-header {
+    background-color: #cc33ff;
+}
+
+.my-team-table-utility .ag-header {
+    background-color: #33adff;
 }
