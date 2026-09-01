@@ -70,6 +70,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[8]["headerName"] == "Notes"
     assert grid.columnDefs[8]["editable"] is True
     assert grid.columnDefs[8]["wrapText"] is True
+    assert grid.columnDefs[8]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

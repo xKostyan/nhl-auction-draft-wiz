@@ -118,6 +118,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "cellStyle": {
                 "alignItems": "center",
                 "display": "flex",
+                "fontSize": "14px",
                 "lineHeight": "18px",
                 "whiteSpace": "normal",
             },

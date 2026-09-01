@@ -40,7 +40,7 @@ open in its own browser tab during the draft.
   hue, and `Backup` uses a red hue; selections persist in the workspace.
 - **Notes** is the last, resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
-  workspace.
+  workspace. Visible note text is 14px.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
   shows projected game starts and bars show actual game starts; either missing

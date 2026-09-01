@@ -169,6 +169,7 @@ def _notes_column_def() -> list[dict]:
             "cellStyle": {
                 "alignItems": "center",
                 "display": "flex",
+                "fontSize": "14px",
                 "lineHeight": "18px",
                 "whiteSpace": "normal",
             },
