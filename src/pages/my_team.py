@@ -22,6 +22,12 @@ TABLES = ("F", "D", "utility", "G", "bench")
 CHART_ID = "my-team-projection-chart"
 _GROUPS = (("F", "Forwards"), ("D", "Defencemen"), ("utility", "Utility"), ("G", "Goalies"))
 _GROUP_COLORS = {"F": "#ff8533", "D": "#5cd65c", "utility": "#33adff", "G": "#cc33ff"}
+_PLAYER_COLORS = {
+    "F": ("#ff8533", "#ff9d5c", "#e66f1f", "#ffb380", "#cc5f17", "#ffd0b3", "#f57c00", "#ffab73", "#b84f12"),
+    "D": ("#5cd65c", "#83e683", "#3fbf3f", "#a3efa3", "#2e9c2e", "#c2f5c2", "#48c948", "#76dc76"),
+    "utility": ("#33adff", "#66c2ff", "#1688d9", "#99d6ff", "#0f6fae", "#b3e3ff"),
+    "G": ("#cc33ff", "#dc70ff", "#ad1fd6", "#e7a3ff", "#8610aa", "#f0c2ff"),
+}
 
 
 def grid_id(table: str) -> str:
@@ -54,7 +60,7 @@ def build_projection_chart() -> go.Figure:
         group_values.append(value)
         outer_labels.extend(f"{label}: {name}" for name, _ in players)
         outer_values.extend(player_value for _, player_value in players)
-        outer_colors.extend([_GROUP_COLORS[table]] * len(players))
+        outer_colors.extend(_player_color(table, index) for index in range(len(players)))
 
     grand_total = sum(group_values)
     figure = go.Figure(
@@ -89,6 +95,11 @@ def build_projection_chart() -> go.Figure:
         showlegend=False,
     )
     return figure
+
+
+def _player_color(table: str, index: int) -> str:
+    """Return a distinct player shade within the table's position color family."""
+    return _PLAYER_COLORS[table][index % len(_PLAYER_COLORS[table])]
 
 
 def _goalie_chart_players() -> list[tuple[str, float]]:

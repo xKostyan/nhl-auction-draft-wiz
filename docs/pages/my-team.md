@@ -19,7 +19,8 @@ membership flag is stored in the workspace and survives restarts.
   its center. Its inner ring is split among Forwards, Defencemen, Utility,
   and Goalies; its outer ring splits each group into its players. A white gap
   separates the rings. The groups use orange (F), green (D), blue (Utility),
-  and purple (G), matching their table headers.
+  and purple (G), matching their table headers. Individual player slices use
+  distinct shades within their group's color family.
 - The page has fixed-size tables with 9 forward, 5 defencemen, 2 goalie, 2
   utility, and 4 bench slots. Every slot has an unlabeled numeric index;
   vacant slots are visibly styled and labeled **Empty slot**.

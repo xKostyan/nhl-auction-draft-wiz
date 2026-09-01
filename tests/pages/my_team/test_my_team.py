@@ -151,6 +151,14 @@ def test_goalie_title_warns_when_ninety_percent_starts_are_below_cap(monkeypatch
     assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 400.00 (Warning: projected starts 120.0/140)"
 
 
+def test_projection_chart_uses_distinct_player_shades_within_each_group():
+    assert my_team._player_color("F", 0) == "#ff8533"
+    assert my_team._player_color("F", 1) == "#ff9d5c"
+    assert my_team._player_color("D", 0) == "#5cd65c"
+    assert my_team._player_color("utility", 0) == "#33adff"
+    assert my_team._player_color("G", 0) == "#cc33ff"
+
+
 def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
