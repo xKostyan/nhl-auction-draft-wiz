@@ -26,7 +26,9 @@ membership flag is stored in the workspace and survives restarts.
   vacant slots are visibly styled and labeled **Empty slot**.
 - Players are placed automatically: the main position tables fill first,
   forward/defenceman overflow fills Utility, and all remaining overflow
-  (including goalies) fills Bench.
+  (including goalies) fills Bench. Forwards, Defencemen, Utility, and Goalies
+  are ordered by projected TFP from highest to lowest; Bench keeps spillover
+  order.
 - My Team rows are 40px high. Tables retain the same player data, inline
   charts, Tags, and Notes as their matching position page. Utility has the
   skater columns plus **Position** after player name. Bench is intentionally

@@ -184,9 +184,35 @@ def test_skater_overflow_is_automatically_placed_in_utility_then_bench(tmp_path)
             "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
         )
 
-    expected_ids = [row["id"] for row in get_position_rows("F", my_team_only=True)]
+    expected_ids = [
+        row["id"]
+        for row in sorted(
+            get_position_rows("F", my_team_only=True),
+            key=lambda row: (
+                -position_table._finite_number(row["projected_tfp"]),
+                row["name"].casefold(),
+            ),
+        )
+    ]
     assert [row["id"] for row in get_my_team_table_rows("F")[:9]] == expected_ids[:9]
     assert [row["id"] for row in get_my_team_table_rows("utility")[:2]] == expected_ids[9:11]
     assert get_my_team_table_rows("bench")[0]["id"] == expected_ids[11]
     assert get_my_team_table_rows("utility")[0]["position"] == "F"
     assert get_my_team_table_rows("bench")[0]["position"] == "F"
+
+
+def test_active_my_team_tables_sort_players_by_projected_tfp(monkeypatch):
+    monkeypatch.setattr(
+        position_table,
+        "get_position_rows",
+        lambda position, **_kwargs: {
+            "F": [
+                {"id": 1, "name": "Low", "projected_tfp": 100},
+                {"id": 2, "name": "High", "projected_tfp": 300},
+            ],
+            "D": [],
+            "G": [],
+        }[position],
+    )
+
+    assert [row["name"] for row in get_my_team_table_rows("F")[:2]] == ["High", "Low"]

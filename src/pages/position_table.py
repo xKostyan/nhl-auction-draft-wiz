@@ -107,16 +107,16 @@ def get_my_team_table_rows(table: str) -> list[dict]:
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
 
-    forwards = get_position_rows("F", my_team_only=True)
-    defencemen = get_position_rows("D", my_team_only=True)
-    goalies = get_position_rows("G", my_team_only=True)
+    forwards = _sort_my_team_rows(get_position_rows("F", my_team_only=True))
+    defencemen = _sort_my_team_rows(get_position_rows("D", my_team_only=True))
+    goalies = _sort_my_team_rows(get_position_rows("G", my_team_only=True))
     primary_rows = {
         "F": forwards[:MY_TEAM_SLOT_COUNTS["F"]],
         "D": defencemen[:MY_TEAM_SLOT_COUNTS["D"]],
         "G": goalies[:MY_TEAM_SLOT_COUNTS["G"]],
     }
     skater_overflow = forwards[MY_TEAM_SLOT_COUNTS["F"]:] + defencemen[MY_TEAM_SLOT_COUNTS["D"]:]
-    utility_rows = skater_overflow[:MY_TEAM_TABLES["utility"]["slots"]]
+    utility_rows = _sort_my_team_rows(skater_overflow)[:MY_TEAM_TABLES["utility"]["slots"]]
     bench_rows = skater_overflow[MY_TEAM_TABLES["utility"]["slots"]:] + goalies[MY_TEAM_SLOT_COUNTS["G"]:]
     table_rows = {
         **primary_rows,
@@ -124,6 +124,14 @@ def get_my_team_table_rows(table: str) -> list[dict]:
         "bench": bench_rows[:MY_TEAM_TABLES["bench"]["slots"]],
     }[table]
     return _fill_my_team_slots(table, table_rows)
+
+
+def _sort_my_team_rows(rows: list[dict]) -> list[dict]:
+    """Sort active My Team table rows by projected TFP, highest first."""
+    return sorted(
+        rows,
+        key=lambda row: (-_finite_number(row.get("projected_tfp")), row["name"].casefold()),
+    )
 
 
 def get_my_team_projected_tfp_total(table: str) -> float:
