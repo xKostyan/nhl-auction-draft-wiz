@@ -260,3 +260,29 @@ def test_active_my_team_tables_sort_players_by_projected_tfp(monkeypatch):
     )
 
     assert [row["name"] for row in get_my_team_table_rows("F")[:2]] == ["High", "Low"]
+
+
+def test_my_team_update_refreshes_all_tables_after_removal(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_ids = [
+        int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
+    ][:10]
+    for player_id in player_ids:
+        handle_player_context_action(
+            "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
+        )
+
+    promoted_player_id = get_my_team_table_rows("utility")[0]["id"]
+    removed_player_id = get_my_team_table_rows("F")[0]["id"]
+    update = my_team.build_my_team_update(
+        "F",
+        None,
+        {"rowId": removed_player_id, "value": {"action": "remove-from-my-team"}},
+        "cellRendererData",
+    )
+
+    forward_rows, _, utility_rows, *_ = update
+    assert any(row["id"] == promoted_player_id for row in forward_rows)
+    assert all(row.get("id") != promoted_player_id for row in utility_rows)

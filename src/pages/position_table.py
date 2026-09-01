@@ -468,8 +468,14 @@ def handle_player_context_action(
     slot_count: int | None = None,
 ) -> list[dict]:
     """Persist a custom player-name menu action emitted by the cell renderer."""
+    persist_player_context_action(position, context_action)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+
+
+def persist_player_context_action(position: str, context_action: dict | None) -> None:
+    """Persist a custom player-name menu action without reloading grid rows."""
     if not context_action:
-        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+        return
     if not isinstance(context_action, dict):
         raise ValueError("Player context-menu updates require an event dictionary.")
 
@@ -484,7 +490,6 @@ def handle_player_context_action(
         set_player_notes(player_id, "")
     else:
         set_player_on_my_team(player_id, action == "add-to-my-team")
-    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_cell_change(
@@ -500,9 +505,14 @@ def handle_player_cell_change(
     even when exactly one cell was changed. Process every event because a
     clipboard action can update multiple status cells in one callback.
     """
-    if not cell_changes:
-        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+    persist_player_cell_changes(position, cell_changes)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
+
+def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) -> None:
+    """Persist grid cell changes without reloading grid rows."""
+    if not cell_changes:
+        return
     for cell_change in cell_changes:
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
@@ -534,7 +544,6 @@ def handle_player_cell_change(
             raise ValueError("Player note updates require text.")
         else:
             set_player_notes(player_id, value)
-    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_grid_update(
@@ -752,16 +761,26 @@ def handle_my_team_grid_update(
     triggered_property: str,
 ) -> list[dict]:
     """Persist a My Team table event and return its automatically placed rows."""
+    persist_my_team_grid_update(table, cell_changes, context_action, triggered_property)
+    return get_my_team_table_rows(table)
+
+
+def persist_my_team_grid_update(
+    table: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+) -> None:
+    """Persist a My Team grid event without loading an unused position grid."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     tag_position = "G" if table == "G" else "F"
     if triggered_property == "cellRendererData":
-        handle_player_context_action(tag_position, context_action)
+        persist_player_context_action(tag_position, context_action)
     elif triggered_property == "cellValueChanged":
-        handle_player_cell_change(tag_position, cell_changes)
+        persist_player_cell_changes(tag_position, cell_changes)
     else:
         raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
-    return get_my_team_table_rows(table)
 
 
 def build_position_layout(position: str):

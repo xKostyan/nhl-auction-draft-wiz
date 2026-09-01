@@ -13,7 +13,7 @@ from .position_table import (
     get_my_team_table_title,
     get_my_team_table_rows,
     get_workspace_value,
-    handle_my_team_grid_update,
+    persist_my_team_grid_update,
 )
 
 PATH = "/my-team"
@@ -174,23 +174,51 @@ def layout(**_kwargs):
     )
 
 
+def build_my_team_update(
+    table: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+) -> tuple[list[dict], ...]:
+    """Persist an event and return one consistent update for every roster view."""
+    persist_my_team_grid_update(table, cell_changes, context_action, triggered_property)
+    snapshot = build_my_team_snapshot()
+    return (
+        *(snapshot[current_table] for current_table in TABLES),
+        *(get_my_team_table_title(current_table, snapshot=snapshot) for current_table in TABLES),
+        build_projection_chart(snapshot=snapshot),
+    )
+
+
 dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 
-for _table in TABLES:
-    @callback(
-        Output(grid_id(_table), "rowData"),
-        Output(title_id(_table), "children"),
-        Output(CHART_ID, "figure", allow_duplicate=True),
-        Input(grid_id(_table), "cellValueChanged"),
-        Input(grid_id(_table), "cellRendererData"),
-        prevent_initial_call=True,
+@callback(
+    *(Output(grid_id(table), "rowData") for table in TABLES),
+    *(Output(title_id(table), "children") for table in TABLES),
+    Output(CHART_ID, "figure"),
+    *(Input(grid_id(table), "cellValueChanged") for table in TABLES),
+    *(Input(grid_id(table), "cellRendererData") for table in TABLES),
+    prevent_initial_call=True,
+)
+def update_my_team_player(*values):
+    """Refresh every placement-dependent roster view after a My Team edit."""
+    triggered_id = ctx.triggered_id
+    if not isinstance(triggered_id, str):
+        raise ValueError("My Team grid updates require a triggered grid id.")
+    table = next(
+        (
+            current_table
+            for current_table in TABLES
+            if triggered_id == grid_id(current_table)
+        ),
+        None,
     )
-    def update_my_team_player(cell_changes, context_action, table=_table):
-        rows = handle_my_team_grid_update(
-            table,
-            cell_changes,
-            context_action,
-            ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
-        )
-        return rows, get_my_team_table_title(table), build_projection_chart()
+    if table is None:
+        raise ValueError(f"Unsupported My Team grid id: {triggered_id!r}.")
+
+    table_index = TABLES.index(table)
+    cell_changes = values[table_index]
+    context_action = values[len(TABLES) + table_index]
+    triggered_property = ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1]
+    return build_my_team_update(table, cell_changes, context_action, triggered_property)

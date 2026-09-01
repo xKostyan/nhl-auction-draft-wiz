@@ -51,8 +51,9 @@ membership flag is stored in the workspace and survives restarts.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
   from My Team**. The menu is displayed above the tables and closes when you
   left-click outside it. **Add to My Team** is omitted because it is redundant
-  here. The affected table reloads immediately after a menu action without
-  affecting later Tags or Notes edits.
+  here. Every table, heading, and chart refreshes from one snapshot after an
+  edit, so automatic F/D/Utility/Bench placement remains consistent without
+  an unused full position-page reload.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
 - Each page render creates one roster snapshot, which is reused by all table
