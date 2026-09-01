@@ -330,6 +330,7 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var menuRef = React.useRef(null);
     var allowAddToMyTeam = Boolean(props.allowAddToMyTeam);
     var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
+    var addToMyTeamError = props.data && props.data.my_team_add_error;
 
     React.useEffect(function () {
         if (!menuOpen) {
@@ -359,19 +360,22 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
         props.setData({ action: action, timestamp: Date.now() });
         setMenuOpen(false);
     };
-    var menuAction = function (label, action) {
+    var menuAction = function (label, action, disabled, title) {
         return React.createElement("button", {
+            disabled: Boolean(disabled),
             key: action,
             onClick: function (event) { runAction(action, event); },
             style: {
-                backgroundColor: "#fff",
+                backgroundColor: disabled ? "#f2f2f2" : "#fff",
                 border: "none",
-                cursor: "pointer",
+                color: disabled ? "#888" : "#222",
+                cursor: disabled ? "not-allowed" : "pointer",
                 display: "block",
                 padding: "6px 10px",
                 textAlign: "left",
                 width: "100%"
             },
+            title: title || label,
             type: "button"
         }, label);
     };
@@ -411,7 +415,9 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
         }, [
             menuAction("Clear Tags", "clear-tags"),
             menuAction("Clear Notes", "clear-notes"),
-            allowAddToMyTeam ? menuAction("Add to My Team", "add-to-my-team") : null,
+            allowAddToMyTeam ? menuAction(
+                "Add to My Team", "add-to-my-team", Boolean(addToMyTeamError), addToMyTeamError
+            ) : null,
             menuAction("Remove from My Team", "remove-from-my-team")
         ]), document.body) : null
     ]);

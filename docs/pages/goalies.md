@@ -74,6 +74,9 @@ open in its own browser tab during the draft.
   immediately after an action without affecting later Tags or Notes edits.
   The highlight circle changes to light blue immediately when membership is
   added, and back to gray when it is removed.
+- **Add to My Team** is disabled with an explanatory tooltip when the player
+  cannot fit within the fixed roster and Bench composition limits. A stale add
+  attempt displays the same reason above the table.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,
   so drafted state survives app restarts.
 

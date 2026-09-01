@@ -16,6 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB_PATH = ROOT / ".workspace" / "draft_workspace.sqlite3"
 
 _DB_PATH = DEFAULT_DB_PATH
+MY_TEAM_PRIMARY_SLOTS = {"F": 9, "D": 5, "G": 2}
+MY_TEAM_UTILITY_SLOTS = 2
+MY_TEAM_BENCH_SKATER_SLOTS = 3
+MY_TEAM_BENCH_GOALIE_SLOTS = 2
+MY_TEAM_BENCH_TOTAL_SLOTS = 4
+
+
+class MyTeamCapacityError(ValueError):
+    """Raised when an added player cannot fit within the configured roster."""
 
 
 def configure_storage(path: str | Path | None = None) -> Path:
@@ -359,6 +368,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
 
     conn = db_connection()
     try:
+        add_error = _my_team_add_error(conn, normalized_position)
         rows = conn.execute(
             """
             SELECT
@@ -416,6 +426,9 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                     "name": row["name"],
                     "position": row["position"],
                     "on_my_team": bool(row["on_my_team"]),
+                    "my_team_add_error": "Player is already on My Team."
+                    if row["on_my_team"]
+                    else add_error,
                     "drafted": bool(row["drafted"]),
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
@@ -523,6 +536,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             "name",
             "position",
             "on_my_team",
+            "my_team_add_error",
             "drafted",
             "projected_tfp",
             "projected_afp",
@@ -578,9 +592,14 @@ def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
 
     conn = db_connection()
     try:
-        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        player = conn.execute("SELECT id, position, on_my_team FROM players WHERE id = ?", (player_id,)).fetchone()
         if player is None:
             raise ValueError(f"Cannot update My Team: player {player_id} does not exist.")
+
+        if on_my_team and not player["on_my_team"]:
+            add_error = _my_team_add_error(conn, str(player["position"]))
+            if add_error:
+                raise MyTeamCapacityError(add_error)
 
         conn.execute("UPDATE players SET on_my_team = ? WHERE id = ?", (int(on_my_team), player_id))
         if on_my_team:
@@ -598,6 +617,27 @@ def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def _my_team_add_error(conn: sqlite3.Connection, position: str) -> str | None:
+    """Return why a position cannot be added to the fixed automatic roster."""
+    rows = conn.execute(
+        "SELECT position, COUNT(*) AS count FROM players WHERE on_my_team = 1 GROUP BY position"
+    ).fetchall()
+    counts = {str(row["position"]): int(row["count"]) for row in rows}
+    counts[position] = counts.get(position, 0) + 1
+    skater_overflow = max(0, counts.get("F", 0) - MY_TEAM_PRIMARY_SLOTS["F"]) + max(
+        0, counts.get("D", 0) - MY_TEAM_PRIMARY_SLOTS["D"]
+    )
+    bench_skaters = max(0, skater_overflow - MY_TEAM_UTILITY_SLOTS)
+    bench_goalies = max(0, counts.get("G", 0) - MY_TEAM_PRIMARY_SLOTS["G"])
+    if bench_goalies > MY_TEAM_BENCH_GOALIE_SLOTS:
+        return "My Team has reached its maximum of 2 bench goalies."
+    if bench_skaters > MY_TEAM_BENCH_SKATER_SLOTS:
+        return "My Team has reached its maximum of 3 bench skaters."
+    if bench_skaters + bench_goalies > MY_TEAM_BENCH_TOTAL_SLOTS:
+        return "My Team Bench has reached its maximum of 4 players."
+    return None
 
 
 def set_player_tags(player_id: int, tags: list[str]) -> None:

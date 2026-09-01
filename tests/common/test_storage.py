@@ -173,6 +173,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "name",
         "position",
         "on_my_team",
+        "my_team_add_error",
         "drafted",
         "projected_tfp",
         "projected_afp",

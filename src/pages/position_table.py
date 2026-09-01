@@ -8,6 +8,7 @@ from dash import dcc, html
 from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
+    MyTeamCapacityError,
     set_player_drafted,
     set_player_notes,
     set_player_on_my_team,
@@ -52,6 +53,11 @@ def position_grid_id(position: str) -> str:
 def position_search_id(position: str) -> str:
     """Return the stable component id for a position's player search."""
     return f"{position.lower()}-player-search"
+
+
+def position_status_id(position: str) -> str:
+    """Return the status-message id for a position's player grid."""
+    return f"{position.lower()}-player-action-status"
 
 
 def get_position_rows(position: str, *, my_team_only: bool = False) -> list[dict]:
@@ -434,6 +440,16 @@ def handle_player_grid_update(
     raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
 
 
+def handle_player_grid_update_with_message(
+    position: str, cell_changes: list[dict] | None, context_action: dict | None, triggered_property: str
+) -> tuple[list[dict], str]:
+    """Return a visible capacity message instead of failing a stale add request."""
+    try:
+        return handle_player_grid_update(position, cell_changes, context_action, triggered_property), ""
+    except MyTeamCapacityError as error:
+        return get_position_rows(position), str(error)
+
+
 handle_drafted_cell_change = handle_player_cell_change
 
 
@@ -635,6 +651,7 @@ def build_position_layout(position: str):
                 clearable=True,
                 className="player-search",
             ),
+            html.Div(id=position_status_id(position), role="status"),
             build_position_grid(position),
         ],
     )

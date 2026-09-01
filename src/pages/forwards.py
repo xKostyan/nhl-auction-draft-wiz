@@ -7,11 +7,12 @@ from dash import Input, Output, callback, ctx
 
 from .position_table import (
     build_position_layout,
-    handle_player_grid_update,
+    handle_player_grid_update_with_message,
     get_player_search_target,
     handle_drafted_cell_change,
     position_grid_id,
     position_search_id,
+    position_status_id,
 )
 
 PATH = "/forwards"
@@ -32,12 +33,13 @@ dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 @callback(
     Output(GRID_ID, "rowData"),
+    Output(position_status_id(POSITION), "children"),
     Input(GRID_ID, "cellValueChanged"),
     Input(GRID_ID, "cellRendererData"),
     prevent_initial_call=True,
 )
 def update_drafted_status(cell_change, context_action):
-    return handle_player_grid_update(
+    return handle_player_grid_update_with_message(
         POSITION,
         cell_change,
         context_action,
