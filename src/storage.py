@@ -364,6 +364,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             SELECT
                 p.id,
                 p.name,
+                p.on_my_team,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
                 COALESCE(ps.notes, '') AS notes,
                 MAX(
@@ -383,7 +384,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
             WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
-            GROUP BY p.id, p.name, ps.status
+            GROUP BY p.id, p.name, p.on_my_team, ps.status
             ORDER BY p.name ASC
             """,
             (normalized_position, int(my_team_only)),
@@ -412,6 +413,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                 {
                     "id": int(row["id"]),
                     "name": row["name"],
+                    "on_my_team": bool(row["on_my_team"]),
                     "drafted": bool(row["drafted"]),
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
@@ -517,6 +519,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
         columns = [
             "id",
             "name",
+            "on_my_team",
             "drafted",
             "projected_tfp",
             "projected_afp",

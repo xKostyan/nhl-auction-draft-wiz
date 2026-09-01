@@ -55,9 +55,9 @@ open in its own browser tab during the draft.
 - A searchable typeahead above the table suggests only forwards as you type.
   Selecting a suggestion (or confirming an exact full name) selects and
   centers that player in the table.
-- The 20px **highlight** circle is light gray by default and green for the
-  selected player. It is updated by player search and can be clicked to select
-  a player.
+- The 20px **highlight** circle is light gray by default, light blue for an
+  unselected player on **My Team**, and green for the selected player. It is
+  updated by player search and can be clicked to select a player.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.

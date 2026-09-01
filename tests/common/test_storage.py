@@ -171,6 +171,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     assert list(forwards.columns) == [
         "id",
         "name",
+        "on_my_team",
         "drafted",
         "projected_tfp",
         "projected_afp",
@@ -207,6 +208,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_on_my_team(player_id, True)
     my_team_forwards = get_players_for_position_grid("F", my_team_only=True)
     assert my_team_forwards["id"].tolist() == [player_id]
+    assert my_team_forwards["on_my_team"].item() is True
     assert my_team_forwards["drafted"].item() is True
 
     set_player_on_my_team(player_id, False)

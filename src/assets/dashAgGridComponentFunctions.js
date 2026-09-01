@@ -468,15 +468,18 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
         return null;
     }
 
+    var onMyTeam = Boolean(props.data && props.data.on_my_team);
     return React.createElement("button", {
-        "aria-label": selected ? "Player highlighted" : "Highlight player",
+        "aria-label": selected
+            ? "Player highlighted"
+            : onMyTeam ? "Player is on My Team" : "Highlight player",
         "aria-pressed": selected,
         onClick: function (event) {
             event.stopPropagation();
             props.node.setSelected(!selected, true);
         },
         style: {
-            backgroundColor: selected ? "#388e3c" : "#d3d3d3",
+            backgroundColor: selected ? "#388e3c" : onMyTeam ? "#90caf9" : "#d3d3d3",
             border: "none",
             borderRadius: "50%",
             cursor: "pointer",
@@ -484,7 +487,7 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
             padding: "0",
             width: "14px"
         },
-        title: selected ? "Highlighted player" : "Highlight player",
+        title: selected ? "Highlighted player" : onMyTeam ? "On My Team" : "Highlight player",
         type: "button"
     });
 };
