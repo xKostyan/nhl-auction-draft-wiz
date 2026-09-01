@@ -234,7 +234,7 @@ def get_my_team_table_heading(
     if table == "bench":
         return title, "", ""
 
-    projection_label = "p projection:"
+    projection_label = "projection:"
     if table == "G":
         projection = get_my_team_goalie_projection(snapshot=snapshot)
         if projection["available_starts"] < 140:

@@ -39,7 +39,7 @@ body,
 .my-team-table-heading {
     column-gap: 16px;
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) auto 9rem;
+    grid-template-columns: minmax(160px, 1fr) auto 6rem;
     margin-bottom: 8px;
 }
 

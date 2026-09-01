@@ -40,8 +40,8 @@ membership flag is stored in the workspace and survives restarts.
   `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
   projected TFP, showing projected starts for the detected draft season.
-- Each heading has aligned columns and spacing for its table title, **p
-  projection:** label, and projected-TFP total. Forwards, Defencemen, Utility,
+- Each heading has aligned columns and spacing for its table title,
+  **projection:** label, and projected-TFP total. Forwards, Defencemen, Utility,
   and Goalies show a total; Bench intentionally remains title-only. Missing
   player projections count as zero.
 - The **Goalies** heading estimates projected TFP from 90% of each goalie's
