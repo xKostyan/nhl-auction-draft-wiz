@@ -31,9 +31,11 @@ open in its own browser tab during the draft.
   fantasy points and bars show actual average fantasy points, with missing
   values shown as zero. Its fixed scale is 0-12; actual bars are red below
   7.0, orange through 7.5, yellow through 8.0, and green above 8.0.
-- **Tags** is a resizable 160px group of toggle buttons. Click any of `PP1`,
-  `PP2`, `PK1`, `PK2`, `Line1`, or `Line2` to add or remove it. `1` tags use a
-  green hue and `2` tags use a yellow hue; selections persist in the workspace.
+- **Tags** is a resizable 160px compact display of selected tags, or a subtle
+  `+` when no tags are set. Click the cell to open a temporary picker for
+  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, and `Line2`, then click **Done** to
+  close it. `1` tags use a green hue and `2` tags use a yellow hue; selections
+  persist in the workspace.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
   shows projected game starts and bars show actual game starts; either missing

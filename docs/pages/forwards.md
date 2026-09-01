@@ -38,9 +38,11 @@ open in its own browser tab during the draft.
   fantasy points and bars show actual average fantasy points, with missing
   values shown as zero. Its fixed scale is 0-6; actual bars are red through
   3.1, orange through 3.5, yellow through 3.9, and green above 3.9.
-- **Tags** is a resizable 160px group of toggle buttons. Click any of `PP1`,
-  `PP2`, `PK1`, `PK2`, `Line1`, or `Line2` to add or remove it. `1` tags use a
-  green hue and `2` tags use a yellow hue; selections persist in the workspace.
+- **Tags** is a resizable 160px compact display of selected tags, or a subtle
+  `+` when no tags are set. Click the cell to open a temporary picker for
+  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, and `Line2`, then click **Done** to
+  close it. `1` tags use a green hue and `2` tags use a yellow hue; selections
+  persist in the workspace.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

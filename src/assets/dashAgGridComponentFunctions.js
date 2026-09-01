@@ -205,28 +205,17 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
 dagcomponentfuncs.playerTagsRenderer = function (props) {
     var selectedTags = Array.isArray(props.value) ? props.value : [];
     var availableTags = Array.isArray(props.availableTags) ? props.availableTags : [];
+    var editingState = React.useState(false);
+    var editing = editingState[0];
+    var setEditing = editingState[1];
 
-    return React.createElement("div", {
-        style: {
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "2px",
-            justifyContent: "center",
-            width: "100%"
-        }
-    }, availableTags.map(function (tag) {
-        var selected = selectedTags.indexOf(tag) !== -1;
+    var tagChip = function (tag, selected, onClick) {
         var tierOne = tag.endsWith("1");
         return React.createElement("button", {
             "aria-label": (selected ? "Remove " : "Add ") + tag + " tag",
             "aria-pressed": selected,
             key: tag,
-            onClick: function (event) {
-                event.stopPropagation();
-                props.setValue(selected
-                    ? selectedTags.filter(function (selectedTag) { return selectedTag !== tag; })
-                    : selectedTags.concat(tag));
-            },
+            onClick: onClick,
             style: {
                 backgroundColor: selected ? (tierOne ? "#a5d6a7" : "#fff59d") : "#f5f5f5",
                 border: "1px solid " + (tierOne ? "#66bb6a" : "#fbc02d"),
@@ -239,7 +228,76 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             title: selected ? "Remove " + tag : "Add " + tag,
             type: "button"
         }, tag);
-    }));
+    };
+
+    return React.createElement("div", {
+        onClick: function (event) {
+            event.stopPropagation();
+            setEditing(true);
+        },
+        style: {
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "2px",
+            justifyContent: "center",
+            minHeight: "16px",
+            position: "relative",
+            width: "100%"
+        }
+    }, editing
+        ? React.createElement("div", {
+            onClick: function (event) { event.stopPropagation(); },
+            style: {
+                backgroundColor: "#fff",
+                border: "1px solid #bbb",
+                borderRadius: "4px",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "3px",
+                left: "0",
+                padding: "4px",
+                position: "absolute",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "150px",
+                zIndex: "3"
+            }
+        }, availableTags.map(function (tag) {
+            var selected = selectedTags.indexOf(tag) !== -1;
+            return tagChip(tag, selected, function (event) {
+                event.stopPropagation();
+                props.setValue(selected
+                    ? selectedTags.filter(function (selectedTag) { return selectedTag !== tag; })
+                    : selectedTags.concat(tag));
+            });
+        }).concat(React.createElement("button", {
+            "aria-label": "Close tag editor",
+            key: "close",
+            onClick: function (event) {
+                event.stopPropagation();
+                setEditing(false);
+            },
+            style: {
+                backgroundColor: "#fff",
+                border: "1px solid #999",
+                borderRadius: "3px",
+                cursor: "pointer",
+                fontSize: "9px",
+                padding: "1px 3px"
+            },
+            type: "button"
+        }, "Done")))
+        : selectedTags.length
+            ? selectedTags.map(function (tag) {
+                return tagChip(tag, true, function (event) {
+                    event.stopPropagation();
+                    setEditing(true);
+                });
+            })
+            : React.createElement("span", {
+                style: { color: "#bbb", cursor: "pointer", fontSize: "12px" }
+            }, "+"));
 };
 
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
