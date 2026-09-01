@@ -172,11 +172,13 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "projected_tfp",
         "projected_afp",
         "actual_gp_history",
+        "average_performance_history",
     ]
     assert forwards["drafted"].eq(False).all()
     assert forwards["projected_tfp"].notna().any()
     assert forwards["projected_afp"].notna().any()
     assert forwards["actual_gp_history"].map(bool).any()
+    assert forwards["average_performance_history"].map(bool).all()
 
     player_id = int(forwards.iloc[0]["id"])
     set_player_drafted(player_id, True)

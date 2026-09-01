@@ -311,7 +311,9 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
     detected current season, rather than a hard-coded year. Skater rows also
     include the five most recent seasons with an actual games-played value.
     Goalie rows include projected and actual game starts for every stored
-    goalie season, defaulting missing values to zero.
+    goalie season, defaulting missing values to zero. All position rows
+    include projected and actual average fantasy points for every stored
+    season, also defaulting missing values to zero.
     """
     normalized_position = position.upper()
     if normalized_position not in {"F", "D", "G"}:
@@ -417,6 +419,44 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             for row in data:
                 row["game_starts_history"] = list(game_starts_by_player[row["id"]].values())
 
+        year_rows = conn.execute(
+            """
+            SELECT DISTINCT year
+            FROM player_stats
+            WHERE position = ?
+            UNION
+            SELECT DISTINCT current_season AS year
+            FROM players
+            WHERE position = ?
+            ORDER BY year ASC
+            """,
+            (normalized_position, normalized_position),
+        ).fetchall()
+        average_performance_years = [int(row["year"]) for row in year_rows]
+        average_performance_rows = conn.execute(
+            """
+            SELECT player_id, year, stats_type, stat_value
+            FROM player_stats
+            WHERE position = ? AND stat_name = 'FP_AVG'
+            ORDER BY player_id ASC, year ASC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        average_performance_by_player = {
+            row["id"]: {
+                year: {"year": year, "projected": 0.0, "actual": 0.0}
+                for year in average_performance_years
+            }
+            for row in data
+        }
+        for row in average_performance_rows:
+            player_history = average_performance_by_player.get(int(row["player_id"]))
+            if player_history is not None:
+                player_history[int(row["year"])][row["stats_type"]] = float(row["stat_value"])
+
+        for row in data:
+            row["average_performance_history"] = list(average_performance_by_player[row["id"]].values())
+
         columns = [
             "id",
             "name",
@@ -424,6 +464,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             "projected_tfp",
             "projected_afp",
             "actual_gp_history",
+            "average_performance_history",
         ]
         if normalized_position == "G":
             columns.append("game_starts_history")

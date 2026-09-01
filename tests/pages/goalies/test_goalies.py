@@ -37,6 +37,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "#",
         "Player name",
         "Game Starts",
+        "Average Performance",
         "p TFP 2027",
         "p AFP 2027",
     ]
@@ -51,6 +52,16 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[3]["width"] == 150
     assert grid.columnDefs[3]["resizable"] is True
     assert grid.columnDefs[3]["suppressAutoSize"] is True
+    assert grid.columnDefs[4] == {
+        "field": "average_performance_history",
+        "headerName": "Average Performance",
+        "cellRenderer": "averagePerformanceChart",
+        "cellRendererParams": {"scaleMaximum": 12},
+        "sortable": False,
+        "resizable": True,
+        "suppressAutoSize": True,
+        "width": 150,
+    }
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
@@ -96,6 +107,20 @@ def test_goalie_rows_include_projected_and_actual_game_starts_for_every_season(t
     ]
 
 
+def test_goalie_rows_include_average_performance_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    row = next(row for row in get_position_rows("G") if row["id"] == 3634)
+
+    assert row["average_performance_history"][-1] == {
+        "year": 2027,
+        "projected": 0.0,
+        "actual": 0.0,
+    }
+
+
 def test_checking_a_goalie_uses_the_ag_grid_event_list(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -114,6 +139,8 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
 
     assert "props.setValue(available)" in renderer
     assert "goalieGameStartsChart" in renderer
+    assert "averagePerformanceChart" in renderer
+    assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = 70" in renderer
     assert 'stroke: "#1565c0"' in renderer
     assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer

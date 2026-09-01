@@ -132,6 +132,76 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
     ]);
 };
 
+dagcomponentfuncs.averagePerformanceChart = function (props) {
+    var history = Array.isArray(props.value) ? props.value : [];
+    var scaleMaximum = props.cellRendererParams.scaleMaximum;
+    var pointCount = history.length;
+    var linePoints = history.map(function (season, index) {
+        var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
+        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var y = 100 - projected / scaleMaximum * 100;
+        return x + "," + y;
+    });
+    var lineDots = history.map(function (season, index) {
+        var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
+        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var y = 100 - projected / scaleMaximum * 100;
+        return React.createElement("circle", { cx: x, cy: y, fill: "#1565c0", key: season.year, r: "2" });
+    });
+    var bars = history.map(function (season) {
+        var actual = Math.max(0, Math.min(scaleMaximum, Number(season.actual) || 0));
+        var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
+        var percentage = actual / scaleMaximum * 100;
+        var color = scaleMaximum === 6
+            ? actual <= 3.1 ? "#d32f2f" : actual <= 3.5 ? "#ef6c00" : actual <= 3.9 ? "#f9a825" : "#388e3c"
+            : actual < 7 ? "#d32f2f" : actual <= 7.5 ? "#ef6c00" : actual <= 8 ? "#f9a825" : "#388e3c";
+
+        return React.createElement("div", {
+            key: season.year,
+            title: season.year + ": " + projected + " projected, " + actual + " actual average fantasy points",
+            style: { flex: "1 1 0", height: "100%", position: "relative" }
+        }, [
+            React.createElement("span", {
+                key: "bar",
+                style: { backgroundColor: color, bottom: "0", height: percentage + "%", left: "10%", position: "absolute", right: "10%" }
+            }),
+            React.createElement("span", {
+                key: "label",
+                style: {
+                    bottom: "50%", color: "#333", fontSize: "9px", left: "50%",
+                    position: "absolute", transform: "translate(-50%, 50%)",
+                    whiteSpace: "nowrap", zIndex: "2"
+                }
+            }, actual.toFixed(1))
+        ]);
+    });
+
+    return React.createElement("div", {
+        style: {
+            boxSizing: "border-box", display: "flex", gap: "1px",
+            height: "calc(100% - 10px)", padding: "1px 4px",
+            position: "relative", width: "100%"
+        }
+    }, [
+        React.createElement("svg", {
+            "aria-label": "Projected average fantasy points",
+            height: "100%",
+            key: "projected-line",
+            preserveAspectRatio: "none",
+            style: { left: "4px", pointerEvents: "none", position: "absolute", top: "1px", width: "calc(100% - 8px)" },
+            viewBox: "0 0 100 100",
+            width: "100%"
+        }, [
+            React.createElement("polyline", {
+                fill: "none", key: "line", points: linePoints.join(" "),
+                stroke: "#1565c0", strokeWidth: "2"
+            }),
+            lineDots
+        ]),
+        bars
+    ]);
+};
+
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
     var drafted = Boolean(props.value);
     var available = !drafted;

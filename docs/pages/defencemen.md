@@ -15,7 +15,7 @@ open in its own browser tab during the draft.
 
 - The page header contains only the page title and player search control.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Health (actual GP)**,
+  name**, **Health (actual GP)**, **Average Performance**,
   **p TFP `<upcoming year>`**, and **p AFP `<upcoming year>`** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
   projected Average Fantasy Points per game, both sourced from the detected
@@ -33,6 +33,11 @@ open in its own browser tab during the draft.
   actual GP. The column is 110px wide and is vertically centered in a 50px
   chart area, leaving 5px clearance above and below. Rows are 60px high to
   accommodate current and future inline player graphs.
+- **Average Performance** is a resizable 150px inline combination chart
+  covering every imported defenceman season. A blue line shows projected
+  average fantasy points and bars show actual average fantasy points, with
+  missing values shown as zero. Its fixed scale is 0-6; actual bars are red
+  through 3.1, orange through 3.5, yellow through 3.9, and green above 3.9.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

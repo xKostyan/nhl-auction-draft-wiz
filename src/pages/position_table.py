@@ -106,6 +106,22 @@ def _game_starts_column_def(position: str) -> list[dict]:
     ]
 
 
+def _average_performance_column_def(position: str) -> list[dict]:
+    """Return projected-line and actual-bar average-performance chart settings."""
+    return [
+        {
+            "field": "average_performance_history",
+            "headerName": "Average Performance",
+            "cellRenderer": "averagePerformanceChart",
+            "cellRendererParams": {"scaleMaximum": 12 if position == "G" else 6},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
+        }
+    ]
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -203,6 +219,7 @@ def build_position_layout(position: str):
                     {"field": "name", "headerName": "Player name"},
                     *_health_column_def(position),
                     *_game_starts_column_def(position),
+                    *_average_performance_column_def(position),
                     *_projected_points_column_defs(),
                 ],
                 columnSize="autoSize",

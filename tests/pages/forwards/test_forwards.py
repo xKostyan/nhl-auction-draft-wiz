@@ -73,6 +73,16 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "width": 110,
         },
         {
+            "field": "average_performance_history",
+            "headerName": "Average Performance",
+            "cellRenderer": "averagePerformanceChart",
+            "cellRendererParams": {"scaleMaximum": 6},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
+        },
+        {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
             "type": "numericColumn",
@@ -156,6 +166,22 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
     ]
 
 
+def test_forward_rows_include_average_performance_for_every_season(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    history = next(
+        row["average_performance_history"]
+        for row in get_position_rows("F")
+        if row["name"] == "Mikko Rantanen"
+    )
+
+    assert [season["year"] for season in history] == [2023, 2024, 2025, 2026, 2027]
+    assert history[-1]["projected"] == 4.54
+    assert history[-1]["actual"] == 0.0
+
+
 def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circle():
     renderer = (
         Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
@@ -174,6 +200,8 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
+    assert "averagePerformanceChart" in renderer
+    assert "scaleMaximum === 6" in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
