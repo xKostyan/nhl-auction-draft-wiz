@@ -13,6 +13,12 @@ from dash import Input, Output, callback, html
 
 MENU_TOGGLE_ID = "app-menu-toggle"
 MENU_PANEL_ID = "app-menu-panel"
+PAGE_COLORS = {
+    "/forwards": "#ff8533",
+    "/defencemen": "#5cd65c",
+    "/goalies": "#cc33ff",
+    "/my-team": "#33adff",
+}
 
 _PANEL_HIDDEN_STYLE = {"display": "none"}
 _PANEL_VISIBLE_STYLE = {
@@ -37,7 +43,11 @@ def build_menu() -> html.Div:
         html.A(
             f"{index + 1} - {page['name']}",
             href=page["relative_path"],
-            style={"padding": "8px 16px", "textDecoration": "none", "color": "#222"},
+            style={
+                "padding": "8px 16px",
+                "textDecoration": "none",
+                "color": PAGE_COLORS.get(page["relative_path"], "#222"),
+            },
         )
         for index, page in enumerate(pages)
     ]

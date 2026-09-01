@@ -36,6 +36,9 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
+    assert chart.figure.data[0].marker.colors == ("#ff8533", "#5cd65c", "#33adff", "#cc33ff")
+    assert chart.figure.data[0].domain.x == (0.1, 0.9)
+    assert chart.figure.data[1].hole == 0.84
 
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",

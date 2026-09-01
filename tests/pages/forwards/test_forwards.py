@@ -41,7 +41,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         for node in forwards.layout().children
     )
     assert grid.id == "f-player-grid"
-    assert grid.className == "table-values-large"
+    assert grid.className == "table-values-large position-f"
     assert grid.columnDefs == [
         {
             "field": "search_focus",

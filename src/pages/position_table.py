@@ -558,7 +558,7 @@ def build_position_grid(
 
     return dag.AgGrid(
         id=position_grid_id(position) if not my_team_only else f"my-team-{position.lower()}-player-grid",
-        className="table-values-large",
+        className=f"table-values-large position-{position.lower()}",
         rowData=get_position_grid_rows(
             position, my_team_only=my_team_only, slot_count=slot_count
         ),
@@ -675,7 +675,7 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
     ]
     return dag.AgGrid(
         id=f"my-team-{table.lower()}-player-grid",
-        className="table-values-large",
+        className=f"table-values-large my-team-table-{table}",
         rowData=get_my_team_table_rows(table),
         getRowId="params.data.id",
         columnDefs=column_defs,

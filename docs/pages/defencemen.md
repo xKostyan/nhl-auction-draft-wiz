@@ -14,6 +14,7 @@ open in its own browser tab during the draft.
 ## UI and behavior
 
 - The page header contains only the page title and player search control.
+- The table header and menu entry use the defencemen green `#5cd65c`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
   name**, **Health (actual GP)**, **Average Performance**,
   **p TFP `<upcoming year>`**, **p AFP `<upcoming year>`**, **Tags**, and

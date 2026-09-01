@@ -31,7 +31,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         for node in layout.children
     )
     assert grid.id == "d-player-grid"
-    assert grid.className == "table-values-large"
+    assert grid.className == "table-values-large position-d"
     assert grid.columnDefs[2]["cellRenderer"] == "playerNameContextMenuRenderer"
     assert grid.columnDefs[2]["cellRendererParams"] == {"allowAddToMyTeam": True}
     assert [column["headerName"] for column in grid.columnDefs] == [

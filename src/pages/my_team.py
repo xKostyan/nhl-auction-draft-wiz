@@ -21,7 +21,7 @@ ORDER = 4
 TABLES = ("F", "D", "utility", "G", "bench")
 CHART_ID = "my-team-projection-chart"
 _GROUPS = (("F", "Forwards"), ("D", "Defencemen"), ("utility", "Utility"), ("G", "Goalies"))
-_GROUP_COLORS = {"F": "#1f77b4", "D": "#ff7f0e", "utility": "#2ca02c", "G": "#9467bd"}
+_GROUP_COLORS = {"F": "#ff8533", "D": "#5cd65c", "utility": "#33adff", "G": "#cc33ff"}
 
 
 def grid_id(table: str) -> str:
@@ -67,12 +67,12 @@ def build_projection_chart() -> go.Figure:
                 direction="clockwise",
                 marker={"colors": [_GROUP_COLORS[table] for table, _ in _GROUPS]},
                 textinfo="label+percent",
-                domain={"x": [0, 1], "y": [0, 1]},
+                domain={"x": [0.1, 0.9], "y": [0.1, 0.9]},
             ),
             go.Pie(
                 labels=outer_labels,
                 values=outer_values,
-                hole=0.72,
+                hole=0.84,
                 sort=False,
                 direction="clockwise",
                 marker={"colors": outer_colors},
