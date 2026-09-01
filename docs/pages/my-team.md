@@ -61,3 +61,12 @@ membership flag is stored in the workspace and survives restarts.
 - `src/pages/my_team.py` — page registration and table callbacks
 - `src/pages/position_table.py` — shared grids and context-menu action handler
 - `src/storage.py` — durable My Team membership and player state
+
+## TODO: Projection chart performance
+
+- Build one My Team roster snapshot per page render and reuse it for grids,
+  table totals, goalie projection, and chart slices.
+- Use a lightweight chart query that avoids loading historical inline-chart
+  data.
+- Cache derived projection data and invalidate it after roster/import changes.
+- Consider loading the chart after the roster tables render.
