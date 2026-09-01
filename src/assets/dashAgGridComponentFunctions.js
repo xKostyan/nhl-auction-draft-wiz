@@ -202,6 +202,46 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
     ]);
 };
 
+dagcomponentfuncs.playerTagsRenderer = function (props) {
+    var selectedTags = Array.isArray(props.value) ? props.value : [];
+    var availableTags = Array.isArray(props.availableTags) ? props.availableTags : [];
+
+    return React.createElement("div", {
+        style: {
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "2px",
+            justifyContent: "center",
+            width: "100%"
+        }
+    }, availableTags.map(function (tag) {
+        var selected = selectedTags.indexOf(tag) !== -1;
+        var tierOne = tag.endsWith("1");
+        return React.createElement("button", {
+            "aria-label": (selected ? "Remove " : "Add ") + tag + " tag",
+            "aria-pressed": selected,
+            key: tag,
+            onClick: function (event) {
+                event.stopPropagation();
+                props.setValue(selected
+                    ? selectedTags.filter(function (selectedTag) { return selectedTag !== tag; })
+                    : selectedTags.concat(tag));
+            },
+            style: {
+                backgroundColor: selected ? (tierOne ? "#a5d6a7" : "#fff59d") : "#f5f5f5",
+                border: "1px solid " + (tierOne ? "#66bb6a" : "#fbc02d"),
+                borderRadius: "3px",
+                color: "#333",
+                cursor: "pointer",
+                fontSize: "9px",
+                padding: "1px 3px"
+            },
+            title: selected ? "Remove " + tag : "Add " + tag,
+            type: "button"
+        }, tag);
+    }));
+};
+
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
     var drafted = Boolean(props.value);
     var available = !drafted;

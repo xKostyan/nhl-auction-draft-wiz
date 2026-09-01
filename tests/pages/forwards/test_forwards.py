@@ -83,6 +83,16 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "width": 150,
         },
         {
+            "field": "tags",
+            "headerName": "Tags",
+            "cellRenderer": "playerTagsRenderer",
+            "cellRendererParams": {"availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"]},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 160,
+        },
+        {
             "field": "projected_tfp",
             "headerName": "p TFP 2027",
             "type": "numericColumn",
@@ -203,6 +213,9 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "averagePerformanceChart" in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
+    assert "playerTagsRenderer" in renderer
+    assert "#a5d6a7" in renderer
+    assert "#fff59d" in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer
@@ -259,3 +272,16 @@ def test_batch_status_edits_persist_every_forward_change(tmp_path):
 
     drafted_player_ids = {row["id"] for row in rows if row["drafted"]}
     assert set(player_ids).issubset(drafted_player_ids)
+
+
+def test_tag_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "tags", "value": ["PP1", "Line2"], "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == ["Line2", "PP1"]

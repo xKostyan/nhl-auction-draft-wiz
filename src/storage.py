@@ -79,6 +79,16 @@ def ensure_schema() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS player_tags (
+                player_id INTEGER NOT NULL,
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2')),
+                PRIMARY KEY (player_id, tag),
+                FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS player_stats (
                 player_id INTEGER NOT NULL,
                 year INTEGER NOT NULL,
@@ -133,6 +143,7 @@ def clear_workspace() -> None:
     conn = db_connection()
     try:
         conn.execute("DELETE FROM player_stats")
+        conn.execute("DELETE FROM player_tags")
         conn.execute("DELETE FROM player_status")
         conn.execute("DELETE FROM players")
         conn.execute("DELETE FROM workspace_meta")
@@ -231,6 +242,7 @@ def import_yearly_dataset(
     conn = db_connection()
     try:
         conn.execute("DELETE FROM player_stats")
+        conn.execute("DELETE FROM player_tags")
         conn.execute("DELETE FROM player_status")
         conn.execute("DELETE FROM players")
 
@@ -457,6 +469,21 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
         for row in data:
             row["average_performance_history"] = list(average_performance_by_player[row["id"]].values())
 
+        tag_rows = conn.execute(
+            """
+            SELECT player_id, tag
+            FROM player_tags
+            WHERE player_id IN (SELECT id FROM players WHERE position = ?)
+            ORDER BY player_id ASC, tag ASC
+            """,
+            (normalized_position,),
+        ).fetchall()
+        tags_by_player: dict[int, list[str]] = {}
+        for row in tag_rows:
+            tags_by_player.setdefault(int(row["player_id"]), []).append(str(row["tag"]))
+        for row in data:
+            row["tags"] = tags_by_player.get(row["id"], [])
+
         columns = [
             "id",
             "name",
@@ -465,6 +492,7 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             "projected_afp",
             "actual_gp_history",
             "average_performance_history",
+            "tags",
         ]
         if normalized_position == "G":
             columns.append("game_starts_history")
@@ -495,6 +523,29 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
                 updated_at = CURRENT_TIMESTAMP
             """,
             (player_id, status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_tags(player_id: int, tags: list[str]) -> None:
+    """Replace a player's persistent set of recognized draft-planning tags."""
+    allowed_tags = {"PP1", "PP2", "PK1", "PK2", "Line1", "Line2"}
+    if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+        raise ValueError("Player tags must be a list of tag names.")
+    if len(tags) != len(set(tags)) or any(tag not in allowed_tags for tag in tags):
+        raise ValueError("Player tags must be unique recognized tag names.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update tags: player {player_id} does not exist.")
+        conn.execute("DELETE FROM player_tags WHERE player_id = ?", (player_id,))
+        conn.executemany(
+            "INSERT INTO player_tags (player_id, tag) VALUES (?, ?)",
+            [(player_id, tag) for tag in sorted(tags)],
         )
         conn.commit()
     finally:

@@ -9,11 +9,13 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     set_player_drafted,
+    set_player_tags,
 )
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
 VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
+PLAYER_TAGS = ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"]
 
 
 def position_grid_id(position: str) -> str:
@@ -122,6 +124,22 @@ def _average_performance_column_def(position: str) -> list[dict]:
     ]
 
 
+def _tags_column_def() -> list[dict]:
+    """Return the editable persistent player tags column."""
+    return [
+        {
+            "field": "tags",
+            "headerName": "Tags",
+            "cellRenderer": "playerTagsRenderer",
+            "cellRendererParams": {"availableTags": PLAYER_TAGS},
+            "sortable": False,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 160,
+        }
+    ]
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -144,8 +162,17 @@ def _parse_drafted_value(value: object) -> bool:
     raise ValueError("Drafted status updates require a boolean checkbox value.")
 
 
-def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
-    """Persist drafted checkbox edits and return fresh grid rows.
+def _parse_player_tags(value: object) -> list[str]:
+    """Validate a JSON-compatible tag list emitted by the grid renderer."""
+    if not isinstance(value, list) or any(not isinstance(tag, str) for tag in value):
+        raise ValueError("Player tag updates require a list of tag names.")
+    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS for tag in value):
+        raise ValueError("Player tag updates require unique recognized tag names.")
+    return value
+
+
+def handle_player_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
+    """Persist drafted and tag cell edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
     even when exactly one cell was changed. Process every event because a
@@ -157,7 +184,8 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
     for cell_change in cell_changes:
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
-        if cell_change.get("colId") != "drafted":
+        column_id = cell_change.get("colId")
+        if column_id not in {"drafted", "tags"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -165,13 +193,17 @@ def handle_drafted_cell_change(position: str, cell_changes: list[dict] | None) -
             raise ValueError("Drafted status updates require AG Grid row data.")
 
         player_id = _parse_player_id(row_data.get("id"))
-        drafted_value = cell_change.get("newValue")
-        if drafted_value is None:
-            drafted_value = cell_change.get("value")
-        drafted = _parse_drafted_value(drafted_value)
-
-        set_player_drafted(player_id, drafted)
+        value = cell_change.get("newValue")
+        if value is None:
+            value = cell_change.get("value")
+        if column_id == "drafted":
+            set_player_drafted(player_id, _parse_drafted_value(value))
+        else:
+            set_player_tags(player_id, _parse_player_tags(value))
     return get_position_rows(position)
+
+
+handle_drafted_cell_change = handle_player_cell_change
 
 
 def build_position_layout(position: str):
@@ -220,6 +252,7 @@ def build_position_layout(position: str):
                     *_health_column_def(position),
                     *_game_starts_column_def(position),
                     *_average_performance_column_def(position),
+                    *_tags_column_def(),
                     *_projected_points_column_defs(),
                 ],
                 columnSize="autoSize",
