@@ -52,6 +52,14 @@ body,
     font-variant-numeric: tabular-nums;
 }
 
+.my-team-page .ag-body-vertical-scroll {
+    display: none;
+}
+
+.my-team-page .ag-center-cols-viewport {
+    overflow-y: hidden;
+}
+
 .position-page {
     width: 100%;
 }

@@ -34,7 +34,8 @@ membership flag is stored in the workspace and survives restarts.
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress
-  their unused internal vertical scrollbars.
+  their unused internal vertical scrollbars through both their AG Grid settings
+  and My Team-scoped styling.
 - Goalies retain their position-specific tags (`Starter`, `Backup`, `1A`, and
   `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
