@@ -78,9 +78,9 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
                     backgroundColor: color,
                     bottom: "0",
                     height: percentage + "%",
-                    left: "20%",
+                    left: "10%",
                     position: "absolute",
-                    right: "20%"
+                    right: "10%"
                 }
             }),
             React.createElement("span", {
@@ -103,7 +103,7 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
         style: {
             boxSizing: "border-box",
             display: "flex",
-            gap: "2px",
+            gap: "1px",
             height: "calc(100% - 10px)",
             padding: "1px 4px",
             position: "relative",

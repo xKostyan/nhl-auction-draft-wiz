@@ -34,7 +34,8 @@ open in its own browser tab during the draft.
   42 starts. Every actual bar has a 9px value label centered vertically over
   the chart and above the chart marks; hovering a year shows both values. This
   column can be resized from its default width, and the chart expands to use
-  its full available width.
+  its full available width. Gaps between annual actual-value bars are 50%
+  smaller than the original chart spacing.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only goalies as you type.

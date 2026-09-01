@@ -122,3 +122,6 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     assert 'transform: "translate(-50%, 50%)"' in renderer
     assert 'width: "100%"' in renderer
     assert 'zIndex: "2"' in renderer
+    assert 'gap: "1px"' in renderer
+    assert 'left: "10%"' in renderer
+    assert 'right: "10%"' in renderer
