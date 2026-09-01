@@ -5,7 +5,7 @@ from __future__ import annotations
 import dash
 from dash import Input, Output, callback, html
 
-from .position_table import build_position_grid, handle_player_cell_change
+from .position_table import build_position_grid, handle_player_cell_change, handle_player_context_action
 
 PATH = "/my-team"
 NAME = "My Team"
@@ -43,7 +43,10 @@ for _position in POSITIONS:
     @callback(
         Output(grid_id(_position), "rowData"),
         Input(grid_id(_position), "cellValueChanged"),
+        Input(grid_id(_position), "cellRendererData"),
         prevent_initial_call=True,
     )
-    def update_my_team_player(cell_changes, position=_position):
+    def update_my_team_player(cell_changes, context_action, position=_position):
+        if context_action:
+            return handle_player_context_action(position, context_action, my_team_only=True)
         return handle_player_cell_change(position, cell_changes, my_team_only=True)

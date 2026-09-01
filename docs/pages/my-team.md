@@ -22,7 +22,7 @@ the workspace and survives restarts.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
   from My Team**. The menu is displayed above the tables and closes when you
   left-click outside it. **Add to My Team** is omitted because it is redundant
-  here.
+  here. The affected table reloads immediately after a menu action.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
 

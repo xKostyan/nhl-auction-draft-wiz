@@ -234,6 +234,29 @@ def _parse_context_action(value: object) -> str:
     return action
 
 
+def handle_player_context_action(
+    position: str, context_action: dict | None, *, my_team_only: bool = False
+) -> list[dict]:
+    """Persist a custom player-name menu action emitted by the cell renderer."""
+    if not context_action:
+        return get_position_rows(position, my_team_only=my_team_only)
+    if not isinstance(context_action, dict):
+        raise ValueError("Player context-menu updates require an event dictionary.")
+
+    player_id = _parse_player_id(context_action.get("rowId"))
+    value = context_action.get("value")
+    if not isinstance(value, dict):
+        raise ValueError("Player context-menu updates require an action payload.")
+    action = _parse_context_action(value.get("action"))
+    if action == "clear-tags":
+        set_player_tags(player_id, [])
+    elif action == "clear-notes":
+        set_player_notes(player_id, "")
+    else:
+        set_player_on_my_team(player_id, action == "add-to-my-team")
+    return get_position_rows(position, my_team_only=my_team_only)
+
+
 def handle_player_cell_change(
     position: str, cell_changes: list[dict] | None, *, my_team_only: bool = False
 ) -> list[dict]:

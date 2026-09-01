@@ -335,8 +335,8 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var runAction = function (action, event) {
         event.preventDefault();
         event.stopPropagation();
-        // The unique suffix ensures repeated selections emit a grid change event.
-        props.node.setDataValue("context_action", action + ":" + Date.now());
+        // setData emits Dash AG Grid's cellRendererData prop with this row's id.
+        props.setData({ action: action, timestamp: Date.now() });
         setMenuOpen(false);
     };
     var menuAction = function (label, action) {

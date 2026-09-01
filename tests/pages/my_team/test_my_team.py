@@ -4,7 +4,7 @@ import dash_ag_grid as dag
 
 from src.data_loader import load_players
 from src.pages import my_team
-from src.pages.position_table import get_position_rows, handle_player_cell_change
+from src.pages.position_table import get_position_rows, handle_player_context_action
 from src.storage import clear_workspace, configure_storage, import_yearly_dataset
 
 
@@ -36,14 +36,12 @@ def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path)
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
 
-    handle_player_cell_change(
-        "G", [{"colId": "context_action", "value": "add-to-my-team:1", "data": {"id": player_id}}]
-    )
+    handle_player_context_action("G", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
     assert [row["id"] for row in get_position_rows("G", my_team_only=True)] == [player_id]
 
-    handle_player_cell_change(
+    handle_player_context_action(
         "G",
-        [{"colId": "context_action", "value": "remove-from-my-team:2", "data": {"id": player_id}}],
+        {"rowId": player_id, "value": {"action": "remove-from-my-team"}},
         my_team_only=True,
     )
     assert get_position_rows("G", my_team_only=True) == []

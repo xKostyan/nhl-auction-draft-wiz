@@ -11,6 +11,7 @@ from src.pages.position_table import (
     get_player_search_target,
     get_position_rows,
     handle_drafted_cell_change,
+    handle_player_context_action,
 )
 from src.storage import (
     clear_workspace,
@@ -246,6 +247,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
     assert "playerNameContextMenuRenderer" in renderer
+    assert "props.setData({ action: action, timestamp: Date.now() })" in renderer
     assert "ReactDOM.createPortal" in renderer
     assert 'position: "fixed"' in renderer
     assert 'zIndex: "10000"' in renderer
@@ -351,10 +353,10 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     handle_drafted_cell_change("F", [
         {"colId": "tags", "value": ["PP1"], "data": {"id": player_id}},
         {"colId": "notes", "value": "Keep", "data": {"id": player_id}},
-        {"colId": "context_action", "value": "clear-tags:1", "data": {"id": player_id}},
-        {"colId": "context_action", "value": "clear-notes:2", "data": {"id": player_id}},
-        {"colId": "context_action", "value": "add-to-my-team:3", "data": {"id": player_id}},
     ])
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-tags"}})
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-notes"}})
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
 
     player = next(row for row in get_position_rows("F") if row["id"] == player_id)
     assert player["tags"] == []
