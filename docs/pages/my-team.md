@@ -26,6 +26,8 @@ membership flag is stored in the workspace and survives restarts.
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it.
+- The **Goalies** table includes **p GS** between Average Performance and
+  projected TFP, showing projected starts for the detected draft season.
 - The **Forwards**, **Defencemen**, and **Utility** headings show each table's
   current projected TFP sum for the detected draft season. Goalies and Bench
   do not show a total. Missing player projections count as zero.

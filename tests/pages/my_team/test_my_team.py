@@ -55,6 +55,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert [column["field"] for column in bench.columnDefs] == [
         "search_focus", "slot_number", "name", "position", "projected_tfp", "projected_afp"
     ]
+    goalie = grids[3]
+    assert [column["field"] for column in goalie.columnDefs][4:8] == [
+        "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
+    ]
 
 
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):

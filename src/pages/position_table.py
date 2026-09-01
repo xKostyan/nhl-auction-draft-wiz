@@ -280,6 +280,13 @@ def _projected_points_column_defs() -> list[dict]:
     ]
 
 
+def _projected_game_starts_column_def(position: str) -> list[dict]:
+    """Return the upcoming projected game-starts column for goalies."""
+    if position != "G":
+        return []
+    return [{"field": "projected_gs", "headerName": "p GS", "type": "numericColumn"}]
+
+
 def _health_column_def(position: str) -> list[dict]:
     """Return the actual-GP health sparkline column for skater tables."""
     if position not in SKATER_POSITIONS:
@@ -590,6 +597,7 @@ def build_position_grid(
             *_health_column_def(position),
             *_game_starts_column_def(position),
             *_average_performance_column_def(position),
+            *_projected_game_starts_column_def(position),
             *_projected_points_column_defs(),
             *_tags_column_def(position),
             *_notes_column_def(disable_empty_slots=slot_count is not None),
@@ -660,6 +668,7 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
         *(_health_column_def("F") if is_skater_table else []),
         *(_game_starts_column_def("G") if is_goalie_table else []),
         *(_average_performance_column_def(tag_position) if is_skater_table or is_goalie_table else []),
+        *(_projected_game_starts_column_def("G") if is_goalie_table else []),
         *_projected_points_column_defs(),
         *(_tags_column_def(tag_position) if is_skater_table or is_goalie_table else []),
         *(_notes_column_def(disable_empty_slots=True) if is_skater_table or is_goalie_table else []),

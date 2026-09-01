@@ -15,12 +15,14 @@ open in its own browser tab during the draft.
 
 - The page header contains only the page title and player search control.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Game Starts**, **Average Performance**, **p TFP `<upcoming year>`**,
+  name**, **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
   **p AFP `<upcoming year>`**, **Tags**, and **Notes** columns, in that order.
   `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
   both sourced from the detected upcoming draft season. Player database ids are
   retained internally for updates but are never displayed.
+- **p GS** shows the player's projected game starts for the detected upcoming
+  draft season.
 - Columns auto-size from their cell contents; header text does not determine
   their default width. All column headers are centered, wrap to multiple lines,
   and grow the header row as needed; cell values do not wrap. Cell values,

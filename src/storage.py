@@ -389,7 +389,13 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                         WHEN stats.stats_type = 'projected' AND stats.stat_name = 'FP_AVG'
                         THEN stats.stat_value
                     END
-                ) AS projected_afp
+                ) AS projected_afp,
+                MAX(
+                    CASE
+                        WHEN stats.stats_type = 'projected' AND stats.stat_name = 'GS'
+                        THEN stats.stat_value
+                    END
+                ) AS projected_gs
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
             LEFT JOIN player_stats stats
@@ -433,6 +439,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
+                    "projected_gs": row["projected_gs"] if normalized_position == "G" else None,
                     "actual_gp_history": actual_gp_by_player.get(int(row["id"]), []),
                 }
             )
@@ -546,6 +553,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             "notes",
         ]
         if normalized_position == "G":
+            columns.append("projected_gs")
             columns.append("game_starts_history")
         return pd.DataFrame(
             data,
