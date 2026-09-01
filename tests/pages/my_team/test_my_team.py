@@ -66,6 +66,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
     assert [len(grid.rowData) for grid in grids] == [9, 5, 2, 2, 4]
     assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [50, 50, 50, 50, 50]
+    assert all(grid.dashGridOptions["suppressVerticalScroll"] is True for grid in grids)
     assert [grid.style["height"] for grid in grids] == ["500px", "300px", "150px", "150px", "250px"]
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)

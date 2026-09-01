@@ -743,6 +743,7 @@ def build_my_team_grid(
         },
         dashGridOptions={
             "rowHeight": 50,
+            "suppressVerticalScroll": True,
             "rowSelection": {
                 "mode": "singleRow",
                 "checkboxes": False,
