@@ -2,6 +2,9 @@ var dagcomponentfuncs = window.dashAgGridComponentFunctions =
     window.dashAgGridComponentFunctions || {};
 
 dagcomponentfuncs.actualGpSparkline = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var bars = history.slice().reverse().map(function (season) {
         var gamesPlayed = Math.max(0, Math.min(84, Number(season.games_played) || 0));
@@ -36,6 +39,9 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
 };
 
 dagcomponentfuncs.goalieGameStartsChart = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var scaleMaximum = 70;
     var pointCount = history.length;
@@ -133,6 +139,9 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
 };
 
 dagcomponentfuncs.averagePerformanceChart = function (props) {
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
     var history = Array.isArray(props.value) ? props.value : [];
     var scaleMaximum = props.scaleMaximum;
     var pointCount = history.length;
@@ -206,6 +215,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
     var selectedTags = Array.isArray(props.value) ? props.value : [];
     var availableTags = Array.isArray(props.availableTags) ? props.availableTags : [];
     var tagColors = props.tagColors || {};
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
     var editingState = React.useState(false);
     var editing = editingState[0];
     var setEditing = editingState[1];
@@ -235,6 +245,10 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             type: "button"
         }, tag);
     };
+
+    if (isEmptySlot) {
+        return null;
+    }
 
     return React.createElement("div", {
         onClick: function (event) {
@@ -315,6 +329,7 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var setMenuPosition = menuPositionState[1];
     var menuRef = React.useRef(null);
     var allowAddToMyTeam = Boolean(props.allowAddToMyTeam);
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
 
     React.useEffect(function () {
         if (!menuOpen) {
@@ -360,13 +375,16 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
         onContextMenu: function (event) {
             event.preventDefault();
             event.stopPropagation();
+            if (isEmptySlot) {
+                return;
+            }
             setMenuPosition({ left: event.clientX, top: event.clientY });
             setMenuOpen(true);
         },
         style: { position: "relative", width: "100%" }
     }, [
         React.createElement("span", { key: "name" }, props.value),
-        menuOpen ? ReactDOM.createPortal(React.createElement("div", {
+        !isEmptySlot && menuOpen ? ReactDOM.createPortal(React.createElement("div", {
             key: "menu",
             ref: menuRef,
             role: "menu",
@@ -445,6 +463,10 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
             props.node.removeEventListener("rowSelected", updateSelection);
         };
     }, [props.node]);
+
+    if (props.data && props.data.is_empty_slot) {
+        return null;
+    }
 
     return React.createElement("button", {
         "aria-label": selected ? "Player highlighted" : "Highlight player",

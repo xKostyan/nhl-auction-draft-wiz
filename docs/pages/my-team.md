@@ -15,8 +15,11 @@ the workspace and survives restarts.
 
 ## UI and behavior
 
-- The page has one table per position, with the same player data, inline
-  charts, Tags, and Notes as the matching position page.
+- The page has one fixed-size table per position: 9 forward slots, 5
+  defencemen slots, and 4 goalie slots. Every slot has an unlabeled numeric
+  index; vacant slots are visibly styled and labeled **Empty slot**.
+- My Team rows are 40px high. Tables retain the same player data, inline
+  charts, Tags, and Notes as their matching position page.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove

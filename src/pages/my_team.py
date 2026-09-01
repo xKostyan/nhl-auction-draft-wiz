@@ -5,7 +5,7 @@ from __future__ import annotations
 import dash
 from dash import Input, Output, callback, ctx, html
 
-from .position_table import build_position_grid, handle_player_grid_update
+from .position_table import MY_TEAM_SLOT_COUNTS, build_position_grid, handle_player_grid_update
 
 PATH = "/my-team"
 NAME = "My Team"
@@ -28,7 +28,11 @@ def layout(**_kwargs):
                 html.Section(
                     className="my-team-position",
                     children=[html.H3({"F": "Forwards", "D": "Defencemen", "G": "Goalies"}[position]),
-                              build_position_grid(position, my_team_only=True)],
+                              build_position_grid(
+                                  position,
+                                  my_team_only=True,
+                                  slot_count=MY_TEAM_SLOT_COUNTS[position],
+                              )],
                 )
                 for position in POSITIONS
             ],
@@ -53,4 +57,5 @@ for _position in POSITIONS:
             context_action,
             ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
             my_team_only=True,
+            slot_count=MY_TEAM_SLOT_COUNTS[position],
         )

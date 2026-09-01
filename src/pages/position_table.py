@@ -34,6 +34,7 @@ TAG_COLORS = {
     "1B": "yellow",
     "Backup": "red",
 }
+MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 4}
 
 
 def position_grid_id(position: str) -> str:
@@ -49,6 +50,40 @@ def position_search_id(position: str) -> str:
 def get_position_rows(position: str, *, my_team_only: bool = False) -> list[dict]:
     """Return the current persisted player rows for one position."""
     return get_players_for_position_grid(position, my_team_only=my_team_only).to_dict("records")
+
+
+def get_position_grid_rows(
+    position: str, *, my_team_only: bool = False, slot_count: int | None = None
+) -> list[dict]:
+    """Return position rows, filling fixed My Team roster slots when requested."""
+    rows = get_position_rows(position, my_team_only=my_team_only)
+    if slot_count is None:
+        return rows
+    if not my_team_only or slot_count < 1:
+        raise ValueError("Fixed player slots are only supported for a positive My Team slot count.")
+
+    roster_rows = rows[:slot_count]
+    for index, row in enumerate(roster_rows, start=1):
+        row["slot_number"] = index
+
+    for slot_number in range(len(roster_rows) + 1, slot_count + 1):
+        roster_rows.append(
+            {
+                "id": f"empty-slot-{position}-{slot_number}",
+                "slot_number": slot_number,
+                "name": "Empty slot",
+                "is_empty_slot": True,
+                "drafted": False,
+                "projected_tfp": None,
+                "projected_afp": None,
+                "actual_gp_history": [],
+                "average_performance_history": [],
+                "game_starts_history": [],
+                "tags": [],
+                "notes": "",
+            }
+        )
+    return roster_rows
 
 
 def get_position_search_options(position: str) -> list[dict]:
@@ -158,7 +193,7 @@ def _tags_column_def(position: str) -> list[dict]:
     ]
 
 
-def _notes_column_def() -> list[dict]:
+def _notes_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
     """Return the editable wrapped player notes column."""
     return [
         {
@@ -174,7 +209,9 @@ def _notes_column_def() -> list[dict]:
                 "lineHeight": "18px",
                 "whiteSpace": "normal",
             },
-            "editable": True,
+            "editable": (
+                {"function": "!params.data.is_empty_slot"} if disable_empty_slots else True
+            ),
             "resizable": True,
             "suppressAutoSize": True,
             "width": 220,
@@ -235,11 +272,15 @@ def _parse_context_action(value: object) -> str:
 
 
 def handle_player_context_action(
-    position: str, context_action: dict | None, *, my_team_only: bool = False
+    position: str,
+    context_action: dict | None,
+    *,
+    my_team_only: bool = False,
+    slot_count: int | None = None,
 ) -> list[dict]:
     """Persist a custom player-name menu action emitted by the cell renderer."""
     if not context_action:
-        return get_position_rows(position, my_team_only=my_team_only)
+        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
     if not isinstance(context_action, dict):
         raise ValueError("Player context-menu updates require an event dictionary.")
 
@@ -254,11 +295,15 @@ def handle_player_context_action(
         set_player_notes(player_id, "")
     else:
         set_player_on_my_team(player_id, action == "add-to-my-team")
-    return get_position_rows(position, my_team_only=my_team_only)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_cell_change(
-    position: str, cell_changes: list[dict] | None, *, my_team_only: bool = False
+    position: str,
+    cell_changes: list[dict] | None,
+    *,
+    my_team_only: bool = False,
+    slot_count: int | None = None,
 ) -> list[dict]:
     """Persist drafted and tag cell edits and return fresh grid rows.
 
@@ -267,7 +312,7 @@ def handle_player_cell_change(
     clipboard action can update multiple status cells in one callback.
     """
     if not cell_changes:
-        return get_position_rows(position)
+        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
     for cell_change in cell_changes:
         if not isinstance(cell_change, dict):
@@ -300,7 +345,7 @@ def handle_player_cell_change(
             raise ValueError("Player note updates require text.")
         else:
             set_player_notes(player_id, value)
-    return get_position_rows(position, my_team_only=my_team_only)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_grid_update(
@@ -310,6 +355,7 @@ def handle_player_grid_update(
     triggered_property: str,
     *,
     my_team_only: bool = False,
+    slot_count: int | None = None,
 ) -> list[dict]:
     """Dispatch only the grid property that initiated this callback.
 
@@ -318,21 +364,35 @@ def handle_player_grid_update(
     same callback.
     """
     if triggered_property == "cellRendererData":
-        return handle_player_context_action(position, context_action, my_team_only=my_team_only)
+        return handle_player_context_action(
+            position, context_action, my_team_only=my_team_only, slot_count=slot_count
+        )
     if triggered_property == "cellValueChanged":
-        return handle_player_cell_change(position, cell_changes, my_team_only=my_team_only)
+        return handle_player_cell_change(
+            position, cell_changes, my_team_only=my_team_only, slot_count=slot_count
+        )
     raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
 
 
 handle_drafted_cell_change = handle_player_cell_change
 
 
-def build_position_grid(position: str, *, my_team_only: bool = False) -> dag.AgGrid:
+def build_position_grid(
+    position: str, *, my_team_only: bool = False, slot_count: int | None = None
+) -> dag.AgGrid:
     """Build one reusable position grid, optionally restricted to My Team."""
+    if slot_count is not None and (not my_team_only or slot_count < 1):
+        raise ValueError("Fixed player slots are only supported for a positive My Team slot count.")
+    grid_style = {"flex": "1 1 0", "minHeight": 0, "width": "100%"}
+    if slot_count is not None:
+        grid_style.update({"flex": "0 0 auto", "height": f"{slot_count * 40 + 50}px"})
+
     return dag.AgGrid(
         id=position_grid_id(position) if not my_team_only else f"my-team-{position.lower()}-player-grid",
         className="table-values-large",
-        rowData=get_position_rows(position, my_team_only=my_team_only),
+        rowData=get_position_grid_rows(
+            position, my_team_only=my_team_only, slot_count=slot_count
+        ),
         getRowId="params.data.id",
         columnDefs=[
             {
@@ -356,13 +416,21 @@ def build_position_grid(position: str, *, my_team_only: bool = False) -> dag.AgG
                 "resizable": False,
                 "width": 26,
             }]),
+            *([] if slot_count is None else [{
+                "field": "slot_number",
+                "headerName": "",
+                "type": "numericColumn",
+                "sortable": False,
+                "resizable": False,
+                "width": 32,
+            }]),
             _player_name_column_def(allow_add_to_my_team=not my_team_only),
             *_health_column_def(position),
             *_game_starts_column_def(position),
             *_average_performance_column_def(position),
             *_projected_points_column_defs(),
             *_tags_column_def(position),
-            *_notes_column_def(),
+            *_notes_column_def(disable_empty_slots=slot_count is not None),
         ],
         columnSize="autoSize",
         columnSizeOptions={"skipHeader": True},
@@ -376,19 +444,26 @@ def build_position_grid(position: str, *, my_team_only: bool = False) -> dag.AgG
             "wrapHeaderText": True,
         },
         dashGridOptions={
-            "rowHeight": 60,
+            "rowHeight": 40 if slot_count is not None else 60,
             "rowSelection": {
                 "mode": "singleRow",
                 "checkboxes": False,
                 "headerCheckbox": False,
             },
-            **({} if my_team_only else {
+            **({
+                "getRowStyle": {
+                    "function": (
+                        "params.data.is_empty_slot ? "
+                        "{color: '#999', backgroundColor: '#f2f2f2', fontStyle: 'italic'} : null"
+                    )
+                }
+            } if slot_count is not None else {} if my_team_only else {
                 "getRowStyle": {
                     "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
                 }
             }),
         },
-        style={"flex": "1 1 0", "minHeight": 0, "width": "100%"},
+        style=grid_style,
     )
 
 

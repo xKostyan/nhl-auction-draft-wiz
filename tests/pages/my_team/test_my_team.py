@@ -4,7 +4,12 @@ import dash_ag_grid as dag
 
 from src.data_loader import load_players
 from src.pages import my_team
-from src.pages.position_table import get_position_rows, handle_player_context_action
+from src.pages.position_table import (
+    MY_TEAM_SLOT_COUNTS,
+    get_position_grid_rows,
+    get_position_rows,
+    handle_player_context_action,
+)
 from src.storage import clear_workspace, configure_storage, import_yearly_dataset
 
 
@@ -14,7 +19,7 @@ def test_page_is_registered_at_the_expected_path_and_order():
     assert my_team.ORDER == 4
 
 
-def test_layout_has_one_undimmed_grid_per_position_without_drafted_column(tmp_path, walk_components):
+def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path, walk_components):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -25,7 +30,12 @@ def test_layout_has_one_undimmed_grid_per_position_without_drafted_column(tmp_pa
         "my-team-f-player-grid", "my-team-d-player-grid", "my-team-g-player-grid"
     ]
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
-    assert all("getRowStyle" not in grid.dashGridOptions for grid in grids)
+    assert [len(grid.rowData) for grid in grids] == [9, 5, 4]
+    assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [40, 40, 40]
+    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "210px"]
+    assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
+    assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
+    assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
 
@@ -45,3 +55,15 @@ def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path)
         my_team_only=True,
     )
     assert get_position_rows("G", my_team_only=True) == []
+
+
+def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    rows = get_position_grid_rows("F", my_team_only=True, slot_count=MY_TEAM_SLOT_COUNTS["F"])
+
+    assert [row["slot_number"] for row in rows] == list(range(1, 10))
+    assert all(row["is_empty_slot"] is True for row in rows)
+    assert all(row["name"] == "Empty slot" for row in rows)
