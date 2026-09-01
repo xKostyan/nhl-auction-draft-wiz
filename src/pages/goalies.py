@@ -41,7 +41,7 @@ def update_drafted_status(cell_change, context_action):
         POSITION,
         cell_change,
         context_action,
-        ctx.triggered_prop_id.rsplit(".", 1)[-1],
+        ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
     )
 
 

@@ -51,6 +51,6 @@ for _position in POSITIONS:
             position,
             cell_changes,
             context_action,
-            ctx.triggered_prop_id.rsplit(".", 1)[-1],
+            ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
             my_team_only=True,
         )

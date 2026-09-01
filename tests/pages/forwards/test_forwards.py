@@ -379,3 +379,25 @@ def test_cell_edit_is_not_blocked_by_a_previous_context_action(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["tags"] == ["PP1"]
+
+
+def test_context_event_is_dispatched_without_reapplying_on_later_cell_edits(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+
+    handle_player_grid_update(
+        "F",
+        None,
+        {"rowId": player_id, "value": {"action": "clear-notes"}},
+        "cellRendererData",
+    )
+    rows = handle_player_grid_update(
+        "F",
+        [{"colId": "notes", "value": "New note", "data": {"id": player_id}}],
+        {"rowId": player_id, "value": {"action": "clear-notes"}},
+        "cellValueChanged",
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["notes"] == "New note"
