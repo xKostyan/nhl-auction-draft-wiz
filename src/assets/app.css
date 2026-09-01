@@ -25,6 +25,18 @@ body,
     min-height: 0;
 }
 
+.my-team-page {
+    overflow-y: auto;
+    width: 100%;
+}
+
+.my-team-position {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+    min-height: 200px;
+}
+
 .position-page {
     width: 100%;
 }

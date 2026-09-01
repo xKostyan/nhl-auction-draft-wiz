@@ -23,18 +23,18 @@ _PAGES_LOCATION_ID = getattr(dash.dash, "_ID_LOCATION", "_pages_location")
 def _landing_page_path() -> str:
     """Decide which page to redirect to from "/".
 
-    If the workspace already has imported players, land on the Forwards
+    If the workspace already has imported players, land on the My Team
     page; otherwise land on the Import data page so the user is prompted to
     import a season's CSV export first.
     """
     # Imported lazily: these modules call `dash.register_page(...)` at import
     # time, which Dash only allows after a `Dash(use_pages=True, ...)` app has
     # been instantiated (see build_dashboard()).
-    from .pages import forwards, import_data
+    from .pages import import_data, my_team
 
     summary = get_workspace_summary()
     if summary["total_players"] > 0:
-        return forwards.PATH
+        return my_team.PATH
     return import_data.PATH
 
 
@@ -50,7 +50,7 @@ def build_dashboard() -> Dash:
 
     # Importing the page modules triggers their `dash.register_page(...)` calls.
     # This must happen after the Dash(use_pages=True) app above is created.
-    from .pages import data_table_1, defencemen, forwards, goalies, import_data  # noqa: F401  (side-effect import)
+    from .pages import defencemen, forwards, goalies, import_data, my_team  # noqa: F401  (side-effect import)
 
     app.layout = html.Div(
         className="app-shell",

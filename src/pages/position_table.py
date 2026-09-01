@@ -10,6 +10,7 @@ from ..storage import (
     get_workspace_value,
     set_player_drafted,
     set_player_notes,
+    set_player_on_my_team,
     set_player_tags,
 )
 
@@ -45,9 +46,9 @@ def position_search_id(position: str) -> str:
     return f"{position.lower()}-player-search"
 
 
-def get_position_rows(position: str) -> list[dict]:
+def get_position_rows(position: str, *, my_team_only: bool = False) -> list[dict]:
     """Return the current persisted player rows for one position."""
-    return get_players_for_position_grid(position).to_dict("records")
+    return get_players_for_position_grid(position, my_team_only=my_team_only).to_dict("records")
 
 
 def get_position_search_options(position: str) -> list[dict]:
@@ -182,6 +183,16 @@ def _notes_column_def() -> list[dict]:
     ]
 
 
+def _player_name_column_def(*, allow_add_to_my_team: bool) -> dict:
+    """Return the player-name column with its shared custom context menu."""
+    return {
+        "field": "name",
+        "headerName": "Player name",
+        "cellRenderer": "playerNameContextMenuRenderer",
+        "cellRendererParams": {"allowAddToMyTeam": allow_add_to_my_team},
+    }
+
+
 def _parse_player_id(value: object) -> int:
     """Convert the JSON-compatible grid row id to a database player id."""
     if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -213,7 +224,19 @@ def _parse_player_tags(position: str, value: object) -> list[str]:
     return value
 
 
-def handle_player_cell_change(position: str, cell_changes: list[dict] | None) -> list[dict]:
+def _parse_context_action(value: object) -> str:
+    """Extract the action from the timestamp-suffixed browser menu payload."""
+    if not isinstance(value, str):
+        raise ValueError("Player context-menu updates require an action.")
+    action = value.split(":", 1)[0]
+    if action not in {"clear-tags", "clear-notes", "add-to-my-team", "remove-from-my-team"}:
+        raise ValueError("Player context-menu action is not recognized.")
+    return action
+
+
+def handle_player_cell_change(
+    position: str, cell_changes: list[dict] | None, *, my_team_only: bool = False
+) -> list[dict]:
     """Persist drafted and tag cell edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
@@ -227,7 +250,7 @@ def handle_player_cell_change(position: str, cell_changes: list[dict] | None) ->
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
         column_id = cell_change.get("colId")
-        if column_id not in {"drafted", "notes", "tags"}:
+        if column_id not in {"drafted", "notes", "tags", "context_action"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -242,14 +265,87 @@ def handle_player_cell_change(position: str, cell_changes: list[dict] | None) ->
             set_player_drafted(player_id, _parse_drafted_value(value))
         elif column_id == "tags":
             set_player_tags(player_id, _parse_player_tags(position, value))
+        elif column_id == "context_action":
+            action = _parse_context_action(value)
+            if action == "clear-tags":
+                set_player_tags(player_id, [])
+            elif action == "clear-notes":
+                set_player_notes(player_id, "")
+            else:
+                set_player_on_my_team(player_id, action == "add-to-my-team")
         elif not isinstance(value, str):
             raise ValueError("Player note updates require text.")
         else:
             set_player_notes(player_id, value)
-    return get_position_rows(position)
+    return get_position_rows(position, my_team_only=my_team_only)
 
 
 handle_drafted_cell_change = handle_player_cell_change
+
+
+def build_position_grid(position: str, *, my_team_only: bool = False) -> dag.AgGrid:
+    """Build one reusable position grid, optionally restricted to My Team."""
+    return dag.AgGrid(
+        id=position_grid_id(position) if not my_team_only else f"my-team-{position.lower()}-player-grid",
+        className="table-values-large",
+        rowData=get_position_rows(position, my_team_only=my_team_only),
+        getRowId="params.data.id",
+        columnDefs=[
+            {
+                "field": "search_focus",
+                "headerName": "",
+                "cellRenderer": "searchFocusCircleRenderer",
+                "sortable": False,
+                "resizable": False,
+                "suppressMenu": True,
+                "width": 20,
+            },
+            *([] if my_team_only else [{
+                "field": "drafted",
+                "headerName": "#",
+                "cellRenderer": "draftedSwitchRenderer",
+                "cellStyle": {
+                    **VERTICALLY_CENTERED_CELL_STYLE,
+                    "paddingLeft": "2px",
+                    "paddingRight": "2px",
+                },
+                "resizable": False,
+                "width": 26,
+            }]),
+            _player_name_column_def(allow_add_to_my_team=not my_team_only),
+            *_health_column_def(position),
+            *_game_starts_column_def(position),
+            *_average_performance_column_def(position),
+            *_projected_points_column_defs(),
+            *_tags_column_def(position),
+            *_notes_column_def(),
+        ],
+        columnSize="autoSize",
+        columnSizeOptions={"skipHeader": True},
+        dangerously_allow_code=True,
+        defaultColDef={
+            "autoHeaderHeight": True,
+            "cellStyle": VERTICALLY_CENTERED_CELL_STYLE,
+            "headerClass": "centered-column-header",
+            "resizable": True,
+            "sortable": True,
+            "wrapHeaderText": True,
+        },
+        dashGridOptions={
+            "rowHeight": 60,
+            "rowSelection": {
+                "mode": "singleRow",
+                "checkboxes": False,
+                "headerCheckbox": False,
+            },
+            **({} if my_team_only else {
+                "getRowStyle": {
+                    "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
+                }
+            }),
+        },
+        style={"flex": "1 1 0", "minHeight": 0, "width": "100%"},
+    )
 
 
 def build_position_layout(position: str):
@@ -267,64 +363,6 @@ def build_position_layout(position: str):
                 clearable=True,
                 className="player-search",
             ),
-            dag.AgGrid(
-                id=position_grid_id(position),
-                className="table-values-large",
-                rowData=get_position_rows(position),
-                getRowId="params.data.id",
-                columnDefs=[
-                    {
-                        "field": "search_focus",
-                        "headerName": "",
-                        "cellRenderer": "searchFocusCircleRenderer",
-                        "sortable": False,
-                        "resizable": False,
-                        "suppressMenu": True,
-                        "width": 20,
-                    },
-                    {
-                        "field": "drafted",
-                        "headerName": "#",
-                        "cellRenderer": "draftedSwitchRenderer",
-                        "cellStyle": {
-                            **VERTICALLY_CENTERED_CELL_STYLE,
-                            "paddingLeft": "2px",
-                            "paddingRight": "2px",
-                        },
-                        "resizable": False,
-                        "width": 26,
-                    },
-                    {"field": "name", "headerName": "Player name"},
-                    *_health_column_def(position),
-                    *_game_starts_column_def(position),
-                    *_average_performance_column_def(position),
-                    *_projected_points_column_defs(),
-                    *_tags_column_def(position),
-                    *_notes_column_def(),
-                ],
-                columnSize="autoSize",
-                columnSizeOptions={"skipHeader": True},
-                dangerously_allow_code=True,
-                defaultColDef={
-                    "autoHeaderHeight": True,
-                    "cellStyle": VERTICALLY_CENTERED_CELL_STYLE,
-                    "headerClass": "centered-column-header",
-                    "resizable": True,
-                    "sortable": True,
-                    "wrapHeaderText": True,
-                },
-                dashGridOptions={
-                    "rowHeight": 60,
-                    "rowSelection": {
-                        "mode": "singleRow",
-                        "checkboxes": False,
-                        "headerCheckbox": False,
-                    },
-                    "getRowStyle": {
-                        "function": "params.data.drafted ? {color: '#888', backgroundColor: '#f2f2f2'} : null"
-                    }
-                },
-                style={"flex": "1 1 0", "minHeight": 0, "width": "100%"},
-            ),
+            build_position_grid(position),
         ],
     )

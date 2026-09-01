@@ -63,7 +63,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "resizable": False,
             "width": 26,
         },
-        {"field": "name", "headerName": "Player name"},
+        {
+            "field": "name",
+            "headerName": "Player name",
+            "cellRenderer": "playerNameContextMenuRenderer",
+            "cellRendererParams": {"allowAddToMyTeam": True},
+        },
         {
             "field": "actual_gp_history",
             "headerName": "Health (actual GP)",
@@ -329,3 +334,23 @@ def test_note_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."
+
+
+def test_player_context_actions_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    handle_drafted_cell_change("F", [
+        {"colId": "tags", "value": ["PP1"], "data": {"id": player_id}},
+        {"colId": "notes", "value": "Keep", "data": {"id": player_id}},
+        {"colId": "context_action", "value": "clear-tags:1", "data": {"id": player_id}},
+        {"colId": "context_action", "value": "clear-notes:2", "data": {"id": player_id}},
+        {"colId": "context_action", "value": "add-to-my-team:3", "data": {"id": player_id}},
+    ])
+
+    player = next(row for row in get_position_rows("F") if row["id"] == player_id)
+    assert player["tags"] == []
+    assert player["notes"] == ""
+    assert player["drafted"] is True

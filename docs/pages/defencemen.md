@@ -65,6 +65,10 @@ open in its own browser tab during the draft.
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row
   background.
+- Right-click a **Player name** for a custom menu. **Clear Tags** and **Clear
+  Notes** remove those persisted values. **Add to My Team** persistently adds
+  the player to the My Team roster (and marks them drafted), while **Remove
+  from My Team** only removes that roster membership.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,
   so drafted state survives app restarts.
 

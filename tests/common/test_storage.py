@@ -14,6 +14,7 @@ from src.storage import (
     import_yearly_dataset,
     set_player_drafted,
     set_player_notes,
+    set_player_on_my_team,
     set_player_tags,
 )
 
@@ -202,6 +203,14 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_drafted(player_id, False)
     available_forwards = get_players_for_position_grid("F")
     assert available_forwards.loc[available_forwards["id"] == player_id, "drafted"].item() is False
+
+    set_player_on_my_team(player_id, True)
+    my_team_forwards = get_players_for_position_grid("F", my_team_only=True)
+    assert my_team_forwards["id"].tolist() == [player_id]
+    assert my_team_forwards["drafted"].item() is True
+
+    set_player_on_my_team(player_id, False)
+    assert get_players_for_position_grid("F", my_team_only=True).empty
 
 
 def test_position_grid_rejects_unknown_position(tmp_path):

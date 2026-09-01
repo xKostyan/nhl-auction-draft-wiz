@@ -306,6 +306,71 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             }, "+"));
 };
 
+dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
+    var menuState = React.useState(false);
+    var menuOpen = menuState[0];
+    var setMenuOpen = menuState[1];
+    var allowAddToMyTeam = Boolean(props.allowAddToMyTeam);
+
+    var runAction = function (action, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        // The unique suffix ensures repeated selections emit a grid change event.
+        props.node.setDataValue("context_action", action + ":" + Date.now());
+        setMenuOpen(false);
+    };
+    var menuAction = function (label, action) {
+        return React.createElement("button", {
+            key: action,
+            onClick: function (event) { runAction(action, event); },
+            style: {
+                backgroundColor: "#fff",
+                border: "none",
+                cursor: "pointer",
+                display: "block",
+                padding: "6px 10px",
+                textAlign: "left",
+                width: "100%"
+            },
+            type: "button"
+        }, label);
+    };
+
+    return React.createElement("div", {
+        onContextMenu: function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setMenuOpen(true);
+        },
+        style: { position: "relative", width: "100%" }
+    }, [
+        React.createElement("span", { key: "name" }, props.value),
+        menuOpen ? React.createElement("div", {
+            key: "menu",
+            onContextMenu: function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            },
+            style: {
+                backgroundColor: "#fff",
+                border: "1px solid #999",
+                borderRadius: "4px",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+                left: "0",
+                minWidth: "155px",
+                position: "absolute",
+                top: "100%",
+                zIndex: "10"
+            }
+        }, [
+            menuAction("Clear Tags", "clear-tags"),
+            menuAction("Clear Notes", "clear-notes"),
+            allowAddToMyTeam ? menuAction("Add to My Team", "add-to-my-team") : null,
+            menuAction("Remove from My Team", "remove-from-my-team")
+        ]) : null
+    ]);
+};
+
 dagcomponentfuncs.draftedSwitchRenderer = function (props) {
     var drafted = Boolean(props.value);
     var available = !drafted;

@@ -61,11 +61,20 @@ def ensure_schema() -> None:
                 name TEXT NOT NULL,
                 position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
                 selected INTEGER NOT NULL DEFAULT 0,
+                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
                 current_season INTEGER NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+        player_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(players)").fetchall()
+        }
+        if "on_my_team" not in player_columns:
+            conn.execute(
+                "ALTER TABLE players ADD COLUMN on_my_team INTEGER NOT NULL DEFAULT 0 "
+                "CHECK(on_my_team IN (0, 1))"
+            )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_status (
@@ -331,7 +340,7 @@ def get_players_for_grid() -> pd.DataFrame:
         conn.close()
 
 
-def get_players_for_position_grid(position: str) -> pd.DataFrame:
+def get_players_for_position_grid(position: str, *, my_team_only: bool = False) -> pd.DataFrame:
     """Return one position's players, projected points, and chart histories.
 
     The player id remains in the row data so a status edit can be persisted,
@@ -373,11 +382,11 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             LEFT JOIN player_status ps ON ps.player_id = p.id
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
-            WHERE p.position = ?
+            WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
             GROUP BY p.id, p.name, ps.status
             ORDER BY p.name ASC
             """,
-            (normalized_position,),
+            (normalized_position, int(my_team_only)),
         ).fetchall()
         gp_rows = conn.execute(
             """
@@ -492,10 +501,12 @@ def get_players_for_position_grid(position: str) -> pd.DataFrame:
             """
             SELECT player_id, tag
             FROM player_tags
-            WHERE player_id IN (SELECT id FROM players WHERE position = ?)
+            WHERE player_id IN (
+                SELECT id FROM players WHERE position = ? AND (? = 0 OR on_my_team = 1)
+            )
             ORDER BY player_id ASC, tag ASC
             """,
-            (normalized_position,),
+            (normalized_position, int(my_team_only)),
         ).fetchall()
         tags_by_player: dict[int, list[str]] = {}
         for row in tag_rows:
@@ -544,6 +555,40 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
             """,
             (player_id, status),
         )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
+    """Persist whether a player belongs to the user's drafted team.
+
+    Adding a player to My Team also marks them drafted: the My Team view is a
+    subset of the live-auction roster whose members are necessarily drafted.
+    Removing them leaves their draft status unchanged.
+    """
+    if not isinstance(on_my_team, bool):
+        raise ValueError("My Team updates require a boolean value.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update My Team: player {player_id} does not exist.")
+
+        conn.execute("UPDATE players SET on_my_team = ? WHERE id = ?", (int(on_my_team), player_id))
+        if on_my_team:
+            conn.execute("UPDATE players SET selected = 1 WHERE id = ?", (player_id,))
+            conn.execute(
+                """
+                INSERT INTO player_status (player_id, status, notes)
+                VALUES (?, 'drafted', '')
+                ON CONFLICT(player_id) DO UPDATE SET
+                    status = 'drafted',
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (player_id,),
+            )
         conn.commit()
     finally:
         conn.close()

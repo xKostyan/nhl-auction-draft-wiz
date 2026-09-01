@@ -11,7 +11,7 @@ This repository is a Python dashboard project for NHL auction draft planning. Th
 
 The goal is to provide a single-agent-friendly environment for building and iterating on a draft planning dashboard without losing project context or conventions.
 
-**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering five pages: **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - Data table 1** (`/data-table-1`, placeholder for the future data-analysis feature). The three position pages provide name/status draft tables only. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
+**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering five pages: **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - My Team** (`/my-team`). The position pages provide live draft tables and My Team shows the persisted roster subset in three position tables. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
 
 ## Repo layout
 
@@ -46,7 +46,7 @@ Current pages (this table is the source of truth for page names/order used in fu
 | 2 | Forwards | `/forwards` | `src/pages/forwards.py` | `docs/pages/forwards.md` | `tests/pages/forwards/` | Implemented placeholder |
 | 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | `docs/pages/defencemen.md` | `tests/pages/defencemen/` | Implemented placeholder |
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` | Implemented placeholder |
-| 5 | Data table 1 | `/data-table-1` | `src/pages/data_table_1.py` | `docs/pages/data-table-1.md` | `tests/pages/data_table_1/` | Placeholder |
+| 5 | My Team | `/my-team` | `src/pages/my_team.py` | `docs/pages/my-team.md` | `tests/pages/my_team/` | Implemented |
 
 **Mandatory rule: whenever you implement, change, or extend a page's functionality, update its `docs/pages/<page-name>.md` file and its `tests/pages/<page_name>/` tests in the same change.** Do not let the docs or page-specific tests drift out of sync with the code — this is as required as the general testing rules below.
 
@@ -95,7 +95,7 @@ The app should start from the repo root and serve the Dash dashboard locally.
   `python -m pytest tests/common`
 - Run tests for one page only:
   `python -m pytest tests/pages/import_data`
-  `python -m pytest tests/pages/data_table_1`
+  `python -m pytest tests/pages/my_team`
 - Run one test file:
   `python -m pytest tests/common/test_data_loader.py`
 - Run one test by name:
@@ -122,7 +122,7 @@ The app should start from the repo root and serve the Dash dashboard locally.
 
 ## Dashboard conventions
 
-- Current app scope: page 1 ("Import data") provides 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; pages 2-4 provide dedicated position tables with name and drafted-status checkbox columns; page 5 ("Data table 1") is a placeholder with no functionality yet.
+- Current app scope: page 1 ("Import data") provides 4 CSV upload controls, an "Import season data" button, a "Clear workspace" button, a status message, and an AG Grid table confirming the imported players; pages 2-4 provide dedicated position tables with name and drafted-status checkbox columns; page 5 ("My Team") shows three persisted roster-subset tables without availability controls.
 - Do not add Plotly charts, ranking/filter views, or player status-editing UI beyond the drafted-status controls until explicitly requested — keep implementation focused on what's in the pages table above and in each page's `docs/pages/*.md` file.
 - Dash callbacks should stay thin wrappers around testable helper functions; avoid embedding business logic directly in `@dash.callback`/`@app.callback` bodies.
 - Avoid mixing business rules into layout code.
