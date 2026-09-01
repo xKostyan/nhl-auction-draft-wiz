@@ -23,8 +23,9 @@ membership flag is stored in the workspace and survives restarts.
   (including goalies) fills Bench.
 - My Team rows are 40px high. Tables retain the same player data, inline
   charts, Tags, and Notes as their matching position page. Utility has the
-  skater columns; Bench is intentionally limited to highlight, index, player
-  name, projected TFP, and projected AFP so skaters and goalies share it.
+  skater columns plus **Position** after player name. Bench is intentionally
+  limited to highlight, index, player name, **Position**, projected TFP, and
+  projected AFP so skaters and goalies share it.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove

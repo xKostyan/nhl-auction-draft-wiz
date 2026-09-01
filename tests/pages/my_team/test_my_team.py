@@ -43,9 +43,13 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
+    utility = grids[2]
+    assert [column["field"] for column in utility.columnDefs][:4] == [
+        "search_focus", "slot_number", "name", "position"
+    ]
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
-        "search_focus", "slot_number", "name", "projected_tfp", "projected_afp"
+        "search_focus", "slot_number", "name", "position", "projected_tfp", "projected_afp"
     ]
 
 
@@ -95,3 +99,5 @@ def test_skater_overflow_is_automatically_placed_in_utility_then_bench(tmp_path)
     assert [row["id"] for row in get_my_team_table_rows("F")[:9]] == expected_ids[:9]
     assert [row["id"] for row in get_my_team_table_rows("utility")[:2]] == expected_ids[9:11]
     assert get_my_team_table_rows("bench")[0]["id"] == expected_ids[11]
+    assert get_my_team_table_rows("utility")[0]["position"] == "F"
+    assert get_my_team_table_rows("bench")[0]["position"] == "F"
