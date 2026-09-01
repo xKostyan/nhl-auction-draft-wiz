@@ -218,6 +218,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#fff59d" in renderer
     assert "Close tag editor" in renderer
     assert '}, "Done")' in renderer
+    assert 'justifyContent: "flex-start"' in renderer
     assert "var available = !drafted" in renderer
     assert "props.setValue(available)" in renderer
     assert 'backgroundColor: selected ? "#388e3c" : "#d3d3d3"' in renderer

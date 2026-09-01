@@ -239,7 +239,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             display: "flex",
             flexWrap: "wrap",
             gap: "2px",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             minHeight: "16px",
             position: "relative",
             width: "100%"
