@@ -6,6 +6,7 @@ from src.data_loader import load_players
 from src.pages import my_team
 from src.pages.position_table import (
     MY_TEAM_SLOT_COUNTS,
+    get_my_team_table_rows,
     get_position_grid_rows,
     get_position_rows,
     handle_player_context_action,
@@ -27,17 +28,25 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     grids = [node for node in walk_components(my_team.layout()) if isinstance(node, dag.AgGrid)]
 
     assert [grid.id for grid in grids] == [
-        "my-team-f-player-grid", "my-team-d-player-grid", "my-team-g-player-grid"
+        "my-team-f-player-grid",
+        "my-team-d-player-grid",
+        "my-team-g-player-grid",
+        "my-team-utility-player-grid",
+        "my-team-bench-player-grid",
     ]
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
-    assert [len(grid.rowData) for grid in grids] == [9, 5, 2]
-    assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [40, 40, 40]
-    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "130px"]
+    assert [len(grid.rowData) for grid in grids] == [9, 5, 2, 2, 4]
+    assert [grid.dashGridOptions["rowHeight"] for grid in grids] == [40, 40, 40, 40, 40]
+    assert [grid.style["height"] for grid in grids] == ["410px", "250px", "130px", "130px", "210px"]
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
+    bench = grids[-1]
+    assert [column["field"] for column in bench.columnDefs] == [
+        "search_focus", "slot_number", "name", "projected_tfp", "projected_afp"
+    ]
 
 
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):
@@ -67,3 +76,22 @@ def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):
     assert [row["slot_number"] for row in rows] == list(range(1, 10))
     assert all(row["is_empty_slot"] is True for row in rows)
     assert all(row["name"] == "Empty slot" for row in rows)
+
+
+def test_skater_overflow_is_automatically_placed_in_utility_then_bench(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_ids = [
+        int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
+    ][:12]
+
+    for player_id in player_ids:
+        handle_player_context_action(
+            "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
+        )
+
+    expected_ids = [row["id"] for row in get_position_rows("F", my_team_only=True)]
+    assert [row["id"] for row in get_my_team_table_rows("F")[:9]] == expected_ids[:9]
+    assert [row["id"] for row in get_my_team_table_rows("utility")[:2]] == expected_ids[9:11]
+    assert get_my_team_table_rows("bench")[0]["id"] == expected_ids[11]

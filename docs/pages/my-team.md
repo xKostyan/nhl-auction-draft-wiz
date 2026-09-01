@@ -9,17 +9,22 @@
 ## Purpose
 
 Show the user's drafted roster, separated into **Forwards**, **Defencemen**,
-and **Goalies** tables. A player is included only after **Add to My Team** is
-selected from their player-name context menu. The membership flag is stored in
-the workspace and survives restarts.
+**Goalies**, **Utility**, and **Bench** tables. A player is included only after
+**Add to My Team** is selected from their player-name context menu. The
+membership flag is stored in the workspace and survives restarts.
 
 ## UI and behavior
 
-- The page has one fixed-size table per position: 9 forward slots, 5
-  defencemen slots, and 2 goalie slots. Every slot has an unlabeled numeric
-  index; vacant slots are visibly styled and labeled **Empty slot**.
+- The page has fixed-size tables with 9 forward, 5 defencemen, 2 goalie, 2
+  utility, and 4 bench slots. Every slot has an unlabeled numeric index;
+  vacant slots are visibly styled and labeled **Empty slot**.
+- Players are placed automatically: the main position tables fill first,
+  forward/defenceman overflow fills Utility, and all remaining overflow
+  (including goalies) fills Bench.
 - My Team rows are 40px high. Tables retain the same player data, inline
-  charts, Tags, and Notes as their matching position page.
+  charts, Tags, and Notes as their matching position page. Utility has the
+  skater columns; Bench is intentionally limited to highlight, index, player
+  name, projected TFP, and projected AFP so skaters and goalies share it.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove

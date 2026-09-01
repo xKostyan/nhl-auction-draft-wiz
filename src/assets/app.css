@@ -34,7 +34,6 @@ body,
     display: flex;
     flex-direction: column;
     margin-bottom: 24px;
-    min-height: 200px;
 }
 
 .position-page {

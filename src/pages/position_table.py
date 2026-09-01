@@ -35,6 +35,13 @@ TAG_COLORS = {
     "Backup": "red",
 }
 MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 2}
+MY_TEAM_TABLES = {
+    "F": {"title": "Forwards", "slots": 9, "skater_columns": True},
+    "D": {"title": "Defencemen", "slots": 5, "skater_columns": True},
+    "G": {"title": "Goalies", "slots": 2, "skater_columns": False},
+    "utility": {"title": "Utility", "slots": 2, "skater_columns": True},
+    "bench": {"title": "Bench", "slots": 4, "skater_columns": False},
+}
 
 
 def position_grid_id(position: str) -> str:
@@ -84,6 +91,58 @@ def get_position_grid_rows(
             }
         )
     return roster_rows
+
+
+def get_my_team_table_rows(table: str) -> list[dict]:
+    """Return fixed My Team table rows using automatic position-first placement."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+
+    forwards = get_position_rows("F", my_team_only=True)
+    defencemen = get_position_rows("D", my_team_only=True)
+    goalies = get_position_rows("G", my_team_only=True)
+    primary_rows = {
+        "F": forwards[:MY_TEAM_SLOT_COUNTS["F"]],
+        "D": defencemen[:MY_TEAM_SLOT_COUNTS["D"]],
+        "G": goalies[:MY_TEAM_SLOT_COUNTS["G"]],
+    }
+    skater_overflow = forwards[MY_TEAM_SLOT_COUNTS["F"]:] + defencemen[MY_TEAM_SLOT_COUNTS["D"]:]
+    utility_rows = skater_overflow[:MY_TEAM_TABLES["utility"]["slots"]]
+    bench_rows = skater_overflow[MY_TEAM_TABLES["utility"]["slots"]:] + goalies[MY_TEAM_SLOT_COUNTS["G"]:]
+    table_rows = {
+        **primary_rows,
+        "utility": utility_rows,
+        "bench": bench_rows[:MY_TEAM_TABLES["bench"]["slots"]],
+    }[table]
+    return _fill_my_team_slots(table, table_rows)
+
+
+def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
+    """Add stable indices and visible vacancy rows to a fixed My Team table."""
+    table_config = MY_TEAM_TABLES[table]
+    rows = player_rows[:table_config["slots"]]
+    for index, row in enumerate(rows, start=1):
+        row["slot_number"] = index
+
+    for slot_number in range(len(rows) + 1, table_config["slots"] + 1):
+        rows.append(
+            {
+                "id": f"empty-slot-{table}-{slot_number}",
+                "slot_number": slot_number,
+                "name": "Empty slot",
+                "is_empty_slot": True,
+                "drafted": False,
+                "on_my_team": False,
+                "projected_tfp": None,
+                "projected_afp": None,
+                "actual_gp_history": [],
+                "average_performance_history": [],
+                "game_starts_history": [],
+                "tags": [],
+                "notes": "",
+            }
+        )
+    return rows
 
 
 def get_position_search_options(position: str) -> list[dict]:
@@ -465,6 +524,98 @@ def build_position_grid(
         },
         style=grid_style,
     )
+
+
+def build_my_team_grid(table: str) -> dag.AgGrid:
+    """Build one fixed My Team position, utility, or bench roster table."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+    config = MY_TEAM_TABLES[table]
+    is_skater_table = config["skater_columns"]
+    is_goalie_table = table == "G"
+    tag_position = "G" if is_goalie_table else "F"
+    column_defs = [
+        {
+            "field": "search_focus",
+            "headerName": "",
+            "cellRenderer": "searchFocusCircleRenderer",
+            "sortable": False,
+            "resizable": False,
+            "suppressMenu": True,
+            "width": 20,
+        },
+        {
+            "field": "slot_number",
+            "headerName": "",
+            "type": "numericColumn",
+            "sortable": False,
+            "resizable": False,
+            "width": 32,
+        },
+        _player_name_column_def(allow_add_to_my_team=False),
+        *(_health_column_def("F") if is_skater_table else []),
+        *(_game_starts_column_def("G") if is_goalie_table else []),
+        *(_average_performance_column_def(tag_position) if is_skater_table or is_goalie_table else []),
+        *_projected_points_column_defs(),
+        *(_tags_column_def(tag_position) if is_skater_table or is_goalie_table else []),
+        *(_notes_column_def(disable_empty_slots=True) if is_skater_table or is_goalie_table else []),
+    ]
+    return dag.AgGrid(
+        id=f"my-team-{table.lower()}-player-grid",
+        className="table-values-large",
+        rowData=get_my_team_table_rows(table),
+        getRowId="params.data.id",
+        columnDefs=column_defs,
+        columnSize="autoSize",
+        columnSizeOptions={"skipHeader": True},
+        dangerously_allow_code=True,
+        defaultColDef={
+            "autoHeaderHeight": True,
+            "cellStyle": VERTICALLY_CENTERED_CELL_STYLE,
+            "headerClass": "centered-column-header",
+            "resizable": True,
+            "sortable": True,
+            "wrapHeaderText": True,
+        },
+        dashGridOptions={
+            "rowHeight": 40,
+            "rowSelection": {
+                "mode": "singleRow",
+                "checkboxes": False,
+                "headerCheckbox": False,
+            },
+            "getRowStyle": {
+                "function": (
+                    "params.data.is_empty_slot ? "
+                    "{color: '#999', backgroundColor: '#f2f2f2', fontStyle: 'italic'} : null"
+                )
+            },
+        },
+        style={
+            "flex": "0 0 auto",
+            "height": f"{config['slots'] * 40 + 50}px",
+            "minHeight": 0,
+            "width": "100%",
+        },
+    )
+
+
+def handle_my_team_grid_update(
+    table: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+) -> list[dict]:
+    """Persist a My Team table event and return its automatically placed rows."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+    if triggered_property == "cellRendererData":
+        handle_player_context_action("F", context_action)
+    elif triggered_property == "cellValueChanged":
+        handle_player_cell_change("F", cell_changes)
+    else:
+        raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
+    return get_my_team_table_rows(table)
 
 
 def build_position_layout(position: str):

@@ -5,17 +5,17 @@ from __future__ import annotations
 import dash
 from dash import Input, Output, callback, ctx, html
 
-from .position_table import MY_TEAM_SLOT_COUNTS, build_position_grid, handle_player_grid_update
+from .position_table import MY_TEAM_TABLES, build_my_team_grid, handle_my_team_grid_update
 
 PATH = "/my-team"
 NAME = "My Team"
 ORDER = 4
-POSITIONS = ("F", "D", "G")
+TABLES = ("F", "D", "G", "utility", "bench")
 
 
-def grid_id(position: str) -> str:
-    """Return a My Team grid id for a position."""
-    return f"my-team-{position.lower()}-player-grid"
+def grid_id(table: str) -> str:
+    """Return a My Team grid id for a roster table."""
+    return f"my-team-{table.lower()}-player-grid"
 
 
 def layout(**_kwargs):
@@ -27,14 +27,9 @@ def layout(**_kwargs):
             *[
                 html.Section(
                     className="my-team-position",
-                    children=[html.H3({"F": "Forwards", "D": "Defencemen", "G": "Goalies"}[position]),
-                              build_position_grid(
-                                  position,
-                                  my_team_only=True,
-                                  slot_count=MY_TEAM_SLOT_COUNTS[position],
-                              )],
+                    children=[html.H3(MY_TEAM_TABLES[table]["title"]), build_my_team_grid(table)],
                 )
-                for position in POSITIONS
+                for table in TABLES
             ],
         ],
     )
@@ -43,19 +38,17 @@ def layout(**_kwargs):
 dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 
-for _position in POSITIONS:
+for _table in TABLES:
     @callback(
-        Output(grid_id(_position), "rowData"),
-        Input(grid_id(_position), "cellValueChanged"),
-        Input(grid_id(_position), "cellRendererData"),
+        Output(grid_id(_table), "rowData"),
+        Input(grid_id(_table), "cellValueChanged"),
+        Input(grid_id(_table), "cellRendererData"),
         prevent_initial_call=True,
     )
-    def update_my_team_player(cell_changes, context_action, position=_position):
-        return handle_player_grid_update(
-            position,
+    def update_my_team_player(cell_changes, context_action, table=_table):
+        return handle_my_team_grid_update(
+            table,
             cell_changes,
             context_action,
             ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
-            my_team_only=True,
-            slot_count=MY_TEAM_SLOT_COUNTS[position],
         )
