@@ -71,6 +71,26 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     ]
 
 
+def test_layout_builds_one_my_team_snapshot(monkeypatch):
+    calls = []
+
+    def get_rows(position, **kwargs):
+        calls.append((position, kwargs))
+        return []
+
+    monkeypatch.setattr(position_table, "get_position_rows", get_rows)
+    monkeypatch.setattr(position_table, "get_workspace_value", lambda _key: "2027")
+    monkeypatch.setattr(my_team, "get_workspace_value", lambda _key: "2027")
+
+    my_team.layout()
+
+    assert calls == [
+        ("F", {"my_team_only": True}),
+        ("D", {"my_team_only": True}),
+        ("G", {"my_team_only": True}),
+    ]
+
+
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -127,7 +147,7 @@ def test_projected_tfp_total_treats_missing_values_as_zero(monkeypatch):
     monkeypatch.setattr(
         position_table,
         "get_my_team_table_rows",
-        lambda _table: [
+        lambda _table, **_kwargs: [
             {"projected_tfp": 100.0},
             {"projected_tfp": float("nan")},
             {"projected_tfp": None},
@@ -143,7 +163,7 @@ def test_goalie_projection_uses_active_then_bench_priority_and_start_cap(monkeyp
     monkeypatch.setattr(
         position_table,
         "get_my_team_table_rows",
-        lambda table: {
+        lambda table, **_kwargs: {
             "G": [
                 {"id": 1, "projected_afp": 4, "game_starts_history": [{"year": 2027, "projected": 80}]},
                 {"id": 2, "projected_afp": 3, "game_starts_history": [{"year": 2027, "projected": 80}]},
@@ -164,7 +184,11 @@ def test_goalie_title_warns_when_ninety_percent_starts_are_below_cap(monkeypatch
     monkeypatch.setattr(
         position_table,
         "get_my_team_goalie_projection",
-        lambda: {"projected_points": 400.0, "available_starts": 120.0, "counted_starts": 120.0},
+        lambda **_kwargs: {
+            "projected_points": 400.0,
+            "available_starts": 120.0,
+            "counted_starts": 120.0,
+        },
     )
 
     assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 400.00 (Warning: projected starts 120.0/140)"

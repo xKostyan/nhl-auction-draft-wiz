@@ -102,11 +102,8 @@ def get_position_grid_rows(
     return roster_rows
 
 
-def get_my_team_table_rows(table: str) -> list[dict]:
-    """Return fixed My Team table rows using automatic position-first placement."""
-    if table not in MY_TEAM_TABLES:
-        raise ValueError(f"Unsupported My Team table: {table!r}.")
-
+def build_my_team_snapshot() -> dict[str, list[dict]]:
+    """Load and place the complete My Team roster for one page render."""
     forwards = _sort_my_team_rows(get_position_rows("F", my_team_only=True))
     defencemen = _sort_my_team_rows(get_position_rows("D", my_team_only=True))
     goalies = _sort_my_team_rows(get_position_rows("G", my_team_only=True))
@@ -122,8 +119,22 @@ def get_my_team_table_rows(table: str) -> list[dict]:
         **primary_rows,
         "utility": utility_rows,
         "bench": bench_rows[:MY_TEAM_TABLES["bench"]["slots"]],
-    }[table]
-    return _fill_my_team_slots(table, table_rows)
+    }
+    return {
+        table: _fill_my_team_slots(table, rows)
+        for table, rows in table_rows.items()
+    }
+
+
+def get_my_team_table_rows(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> list[dict]:
+    """Return fixed My Team table rows using automatic position-first placement."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+    if snapshot is None:
+        snapshot = build_my_team_snapshot()
+    return snapshot[table]
 
 
 def _sort_my_team_rows(rows: list[dict]) -> list[dict]:
@@ -134,12 +145,14 @@ def _sort_my_team_rows(rows: list[dict]) -> list[dict]:
     )
 
 
-def get_my_team_projected_tfp_total(table: str) -> float:
+def get_my_team_projected_tfp_total(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> float:
     """Return the projected total fantasy points for a scored My Team table."""
     if table not in {"F", "D", "utility"}:
         raise ValueError(f"My Team table {table!r} does not have a projected TFP total.")
     total = 0.0
-    for row in get_my_team_table_rows(table):
+    for row in get_my_team_table_rows(table, snapshot=snapshot):
         value = row.get("projected_tfp")
         if row.get("is_empty_slot") or value is None:
             continue
@@ -149,15 +162,19 @@ def get_my_team_projected_tfp_total(table: str) -> float:
     return total
 
 
-def get_my_team_goalie_projection() -> dict[str, float]:
+def get_my_team_goalie_projection(
+    *, snapshot: dict[str, list[dict]] | None = None
+) -> dict[str, float]:
     """Estimate goalie points using 90% starts shares and the 140-start cap."""
     current_season = get_workspace_value("current_season")
     active_goalies = [
-        row for row in get_my_team_table_rows("G") if not row.get("is_empty_slot")
+        row
+        for row in get_my_team_table_rows("G", snapshot=snapshot)
+        if not row.get("is_empty_slot")
     ]
     bench_goalies = [
         row
-        for row in get_my_team_table_rows("bench")
+        for row in get_my_team_table_rows("bench", snapshot=snapshot)
         if not row.get("is_empty_slot") and row.get("position") == "G"
     ]
     bench_goalies.sort(key=lambda row: _finite_number(row.get("projected_afp")), reverse=True)
@@ -197,14 +214,16 @@ def _finite_number(value: object) -> float:
     return numeric_value if math.isfinite(numeric_value) else 0.0
 
 
-def get_my_team_table_title(table: str) -> str:
+def get_my_team_table_title(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> str:
     """Return a My Team section title, including skater projected TFP totals."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     title = MY_TEAM_TABLES[table]["title"]
     if table == "G":
         year = get_workspace_value("current_season") or "upcoming"
-        projection = get_my_team_goalie_projection()
+        projection = get_my_team_goalie_projection(snapshot=snapshot)
         title = f"Goalies - p TFP {year}: {projection['projected_points']:.2f}"
         if projection["available_starts"] < 140:
             return (
@@ -215,7 +234,10 @@ def get_my_team_table_title(table: str) -> str:
     if table not in {"F", "D", "utility"}:
         return title
     year = get_workspace_value("current_season") or "upcoming"
-    return f"{title} - p TFP {year}: {get_my_team_projected_tfp_total(table):.2f}"
+    return (
+        f"{title} - p TFP {year}: "
+        f"{get_my_team_projected_tfp_total(table, snapshot=snapshot):.2f}"
+    )
 
 
 def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
@@ -645,7 +667,9 @@ def build_position_grid(
     )
 
 
-def build_my_team_grid(table: str) -> dag.AgGrid:
+def build_my_team_grid(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> dag.AgGrid:
     """Build one fixed My Team position, utility, or bench roster table."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
@@ -684,7 +708,7 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
     return dag.AgGrid(
         id=f"my-team-{table.lower()}-player-grid",
         className=f"table-values-large my-team-table-{table}",
-        rowData=get_my_team_table_rows(table),
+        rowData=get_my_team_table_rows(table, snapshot=snapshot),
         getRowId="params.data.id",
         columnDefs=column_defs,
         columnSize="autoSize",

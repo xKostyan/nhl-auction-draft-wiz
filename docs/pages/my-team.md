@@ -55,6 +55,10 @@ membership flag is stored in the workspace and survives restarts.
   affecting later Tags or Notes edits.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
+- Each page render creates one roster snapshot, which is reused by all table
+  rows, projected totals, goalie calculations, and chart slices. This prevents
+  every displayed component from separately reloading and placing the same
+  roster data.
 
 ## Related code
 
@@ -64,8 +68,6 @@ membership flag is stored in the workspace and survives restarts.
 
 ## TODO: Projection chart performance
 
-- Build one My Team roster snapshot per page render and reuse it for grids,
-  table totals, goalie projection, and chart slices.
 - Use a lightweight chart query that avoids loading historical inline-chart
   data.
 - Cache derived projection data and invalidate it after roster/import changes.

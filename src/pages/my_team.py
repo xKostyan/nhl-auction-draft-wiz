@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, ctx, dcc, html
 
 from .position_table import (
+    build_my_team_snapshot,
     build_my_team_grid,
     get_my_team_goalie_projection,
     get_my_team_table_title,
@@ -40,7 +41,7 @@ def title_id(table: str) -> str:
     return f"my-team-{table.lower()}-title"
 
 
-def build_projection_chart() -> go.Figure:
+def build_projection_chart(*, snapshot: dict[str, list[dict]] | None = None) -> go.Figure:
     """Build the two-layer projected-points donut for the active roster."""
     group_values = []
     outer_labels = []
@@ -48,12 +49,12 @@ def build_projection_chart() -> go.Figure:
     outer_colors = []
     for table, label in _GROUPS:
         if table == "G":
-            value = get_my_team_goalie_projection()["projected_points"]
-            players = _goalie_chart_players()
+            value = get_my_team_goalie_projection(snapshot=snapshot)["projected_points"]
+            players = _goalie_chart_players(snapshot=snapshot)
         else:
             players = [
                 (row["name"], _number(row.get("projected_tfp")))
-                for row in get_my_team_table_rows(table)
+                for row in get_my_team_table_rows(table, snapshot=snapshot)
                 if not row.get("is_empty_slot")
             ]
             value = sum(player_value for _, player_value in players)
@@ -102,13 +103,17 @@ def _player_color(table: str, index: int) -> str:
     return _PLAYER_COLORS[table][index % len(_PLAYER_COLORS[table])]
 
 
-def _goalie_chart_players() -> list[tuple[str, float]]:
+def _goalie_chart_players(
+    *, snapshot: dict[str, list[dict]] | None = None
+) -> list[tuple[str, float]]:
     """Return goalie contributions using the same priority and 140-start cap."""
     candidates = [
-        row for row in get_my_team_table_rows("G") if not row.get("is_empty_slot")
+        row
+        for row in get_my_team_table_rows("G", snapshot=snapshot)
+        if not row.get("is_empty_slot")
     ] + sorted(
         [
-            row for row in get_my_team_table_rows("bench")
+            row for row in get_my_team_table_rows("bench", snapshot=snapshot)
             if not row.get("is_empty_slot") and row.get("position") == "G"
         ],
         key=lambda row: _number(row.get("projected_afp")),
@@ -142,15 +147,26 @@ def _number(value: object) -> float:
 
 def layout(**_kwargs):
     """Build separate position tables from the persisted My Team subset."""
+    snapshot = build_my_team_snapshot()
     return html.Div(
         className="my-team-page",
         children=[
             html.H2("My Team"),
-            dcc.Graph(id=CHART_ID, figure=build_projection_chart(), config={"displayModeBar": False}),
+            dcc.Graph(
+                id=CHART_ID,
+                figure=build_projection_chart(snapshot=snapshot),
+                config={"displayModeBar": False},
+            ),
             *[
                 html.Section(
                     className="my-team-position",
-                    children=[html.H3(get_my_team_table_title(table), id=title_id(table)), build_my_team_grid(table)],
+                    children=[
+                        html.H3(
+                            get_my_team_table_title(table, snapshot=snapshot),
+                            id=title_id(table),
+                        ),
+                        build_my_team_grid(table, snapshot=snapshot),
+                    ],
                 )
                 for table in TABLES
             ],
