@@ -210,7 +210,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
     var editing = editingState[0];
     var setEditing = editingState[1];
 
-    var tagChip = function (tag, selected, onClick) {
+    var tagChip = function (tag, selected, onClick, fontSize) {
         var tagColor = tagColors[tag] || "yellow";
         var colors = tagColor === "green"
             ? { active: "#a5d6a7", border: "#66bb6a" }
@@ -228,7 +228,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
                 borderRadius: "3px",
                 color: "#333",
                 cursor: "pointer",
-                fontSize: "9px",
+                fontSize: fontSize || "9px",
                 padding: "1px 3px"
             },
             title: selected ? "Remove " + tag : "Add " + tag,
@@ -299,7 +299,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
                 return tagChip(tag, true, function (event) {
                     event.stopPropagation();
                     setEditing(true);
-                });
+                }, "11px");
             })
             : React.createElement("span", {
                 style: { color: "#bbb", cursor: "pointer", fontSize: "12px" }

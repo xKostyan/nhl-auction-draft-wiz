@@ -149,6 +149,7 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     assert "Close tag editor" in renderer
     assert 'justifyContent: "flex-start"' in renderer
     assert 'tagColor === "red"' in renderer
+    assert '}, "11px")' in renderer
     assert "var scaleMaximum = 70" in renderer
     assert 'stroke: "#1565c0"' in renderer
     assert 'actual < 30 ? "#d32f2f" : actual <= 42 ? "#f9a825" : "#388e3c"' in renderer

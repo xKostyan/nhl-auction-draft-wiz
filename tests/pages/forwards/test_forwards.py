@@ -231,6 +231,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#a5d6a7" in renderer
     assert "#fff59d" in renderer
     assert "#ef9a9a" in renderer
+    assert '}, "11px")' in renderer
     assert "Close tag editor" in renderer
     assert '}, "Done")' in renderer
     assert 'justifyContent: "flex-start"' in renderer

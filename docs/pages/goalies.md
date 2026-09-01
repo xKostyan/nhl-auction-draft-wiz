@@ -34,7 +34,8 @@ open in its own browser tab during the draft.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
   `Starter`, `Backup`, `1A`, and `1B`, then click **Done** to close it. Tags
-  are left-aligned. `Starter` and `1A` use a green hue, `1B` uses a yellow
+  are left-aligned. Always-visible selected tags use 11px text; the picker
+  buttons use 9px text. `Starter` and `1A` use a green hue, `1B` uses a yellow
   hue, and `Backup` uses a red hue; selections persist in the workspace.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
