@@ -29,7 +29,7 @@ membership flag is stored in the workspace and survives restarts.
   (including goalies) fills Bench. Forwards, Defencemen, Utility, and Goalies
   are ordered by projected TFP from highest to lowest; Bench keeps spillover
   order.
-- My Team rows are 50px high. Tables retain the same player data, inline
+- My Team rows are 50px high, with 12px spacing between tables. Tables retain the same player data, inline
   charts, Tags, and Notes as their matching position page. Utility has the
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
@@ -38,9 +38,10 @@ membership flag is stored in the workspace and survives restarts.
   `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
   projected TFP, showing projected starts for the detected draft season.
-- The **Forwards**, **Defencemen**, and **Utility** headings show each table's
-  current projected TFP sum for the detected draft season. Goalies and Bench
-  do not show a total. Missing player projections count as zero.
+- Each heading has aligned columns for its table title, **Projection for
+  YEAR:** label, and projected-TFP total. Forwards, Defencemen, Utility, and
+  Goalies show a total; Bench intentionally remains title-only. Missing player
+  projections count as zero.
 - The **Goalies** heading estimates projected TFP from 90% of each goalie's
   projected starts multiplied by projected AFP, capped at 140 combined starts.
   Active goalie slots are allocated first, then the highest-AFP Bench goalie,

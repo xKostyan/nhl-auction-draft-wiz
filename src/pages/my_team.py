@@ -10,7 +10,7 @@ from .position_table import (
     build_my_team_snapshot,
     build_my_team_grid,
     get_my_team_goalie_projection,
-    get_my_team_table_title,
+    get_my_team_table_heading,
     get_my_team_table_rows,
     get_workspace_value,
     persist_my_team_grid_update,
@@ -145,6 +145,24 @@ def _number(value: object) -> float:
     return value if value == value else 0.0
 
 
+def build_my_team_table_heading(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> html.H3:
+    """Build a consistently aligned My Team table heading."""
+    title, projection_label, projected_total = get_my_team_table_heading(
+        table, snapshot=snapshot
+    )
+    return html.H3(
+        [
+            html.Span(title, className="my-team-heading-title"),
+            html.Span(projection_label, className="my-team-heading-projection"),
+            html.Span(projected_total, className="my-team-heading-total"),
+        ],
+        id=title_id(table),
+        className="my-team-table-heading",
+    )
+
+
 def layout(**_kwargs):
     """Build separate position tables from the persisted My Team subset."""
     snapshot = build_my_team_snapshot()
@@ -161,10 +179,7 @@ def layout(**_kwargs):
                 html.Section(
                     className="my-team-position",
                     children=[
-                        html.H3(
-                            get_my_team_table_title(table, snapshot=snapshot),
-                            id=title_id(table),
-                        ),
+                        build_my_team_table_heading(table, snapshot=snapshot),
                         build_my_team_grid(table, snapshot=snapshot),
                     ],
                 )
@@ -185,7 +200,10 @@ def build_my_team_update(
     snapshot = build_my_team_snapshot()
     return (
         *(snapshot[current_table] for current_table in TABLES),
-        *(get_my_team_table_title(current_table, snapshot=snapshot) for current_table in TABLES),
+        *(
+            build_my_team_table_heading(current_table, snapshot=snapshot)
+            for current_table in TABLES
+        ),
         build_projection_chart(snapshot=snapshot),
     )
 

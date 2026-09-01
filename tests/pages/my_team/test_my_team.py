@@ -2,7 +2,7 @@
 
 import dash_ag_grid as dag
 import src.pages.position_table as position_table
-from dash import dcc
+from dash import dcc, html
 
 from src.data_loader import load_players
 from src.pages import my_team
@@ -43,6 +43,18 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.figure.data[1].hole == 0.84
     assert chart.figure.layout.height == 460
     assert page_layout.children[1] is chart
+    headings = [node for node in walk_components(page_layout) if isinstance(node, html.H3)]
+    assert [heading.id for heading in headings] == [
+        "my-team-f-title",
+        "my-team-d-title",
+        "my-team-utility-title",
+        "my-team-g-title",
+        "my-team-bench-title",
+    ]
+    assert all(heading.className == "my-team-table-heading" for heading in headings)
+    assert all(len(heading.children) == 3 for heading in headings)
+    assert headings[-1].children[1].children == ""
+    assert headings[-1].children[2].children == ""
 
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",
@@ -142,8 +154,8 @@ def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
 
     forward = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
     assert get_my_team_projected_tfp_total("F") == forward["projected_tfp"]
-    assert get_my_team_table_title("F") == f"Forwards - p TFP 2027: {forward['projected_tfp']:.2f}"
-    assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 0.00 (Warning: projected starts 0.0/140)"
+    assert get_my_team_table_title("F") == f"Forwards Projection for 2027: {forward['projected_tfp']:.2f}"
+    assert get_my_team_table_title("G") == "Goalies Projection for 2027: (Warning: projected starts 0.0/140) 0.00"
     assert get_my_team_table_title("bench") == "Bench"
 
 
@@ -195,7 +207,7 @@ def test_goalie_title_warns_when_ninety_percent_starts_are_below_cap(monkeypatch
         },
     )
 
-    assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 400.00 (Warning: projected starts 120.0/140)"
+    assert get_my_team_table_title("G") == "Goalies Projection for 2027: (Warning: projected starts 120.0/140) 400.00"
 
 
 def test_projection_chart_uses_distinct_player_shades_within_each_group():

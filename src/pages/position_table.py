@@ -217,26 +217,37 @@ def _finite_number(value: object) -> float:
 def get_my_team_table_title(
     table: str, *, snapshot: dict[str, list[dict]] | None = None
 ) -> str:
-    """Return a My Team section title, including skater projected TFP totals."""
+    """Return a readable My Team heading for callers that require plain text."""
+    title, projection_label, projected_total = get_my_team_table_heading(
+        table, snapshot=snapshot
+    )
+    return " ".join(part for part in (title, projection_label, projected_total) if part)
+
+
+def get_my_team_table_heading(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> tuple[str, str, str]:
+    """Return aligned My Team heading title, projection label, and total."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     title = MY_TEAM_TABLES[table]["title"]
+    if table == "bench":
+        return title, "", ""
+
+    year = get_workspace_value("current_season") or "upcoming"
+    projection_label = f"Projection for {year}:"
     if table == "G":
-        year = get_workspace_value("current_season") or "upcoming"
         projection = get_my_team_goalie_projection(snapshot=snapshot)
-        title = f"Goalies - p TFP {year}: {projection['projected_points']:.2f}"
         if projection["available_starts"] < 140:
-            return (
-                f"{title} (Warning: projected starts "
+            projection_label = (
+                f"{projection_label} (Warning: projected starts "
                 f"{projection['counted_starts']:.1f}/140)"
             )
-        return title
-    if table not in {"F", "D", "utility"}:
-        return title
-    year = get_workspace_value("current_season") or "upcoming"
+        return title, projection_label, f"{projection['projected_points']:.2f}"
     return (
-        f"{title} - p TFP {year}: "
-        f"{get_my_team_projected_tfp_total(table, snapshot=snapshot):.2f}"
+        title,
+        projection_label,
+        f"{get_my_team_projected_tfp_total(table, snapshot=snapshot):.2f}",
     )
 
 

@@ -33,7 +33,22 @@ body,
 .my-team-position {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
+}
+
+.my-team-table-heading {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) auto 9rem;
+    margin-bottom: 8px;
+}
+
+.my-team-heading-projection,
+.my-team-heading-total {
+    text-align: right;
+}
+
+.my-team-heading-total {
+    font-variant-numeric: tabular-nums;
 }
 
 .position-page {
