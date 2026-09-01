@@ -10,7 +10,7 @@ from .position_table import MY_TEAM_TABLES, build_my_team_grid, handle_my_team_g
 PATH = "/my-team"
 NAME = "My Team"
 ORDER = 4
-TABLES = ("F", "D", "G", "utility", "bench")
+TABLES = ("F", "D", "utility", "G", "bench")
 
 
 def grid_id(table: str) -> str:

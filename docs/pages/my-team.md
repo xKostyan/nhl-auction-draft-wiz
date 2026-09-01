@@ -9,7 +9,7 @@
 ## Purpose
 
 Show the user's drafted roster, separated into **Forwards**, **Defencemen**,
-**Goalies**, **Utility**, and **Bench** tables. A player is included only after
+**Utility**, **Goalies**, and **Bench** tables. A player is included only after
 **Add to My Team** is selected from their player-name context menu. The
 membership flag is stored in the workspace and survives restarts.
 

@@ -30,8 +30,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",
         "my-team-d-player-grid",
-        "my-team-g-player-grid",
         "my-team-utility-player-grid",
+        "my-team-g-player-grid",
         "my-team-bench-player-grid",
     ]
     assert all("drafted" not in [column["field"] for column in grid.columnDefs] for grid in grids)
