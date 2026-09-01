@@ -141,11 +141,69 @@ def get_my_team_projected_tfp_total(table: str) -> float:
     return total
 
 
+def get_my_team_goalie_projection() -> dict[str, float]:
+    """Estimate goalie points using 90% starts shares and the 140-start cap."""
+    current_season = get_workspace_value("current_season")
+    active_goalies = [
+        row for row in get_my_team_table_rows("G") if not row.get("is_empty_slot")
+    ]
+    bench_goalies = [
+        row
+        for row in get_my_team_table_rows("bench")
+        if not row.get("is_empty_slot") and row.get("position") == "G"
+    ]
+    bench_goalies.sort(key=lambda row: _finite_number(row.get("projected_afp")), reverse=True)
+    candidates = active_goalies + bench_goalies
+    remaining_starts = 140.0
+    available_starts = 0.0
+    projected_points = 0.0
+    for goalie in candidates:
+        usable_starts = 0.9 * _goalie_projected_starts(goalie, current_season)
+        available_starts += usable_starts
+        counted_starts = min(usable_starts, remaining_starts)
+        projected_points += counted_starts * _finite_number(goalie.get("projected_afp"))
+        remaining_starts -= counted_starts
+        if remaining_starts <= 0:
+            break
+    return {
+        "projected_points": projected_points,
+        "available_starts": available_starts,
+        "counted_starts": min(available_starts, 140.0),
+    }
+
+
+def _goalie_projected_starts(goalie: dict, current_season: str) -> float:
+    """Return a goalie's projected starts for the detected draft season."""
+    for season in goalie.get("game_starts_history", []):
+        if str(season.get("year")) == current_season:
+            return _finite_number(season.get("projected"))
+    return 0.0
+
+
+def _finite_number(value: object) -> float:
+    """Return a finite numeric value, treating missing data as zero."""
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return numeric_value if math.isfinite(numeric_value) else 0.0
+
+
 def get_my_team_table_title(table: str) -> str:
     """Return a My Team section title, including skater projected TFP totals."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     title = MY_TEAM_TABLES[table]["title"]
+    if table == "G":
+        year = get_workspace_value("current_season") or "upcoming"
+        projection = get_my_team_goalie_projection()
+        title = f"Goalies - p TFP {year}: {projection['projected_points']:.2f}"
+        if projection["available_starts"] < 140:
+            return (
+                f"{title} (Warning: projected starts "
+                f"{projection['counted_starts']:.1f}/140)"
+            )
+        return title
     if table not in {"F", "D", "utility"}:
         return title
     year = get_workspace_value("current_season") or "upcoming"

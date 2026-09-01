@@ -9,6 +9,7 @@ from src.pages.position_table import (
     MY_TEAM_SLOT_COUNTS,
     get_my_team_table_rows,
     get_my_team_projected_tfp_total,
+    get_my_team_goalie_projection,
     get_my_team_table_title,
     get_position_grid_rows,
     get_position_rows,
@@ -86,7 +87,7 @@ def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
     forward = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
     assert get_my_team_projected_tfp_total("F") == forward["projected_tfp"]
     assert get_my_team_table_title("F") == f"Forwards - p TFP 2027: {forward['projected_tfp']:.2f}"
-    assert get_my_team_table_title("G") == "Goalies"
+    assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 0.00 (Warning: projected starts 0.0/140)"
     assert get_my_team_table_title("bench") == "Bench"
 
 
@@ -103,6 +104,38 @@ def test_projected_tfp_total_treats_missing_values_as_zero(monkeypatch):
     )
 
     assert get_my_team_projected_tfp_total("F") == 100.0
+
+
+def test_goalie_projection_uses_active_then_bench_priority_and_start_cap(monkeypatch):
+    monkeypatch.setattr(position_table, "get_workspace_value", lambda _key: "2027")
+    monkeypatch.setattr(
+        position_table,
+        "get_my_team_table_rows",
+        lambda table: {
+            "G": [
+                {"id": 1, "projected_afp": 4, "game_starts_history": [{"year": 2027, "projected": 80}]},
+                {"id": 2, "projected_afp": 3, "game_starts_history": [{"year": 2027, "projected": 80}]},
+            ],
+            "bench": [
+                {"id": 3, "position": "G", "projected_afp": 8, "game_starts_history": [{"year": 2027, "projected": 50}]},
+            ],
+        }[table],
+    )
+
+    projection = get_my_team_goalie_projection()
+
+    assert projection == {"projected_points": 492.0, "available_starts": 144.0, "counted_starts": 140.0}
+
+
+def test_goalie_title_warns_when_ninety_percent_starts_are_below_cap(monkeypatch):
+    monkeypatch.setattr(position_table, "get_workspace_value", lambda _key: "2027")
+    monkeypatch.setattr(
+        position_table,
+        "get_my_team_goalie_projection",
+        lambda: {"projected_points": 400.0, "available_starts": 120.0, "counted_starts": 120.0},
+    )
+
+    assert get_my_team_table_title("G") == "Goalies - p TFP 2027: 400.00 (Warning: projected starts 120.0/140)"
 
 
 def test_empty_roster_slots_are_numbered_and_visually_identifiable(tmp_path):

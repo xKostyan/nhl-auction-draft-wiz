@@ -29,6 +29,11 @@ membership flag is stored in the workspace and survives restarts.
 - The **Forwards**, **Defencemen**, and **Utility** headings show each table's
   current projected TFP sum for the detected draft season. Goalies and Bench
   do not show a total. Missing player projections count as zero.
+- The **Goalies** heading estimates projected TFP from 90% of each goalie's
+  projected starts multiplied by projected AFP, capped at 140 combined starts.
+  Active goalie slots are allocated first, then the highest-AFP Bench goalie,
+  then remaining Bench goalies. It warns and shows the available 90%-share
+  starts when the roster projects fewer than 140 starts.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
