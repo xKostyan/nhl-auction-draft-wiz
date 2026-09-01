@@ -20,7 +20,9 @@ the workspace and survives restarts.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
-  from My Team**. **Add to My Team** is omitted because it is redundant here.
+  from My Team**. The menu is displayed above the tables and closes when you
+  left-click outside it. **Add to My Team** is omitted because it is redundant
+  here.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
 

@@ -310,7 +310,27 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var menuState = React.useState(false);
     var menuOpen = menuState[0];
     var setMenuOpen = menuState[1];
+    var menuPositionState = React.useState({ left: 0, top: 0 });
+    var menuPosition = menuPositionState[0];
+    var setMenuPosition = menuPositionState[1];
+    var menuRef = React.useRef(null);
     var allowAddToMyTeam = Boolean(props.allowAddToMyTeam);
+
+    React.useEffect(function () {
+        if (!menuOpen) {
+            return undefined;
+        }
+
+        var closeOnOutsideLeftClick = function (event) {
+            if (event.button === 0 && menuRef.current && !menuRef.current.contains(event.target)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", closeOnOutsideLeftClick);
+        return function () {
+            document.removeEventListener("mousedown", closeOnOutsideLeftClick);
+        };
+    }, [menuOpen]);
 
     var runAction = function (action, event) {
         event.preventDefault();
@@ -340,13 +360,16 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
         onContextMenu: function (event) {
             event.preventDefault();
             event.stopPropagation();
+            setMenuPosition({ left: event.clientX, top: event.clientY });
             setMenuOpen(true);
         },
         style: { position: "relative", width: "100%" }
     }, [
         React.createElement("span", { key: "name" }, props.value),
-        menuOpen ? React.createElement("div", {
+        menuOpen ? ReactDOM.createPortal(React.createElement("div", {
             key: "menu",
+            ref: menuRef,
+            role: "menu",
             onContextMenu: function (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -356,18 +379,18 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
                 border: "1px solid #999",
                 borderRadius: "4px",
                 boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
-                left: "0",
+                left: menuPosition.left + "px",
                 minWidth: "155px",
-                position: "absolute",
-                top: "100%",
-                zIndex: "10"
+                position: "fixed",
+                top: menuPosition.top + "px",
+                zIndex: "10000"
             }
         }, [
             menuAction("Clear Tags", "clear-tags"),
             menuAction("Clear Notes", "clear-notes"),
             allowAddToMyTeam ? menuAction("Add to My Team", "add-to-my-team") : null,
             menuAction("Remove from My Team", "remove-from-my-team")
-        ]) : null
+        ]), document.body) : null
     ]);
 };
 

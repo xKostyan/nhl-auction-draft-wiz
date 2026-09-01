@@ -245,6 +245,12 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
+    assert "playerNameContextMenuRenderer" in renderer
+    assert "ReactDOM.createPortal" in renderer
+    assert 'position: "fixed"' in renderer
+    assert 'zIndex: "10000"' in renderer
+    assert 'document.addEventListener("mousedown", closeOnOutsideLeftClick)' in renderer
+    assert "event.button === 0" in renderer
     assert "#a5d6a7" in renderer
     assert "#fff59d" in renderer
     assert "#ef9a9a" in renderer
