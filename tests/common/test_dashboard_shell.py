@@ -30,6 +30,8 @@ def test_app_layout_contains_persistent_menu_and_page_container(dash_app, collec
     assert "app-menu-toggle" in ids
     assert "app-menu-panel" in ids
     assert dash_app.layout.className == "app-shell"
+    assert len(dash_app.layout.children) == 2
+    assert dash_app.layout.children[0].children[0].id == "app-menu-toggle"
     assert dash_app.layout.children[-1].className == "page-container"
 
 

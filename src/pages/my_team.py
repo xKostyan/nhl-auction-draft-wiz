@@ -7,12 +7,13 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, ctx, dcc, html
 
 from .position_table import (
+    build_my_team_snapshot,
     build_my_team_grid,
     get_my_team_goalie_projection,
-    get_my_team_table_title,
+    get_my_team_table_heading,
     get_my_team_table_rows,
     get_workspace_value,
-    handle_my_team_grid_update,
+    persist_my_team_grid_update,
 )
 
 PATH = "/my-team"
@@ -40,7 +41,7 @@ def title_id(table: str) -> str:
     return f"my-team-{table.lower()}-title"
 
 
-def build_projection_chart() -> go.Figure:
+def build_projection_chart(*, snapshot: dict[str, list[dict]] | None = None) -> go.Figure:
     """Build the two-layer projected-points donut for the active roster."""
     group_values = []
     outer_labels = []
@@ -48,12 +49,12 @@ def build_projection_chart() -> go.Figure:
     outer_colors = []
     for table, label in _GROUPS:
         if table == "G":
-            value = get_my_team_goalie_projection()["projected_points"]
-            players = _goalie_chart_players()
+            value = get_my_team_goalie_projection(snapshot=snapshot)["projected_points"]
+            players = _goalie_chart_players(snapshot=snapshot)
         else:
             players = [
                 (row["name"], _number(row.get("projected_tfp")))
-                for row in get_my_team_table_rows(table)
+                for row in get_my_team_table_rows(table, snapshot=snapshot)
                 if not row.get("is_empty_slot")
             ]
             value = sum(player_value for _, player_value in players)
@@ -102,13 +103,17 @@ def _player_color(table: str, index: int) -> str:
     return _PLAYER_COLORS[table][index % len(_PLAYER_COLORS[table])]
 
 
-def _goalie_chart_players() -> list[tuple[str, float]]:
+def _goalie_chart_players(
+    *, snapshot: dict[str, list[dict]] | None = None
+) -> list[tuple[str, float]]:
     """Return goalie contributions using the same priority and 140-start cap."""
     candidates = [
-        row for row in get_my_team_table_rows("G") if not row.get("is_empty_slot")
+        row
+        for row in get_my_team_table_rows("G", snapshot=snapshot)
+        if not row.get("is_empty_slot")
     ] + sorted(
         [
-            row for row in get_my_team_table_rows("bench")
+            row for row in get_my_team_table_rows("bench", snapshot=snapshot)
             if not row.get("is_empty_slot") and row.get("position") == "G"
         ],
         key=lambda row: _number(row.get("projected_afp")),
@@ -140,17 +145,43 @@ def _number(value: object) -> float:
     return value if value == value else 0.0
 
 
+def build_my_team_table_heading(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> html.H3:
+    """Build a consistently aligned My Team table heading."""
+    title, projection_label, projected_total = get_my_team_table_heading(
+        table, snapshot=snapshot
+    )
+    return html.H3(
+        [
+            html.Span(title, className="my-team-heading-title"),
+            html.Span(projection_label, className="my-team-heading-projection"),
+            html.Span(projected_total, className="my-team-heading-total"),
+        ],
+        id=title_id(table),
+        className="my-team-table-heading",
+    )
+
+
 def layout(**_kwargs):
     """Build separate position tables from the persisted My Team subset."""
+    snapshot = build_my_team_snapshot()
     return html.Div(
         className="my-team-page",
         children=[
             html.H2("My Team"),
-            dcc.Graph(id=CHART_ID, figure=build_projection_chart(), config={"displayModeBar": False}),
+            dcc.Graph(
+                id=CHART_ID,
+                figure=build_projection_chart(snapshot=snapshot),
+                config={"displayModeBar": False},
+            ),
             *[
                 html.Section(
                     className="my-team-position",
-                    children=[html.H3(get_my_team_table_title(table), id=title_id(table)), build_my_team_grid(table)],
+                    children=[
+                        build_my_team_table_heading(table, snapshot=snapshot),
+                        build_my_team_grid(table, snapshot=snapshot),
+                    ],
                 )
                 for table in TABLES
             ],
@@ -158,23 +189,54 @@ def layout(**_kwargs):
     )
 
 
+def build_my_team_update(
+    table: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+) -> tuple[list[dict], ...]:
+    """Persist an event and return one consistent update for every roster view."""
+    persist_my_team_grid_update(table, cell_changes, context_action, triggered_property)
+    snapshot = build_my_team_snapshot()
+    return (
+        *(snapshot[current_table] for current_table in TABLES),
+        *(
+            build_my_team_table_heading(current_table, snapshot=snapshot).children
+            for current_table in TABLES
+        ),
+        build_projection_chart(snapshot=snapshot),
+    )
+
+
 dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 
-for _table in TABLES:
-    @callback(
-        Output(grid_id(_table), "rowData"),
-        Output(title_id(_table), "children"),
-        Output(CHART_ID, "figure", allow_duplicate=True),
-        Input(grid_id(_table), "cellValueChanged"),
-        Input(grid_id(_table), "cellRendererData"),
-        prevent_initial_call=True,
+@callback(
+    *(Output(grid_id(table), "rowData") for table in TABLES),
+    *(Output(title_id(table), "children") for table in TABLES),
+    Output(CHART_ID, "figure"),
+    *(Input(grid_id(table), "cellValueChanged") for table in TABLES),
+    *(Input(grid_id(table), "cellRendererData") for table in TABLES),
+    prevent_initial_call=True,
+)
+def update_my_team_player(*values):
+    """Refresh every placement-dependent roster view after a My Team edit."""
+    triggered_id = ctx.triggered_id
+    if not isinstance(triggered_id, str):
+        raise ValueError("My Team grid updates require a triggered grid id.")
+    table = next(
+        (
+            current_table
+            for current_table in TABLES
+            if triggered_id == grid_id(current_table)
+        ),
+        None,
     )
-    def update_my_team_player(cell_changes, context_action, table=_table):
-        rows = handle_my_team_grid_update(
-            table,
-            cell_changes,
-            context_action,
-            ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1],
-        )
-        return rows, get_my_team_table_title(table), build_projection_chart()
+    if table is None:
+        raise ValueError(f"Unsupported My Team grid id: {triggered_id!r}.")
+
+    table_index = TABLES.index(table)
+    cell_changes = values[table_index]
+    context_action = values[len(TABLES) + table_index]
+    triggered_property = ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1]
+    return build_my_team_update(table, cell_changes, context_action, triggered_property)

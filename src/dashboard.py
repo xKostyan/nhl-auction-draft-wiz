@@ -55,7 +55,6 @@ def build_dashboard() -> Dash:
     app.layout = html.Div(
         className="app-shell",
         children=[
-            html.H2("NHL Auction Draft Wizard"),
             build_menu(),
             html.Div(dash.page_container, className="page-container"),
         ],

@@ -29,18 +29,21 @@ membership flag is stored in the workspace and survives restarts.
   (including goalies) fills Bench. Forwards, Defencemen, Utility, and Goalies
   are ordered by projected TFP from highest to lowest; Bench keeps spillover
   order.
-- My Team rows are 40px high. Tables retain the same player data, inline
+- My Team rows are 50px high, with 12px spacing between tables. Tables retain the same player data, inline
   charts, Tags, and Notes as their matching position page. Utility has the
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
-  projected AFP so skaters and goalies share it.
+  projected AFP so skaters and goalies share it. The fixed-size tables suppress
+  their unused internal vertical scrollbars through both their AG Grid settings
+  and My Team-scoped styling.
 - Goalies retain their position-specific tags (`Starter`, `Backup`, `1A`, and
   `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
   projected TFP, showing projected starts for the detected draft season.
-- The **Forwards**, **Defencemen**, and **Utility** headings show each table's
-  current projected TFP sum for the detected draft season. Goalies and Bench
-  do not show a total. Missing player projections count as zero.
+- Each heading has aligned columns and spacing for its table title,
+  **projection:** label, and projected-TFP total. Forwards, Defencemen, Utility,
+  and Goalies show a total; Bench intentionally remains title-only. Missing
+  player projections count as zero.
 - The **Goalies** heading estimates projected TFP from 90% of each goalie's
   projected starts multiplied by projected AFP, capped at 140 combined starts.
   Active goalie slots are allocated first, then the highest-AFP Bench goalie,
@@ -51,10 +54,17 @@ membership flag is stored in the workspace and survives restarts.
 - Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
   from My Team**. The menu is displayed above the tables and closes when you
   left-click outside it. **Add to My Team** is omitted because it is redundant
-  here. The affected table reloads immediately after a menu action without
-  affecting later Tags or Notes edits.
+  here. Every table, heading, and chart refreshes from one snapshot after an
+  edit, so automatic F/D/Utility/Bench placement remains consistent without
+  an unused full position-page reload. Heading updates replace only their
+  contents, preserving the page layout across repeated roster edits.
 - When imported player data exists, the app's `/` route opens this page.
   An empty workspace still opens [Import data](./import-data.md).
+- Each page render creates one roster snapshot, which is reused by all table
+  rows, projected totals, goalie calculations, and chart slices. This prevents
+  every displayed component from separately reloading and placing the same
+  roster data. The snapshot's historical inline-chart data is queried only for
+  the players on My Team, rather than every player at the relevant position.
 
 ## Related code
 
@@ -64,8 +74,6 @@ membership flag is stored in the workspace and survives restarts.
 
 ## TODO: Projection chart performance
 
-- Build one My Team roster snapshot per page render and reuse it for grids,
-  table totals, goalie projection, and chart slices.
 - Use a lightweight chart query that avoids loading historical inline-chart
   data.
 - Cache derived projection data and invalidate it after roster/import changes.

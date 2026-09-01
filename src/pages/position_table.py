@@ -102,11 +102,8 @@ def get_position_grid_rows(
     return roster_rows
 
 
-def get_my_team_table_rows(table: str) -> list[dict]:
-    """Return fixed My Team table rows using automatic position-first placement."""
-    if table not in MY_TEAM_TABLES:
-        raise ValueError(f"Unsupported My Team table: {table!r}.")
-
+def build_my_team_snapshot() -> dict[str, list[dict]]:
+    """Load and place the complete My Team roster for one page render."""
     forwards = _sort_my_team_rows(get_position_rows("F", my_team_only=True))
     defencemen = _sort_my_team_rows(get_position_rows("D", my_team_only=True))
     goalies = _sort_my_team_rows(get_position_rows("G", my_team_only=True))
@@ -122,8 +119,22 @@ def get_my_team_table_rows(table: str) -> list[dict]:
         **primary_rows,
         "utility": utility_rows,
         "bench": bench_rows[:MY_TEAM_TABLES["bench"]["slots"]],
-    }[table]
-    return _fill_my_team_slots(table, table_rows)
+    }
+    return {
+        table: _fill_my_team_slots(table, rows)
+        for table, rows in table_rows.items()
+    }
+
+
+def get_my_team_table_rows(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> list[dict]:
+    """Return fixed My Team table rows using automatic position-first placement."""
+    if table not in MY_TEAM_TABLES:
+        raise ValueError(f"Unsupported My Team table: {table!r}.")
+    if snapshot is None:
+        snapshot = build_my_team_snapshot()
+    return snapshot[table]
 
 
 def _sort_my_team_rows(rows: list[dict]) -> list[dict]:
@@ -134,12 +145,14 @@ def _sort_my_team_rows(rows: list[dict]) -> list[dict]:
     )
 
 
-def get_my_team_projected_tfp_total(table: str) -> float:
+def get_my_team_projected_tfp_total(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> float:
     """Return the projected total fantasy points for a scored My Team table."""
     if table not in {"F", "D", "utility"}:
         raise ValueError(f"My Team table {table!r} does not have a projected TFP total.")
     total = 0.0
-    for row in get_my_team_table_rows(table):
+    for row in get_my_team_table_rows(table, snapshot=snapshot):
         value = row.get("projected_tfp")
         if row.get("is_empty_slot") or value is None:
             continue
@@ -149,15 +162,19 @@ def get_my_team_projected_tfp_total(table: str) -> float:
     return total
 
 
-def get_my_team_goalie_projection() -> dict[str, float]:
+def get_my_team_goalie_projection(
+    *, snapshot: dict[str, list[dict]] | None = None
+) -> dict[str, float]:
     """Estimate goalie points using 90% starts shares and the 140-start cap."""
     current_season = get_workspace_value("current_season")
     active_goalies = [
-        row for row in get_my_team_table_rows("G") if not row.get("is_empty_slot")
+        row
+        for row in get_my_team_table_rows("G", snapshot=snapshot)
+        if not row.get("is_empty_slot")
     ]
     bench_goalies = [
         row
-        for row in get_my_team_table_rows("bench")
+        for row in get_my_team_table_rows("bench", snapshot=snapshot)
         if not row.get("is_empty_slot") and row.get("position") == "G"
     ]
     bench_goalies.sort(key=lambda row: _finite_number(row.get("projected_afp")), reverse=True)
@@ -197,25 +214,40 @@ def _finite_number(value: object) -> float:
     return numeric_value if math.isfinite(numeric_value) else 0.0
 
 
-def get_my_team_table_title(table: str) -> str:
-    """Return a My Team section title, including skater projected TFP totals."""
+def get_my_team_table_title(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> str:
+    """Return a readable My Team heading for callers that require plain text."""
+    title, projection_label, projected_total = get_my_team_table_heading(
+        table, snapshot=snapshot
+    )
+    return " ".join(part for part in (title, projection_label, projected_total) if part)
+
+
+def get_my_team_table_heading(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> tuple[str, str, str]:
+    """Return aligned My Team heading title, projection label, and total."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     title = MY_TEAM_TABLES[table]["title"]
+    if table == "bench":
+        return title, "", ""
+
+    projection_label = "projection:"
     if table == "G":
-        year = get_workspace_value("current_season") or "upcoming"
-        projection = get_my_team_goalie_projection()
-        title = f"Goalies - p TFP {year}: {projection['projected_points']:.2f}"
+        projection = get_my_team_goalie_projection(snapshot=snapshot)
         if projection["available_starts"] < 140:
-            return (
-                f"{title} (Warning: projected starts "
+            projection_label = (
+                f"{projection_label} (Warning: projected starts "
                 f"{projection['counted_starts']:.1f}/140)"
             )
-        return title
-    if table not in {"F", "D", "utility"}:
-        return title
-    year = get_workspace_value("current_season") or "upcoming"
-    return f"{title} - p TFP {year}: {get_my_team_projected_tfp_total(table):.2f}"
+        return title, projection_label, f"{projection['projected_points']:.2f}"
+    return (
+        title,
+        projection_label,
+        f"{get_my_team_projected_tfp_total(table, snapshot=snapshot):.2f}",
+    )
 
 
 def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
@@ -446,8 +478,14 @@ def handle_player_context_action(
     slot_count: int | None = None,
 ) -> list[dict]:
     """Persist a custom player-name menu action emitted by the cell renderer."""
+    persist_player_context_action(position, context_action)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+
+
+def persist_player_context_action(position: str, context_action: dict | None) -> None:
+    """Persist a custom player-name menu action without reloading grid rows."""
     if not context_action:
-        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+        return
     if not isinstance(context_action, dict):
         raise ValueError("Player context-menu updates require an event dictionary.")
 
@@ -462,7 +500,6 @@ def handle_player_context_action(
         set_player_notes(player_id, "")
     else:
         set_player_on_my_team(player_id, action == "add-to-my-team")
-    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_cell_change(
@@ -478,9 +515,14 @@ def handle_player_cell_change(
     even when exactly one cell was changed. Process every event because a
     clipboard action can update multiple status cells in one callback.
     """
-    if not cell_changes:
-        return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
+    persist_player_cell_changes(position, cell_changes)
+    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
+
+def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) -> None:
+    """Persist grid cell changes without reloading grid rows."""
+    if not cell_changes:
+        return
     for cell_change in cell_changes:
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
@@ -512,7 +554,6 @@ def handle_player_cell_change(
             raise ValueError("Player note updates require text.")
         else:
             set_player_notes(player_id, value)
-    return get_position_grid_rows(position, my_team_only=my_team_only, slot_count=slot_count)
 
 
 def handle_player_grid_update(
@@ -645,7 +686,9 @@ def build_position_grid(
     )
 
 
-def build_my_team_grid(table: str) -> dag.AgGrid:
+def build_my_team_grid(
+    table: str, *, snapshot: dict[str, list[dict]] | None = None
+) -> dag.AgGrid:
     """Build one fixed My Team position, utility, or bench roster table."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
@@ -684,7 +727,7 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
     return dag.AgGrid(
         id=f"my-team-{table.lower()}-player-grid",
         className=f"table-values-large my-team-table-{table}",
-        rowData=get_my_team_table_rows(table),
+        rowData=get_my_team_table_rows(table, snapshot=snapshot),
         getRowId="params.data.id",
         columnDefs=column_defs,
         columnSize="autoSize",
@@ -699,7 +742,8 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
             "wrapHeaderText": True,
         },
         dashGridOptions={
-            "rowHeight": 40,
+            "rowHeight": 50,
+            "suppressVerticalScroll": True,
             "rowSelection": {
                 "mode": "singleRow",
                 "checkboxes": False,
@@ -714,7 +758,7 @@ def build_my_team_grid(table: str) -> dag.AgGrid:
         },
         style={
             "flex": "0 0 auto",
-            "height": f"{config['slots'] * 40 + 50}px",
+            "height": f"{config['slots'] * 50 + 50}px",
             "minHeight": 0,
             "width": "100%",
         },
@@ -728,16 +772,26 @@ def handle_my_team_grid_update(
     triggered_property: str,
 ) -> list[dict]:
     """Persist a My Team table event and return its automatically placed rows."""
+    persist_my_team_grid_update(table, cell_changes, context_action, triggered_property)
+    return get_my_team_table_rows(table)
+
+
+def persist_my_team_grid_update(
+    table: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+) -> None:
+    """Persist a My Team grid event without loading an unused position grid."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
     tag_position = "G" if table == "G" else "F"
     if triggered_property == "cellRendererData":
-        handle_player_context_action(tag_position, context_action)
+        persist_player_context_action(tag_position, context_action)
     elif triggered_property == "cellValueChanged":
-        handle_player_cell_change(tag_position, cell_changes)
+        persist_player_cell_changes(tag_position, cell_changes)
     else:
         raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
-    return get_my_team_table_rows(table)
 
 
 def build_position_layout(position: str):

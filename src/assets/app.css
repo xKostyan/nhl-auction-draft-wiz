@@ -33,7 +33,31 @@ body,
 .my-team-position {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
+}
+
+.my-team-table-heading {
+    column-gap: 16px;
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) auto 6rem;
+    margin-bottom: 8px;
+}
+
+.my-team-heading-projection,
+.my-team-heading-total {
+    text-align: right;
+}
+
+.my-team-heading-total {
+    font-variant-numeric: tabular-nums;
+}
+
+.my-team-page .ag-body-vertical-scroll {
+    display: none;
+}
+
+.my-team-page .ag-center-cols-viewport {
+    overflow-y: hidden;
 }
 
 .position-page {
