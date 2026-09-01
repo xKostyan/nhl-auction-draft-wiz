@@ -303,6 +303,27 @@ def handle_player_cell_change(
     return get_position_rows(position, my_team_only=my_team_only)
 
 
+def handle_player_grid_update(
+    position: str,
+    cell_changes: list[dict] | None,
+    context_action: dict | None,
+    triggered_property: str,
+    *,
+    my_team_only: bool = False,
+) -> list[dict]:
+    """Dispatch only the grid property that initiated this callback.
+
+    Dash retains the most recent value for each Input. A previous context-menu
+    payload must not be reapplied when a later Tags or Notes edit triggers the
+    same callback.
+    """
+    if triggered_property == "cellRendererData":
+        return handle_player_context_action(position, context_action, my_team_only=my_team_only)
+    if triggered_property == "cellValueChanged":
+        return handle_player_cell_change(position, cell_changes, my_team_only=my_team_only)
+    raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
+
+
 handle_drafted_cell_change = handle_player_cell_change
 
 

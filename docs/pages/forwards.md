@@ -70,7 +70,7 @@ open in its own browser tab during the draft.
   the player to the My Team roster (and marks them drafted), while **Remove
   from My Team** only removes that roster membership. The menu is displayed
   above the grid and closes when you left-click outside it; the table reloads
-  immediately after an action.
+  immediately after an action without affecting later Tags or Notes edits.
 - Rows are loaded from and edits are persisted to the local SQLite workspace,
   so drafted state survives app restarts.
 

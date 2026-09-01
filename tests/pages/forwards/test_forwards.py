@@ -12,6 +12,7 @@ from src.pages.position_table import (
     get_position_rows,
     handle_drafted_cell_change,
     handle_player_context_action,
+    handle_player_grid_update,
 )
 from src.storage import (
     clear_workspace,
@@ -362,3 +363,19 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     assert player["tags"] == []
     assert player["notes"] == ""
     assert player["drafted"] is True
+
+
+def test_cell_edit_is_not_blocked_by_a_previous_context_action(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+
+    rows = handle_player_grid_update(
+        "F",
+        [{"colId": "tags", "value": ["PP1"], "data": {"id": player_id}}],
+        {"rowId": player_id, "value": {"action": "clear-tags"}},
+        "cellValueChanged",
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == ["PP1"]

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import dash
-from dash import Input, Output, callback
+from dash import Input, Output, callback, ctx
 
 from .position_table import (
     build_position_layout,
-    handle_player_context_action,
+    handle_player_grid_update,
     get_player_search_target,
     handle_drafted_cell_change,
     position_grid_id,
@@ -37,9 +37,12 @@ dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
     prevent_initial_call=True,
 )
 def update_drafted_status(cell_change, context_action):
-    if context_action:
-        return handle_player_context_action(POSITION, context_action)
-    return handle_drafted_cell_change(POSITION, cell_change)
+    return handle_player_grid_update(
+        POSITION,
+        cell_change,
+        context_action,
+        ctx.triggered_prop_id.rsplit(".", 1)[-1],
+    )
 
 
 @callback(
