@@ -58,7 +58,8 @@ membership flag is stored in the workspace and survives restarts.
 - Each page render creates one roster snapshot, which is reused by all table
   rows, projected totals, goalie calculations, and chart slices. This prevents
   every displayed component from separately reloading and placing the same
-  roster data.
+  roster data. The snapshot's historical inline-chart data is queried only for
+  the players on My Team, rather than every player at the relevant position.
 
 ## Related code
 

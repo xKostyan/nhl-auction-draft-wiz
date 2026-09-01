@@ -406,15 +406,15 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             """,
             (normalized_position, int(my_team_only)),
         ).fetchall()
-        gp_rows = conn.execute(
-            """
-            SELECT player_id, year, stat_value
-            FROM player_stats
-            WHERE position = ? AND stats_type = 'actual' AND stat_name = 'GP'
-            ORDER BY player_id ASC, year DESC
-            """,
-            (normalized_position,),
-        ).fetchall()
+        player_ids = [int(row["id"]) for row in rows] if my_team_only else None
+        gp_rows = _get_position_stat_rows(
+            conn,
+            normalized_position,
+            "GP",
+            stats_type="actual",
+            player_ids=player_ids,
+            descending_years=True,
+        )
         actual_gp_by_player: dict[int, list[dict[str, int | float]]] = {}
         for row in gp_rows:
             player_id = int(row["player_id"])
@@ -459,15 +459,12 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                 (normalized_position, normalized_position),
             ).fetchall()
             game_start_years = [int(row["year"]) for row in year_rows]
-            game_start_rows = conn.execute(
-                """
-                SELECT player_id, year, stats_type, stat_value
-                FROM player_stats
-                WHERE position = ? AND stat_name = 'GS'
-                ORDER BY player_id ASC, year ASC
-                """,
-                (normalized_position,),
-            ).fetchall()
+            game_start_rows = _get_position_stat_rows(
+                conn,
+                normalized_position,
+                "GS",
+                player_ids=player_ids,
+            )
             game_starts_by_player = {
                 row["id"]: {
                     year: {"year": year, "projected": 0.0, "actual": 0.0}
@@ -497,15 +494,12 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             (normalized_position, normalized_position),
         ).fetchall()
         average_performance_years = [int(row["year"]) for row in year_rows]
-        average_performance_rows = conn.execute(
-            """
-            SELECT player_id, year, stats_type, stat_value
-            FROM player_stats
-            WHERE position = ? AND stat_name = 'FP_AVG'
-            ORDER BY player_id ASC, year ASC
-            """,
-            (normalized_position,),
-        ).fetchall()
+        average_performance_rows = _get_position_stat_rows(
+            conn,
+            normalized_position,
+            "FP_AVG",
+            player_ids=player_ids,
+        )
         average_performance_by_player = {
             row["id"]: {
                 year: {"year": year, "projected": 0.0, "actual": 0.0}
@@ -561,6 +555,40 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
         )
     finally:
         conn.close()
+
+
+def _get_position_stat_rows(
+    conn: sqlite3.Connection,
+    position: str,
+    stat_name: str,
+    *,
+    stats_type: str | None = None,
+    player_ids: list[int] | None = None,
+    descending_years: bool = False,
+) -> list[sqlite3.Row]:
+    """Return a position's stat rows, optionally restricted to roster player ids."""
+    if player_ids == []:
+        return []
+
+    predicates = ["position = ?", "stat_name = ?"]
+    parameters: list[str | int] = [position, stat_name]
+    if stats_type is not None:
+        predicates.append("stats_type = ?")
+        parameters.append(stats_type)
+    if player_ids is not None:
+        predicates.append(f"player_id IN ({', '.join('?' for _ in player_ids)})")
+        parameters.extend(player_ids)
+
+    year_order = "DESC" if descending_years else "ASC"
+    return conn.execute(
+        f"""
+        SELECT player_id, year, stats_type, stat_value
+        FROM player_stats
+        WHERE {' AND '.join(predicates)}
+        ORDER BY player_id ASC, year {year_order}
+        """,
+        parameters,
+    ).fetchall()
 
 
 def set_player_drafted(player_id: int, drafted: bool) -> None:

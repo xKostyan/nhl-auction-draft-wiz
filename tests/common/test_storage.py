@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+import src.storage as storage
 from src.data_loader import load_stats
 from src.storage import (
     clear_workspace,
@@ -215,6 +216,29 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
 
     set_player_on_my_team(player_id, False)
     assert get_players_for_position_grid("F", my_team_only=True).empty
+
+
+def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_path, monkeypatch):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    forwards = get_players_for_position_grid("F")
+    player_id = int(forwards.iloc[0]["id"])
+    set_player_on_my_team(player_id, True)
+
+    original_get_position_stat_rows = storage._get_position_stat_rows
+    query_player_ids = []
+
+    def capture_history_query(*args, **kwargs):
+        query_player_ids.append(kwargs["player_ids"])
+        return original_get_position_stat_rows(*args, **kwargs)
+
+    monkeypatch.setattr(storage, "_get_position_stat_rows", capture_history_query)
+
+    my_team_forwards = get_players_for_position_grid("F", my_team_only=True)
+
+    assert my_team_forwards["id"].tolist() == [player_id]
+    assert query_player_ids == [[player_id], [player_id]]
 
 
 def test_position_grid_rejects_unknown_position(tmp_path):

@@ -99,6 +99,7 @@ def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path)
 
     handle_player_context_action("G", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
     assert [row["id"] for row in get_position_rows("G", my_team_only=True)] == [player_id]
+    assert get_position_rows("G", my_team_only=True)[0]["average_performance_history"]
 
     handle_player_context_action(
         "G",
