@@ -15,13 +15,12 @@ membership flag is stored in the workspace and survives restarts.
 
 ## UI and behavior
 
-- A two-layer donut chart beside the Bench table shows the grand projected-TFP
-  total in its center. Its inner ring is split among Forwards, Defencemen,
-  Utility, and Goalies; its outer ring splits each group into its players. A
-  white gap separates the rings. The groups use orange (F), green (D), blue
-  (Utility), and purple (G), matching their table headers. Individual player
-  slices use distinct shades within their group's color family. The Bench/chart
-  section uses equal-width columns and stacks on narrow screens.
+- A two-layer donut chart at the top shows the grand projected-TFP total in
+  its center. Its inner ring is split among Forwards, Defencemen, Utility,
+  and Goalies; its outer ring splits each group into its players. A white gap
+  separates the rings. The groups use orange (F), green (D), blue (Utility),
+  and purple (G), matching their table headers. Individual player slices use
+  distinct shades within their group's color family.
 - The page has fixed-size tables with 9 forward, 5 defencemen, 2 goalie, 2
   utility, and 4 bench slots. Every slot has an unlabeled numeric index;
   vacant slots are visibly styled and labeled **Empty slot**.

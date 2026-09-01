@@ -36,26 +36,6 @@ body,
     margin-bottom: 24px;
 }
 
-.my-team-bench-and-chart {
-    display: grid;
-    gap: 24px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.my-team-bench-and-chart .my-team-position {
-    margin-bottom: 0;
-}
-
-.my-team-projection-chart {
-    min-width: 0;
-}
-
-@media (max-width: 900px) {
-    .my-team-bench-and-chart {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
 .position-page {
     width: 100%;
 }

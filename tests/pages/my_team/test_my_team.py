@@ -41,12 +41,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.figure.data[0].marker.colors == ("#ff8533", "#5cd65c", "#33adff", "#cc33ff")
     assert chart.figure.data[0].domain.x == (0.1, 0.9)
     assert chart.figure.data[1].hole == 0.84
-    assert chart.figure.layout.height == 300
-    assert chart.className == "my-team-projection-chart"
-    bench_and_chart = page_layout.children[-1]
-    assert bench_and_chart.className == "my-team-bench-and-chart"
-    assert isinstance(bench_and_chart.children[0], type(page_layout.children[1]))
-    assert bench_and_chart.children[1] is chart
+    assert chart.figure.layout.height == 460
+    assert page_layout.children[1] is chart
 
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",
