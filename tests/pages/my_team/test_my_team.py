@@ -2,6 +2,7 @@
 
 import dash_ag_grid as dag
 import src.pages.position_table as position_table
+from dash import dcc
 
 from src.data_loader import load_players
 from src.pages import my_team
@@ -30,6 +31,11 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     import_yearly_dataset()
 
     grids = [node for node in walk_components(my_team.layout()) if isinstance(node, dag.AgGrid)]
+    chart = next(node for node in walk_components(my_team.layout()) if isinstance(node, dcc.Graph))
+
+    assert chart.id == my_team.CHART_ID
+    assert len(chart.figure.data) == 2
+    assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
 
     assert [grid.id for grid in grids] == [
         "my-team-f-player-grid",
