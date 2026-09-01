@@ -34,6 +34,8 @@ membership flag is stored in the workspace and survives restarts.
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it.
+- Goalies retain their position-specific tags (`Starter`, `Backup`, `1A`, and
+  `1B`) when edited from the My Team Goalie table.
 - The **Goalies** table includes **p GS** between Average Performance and
   projected TFP, showing projected starts for the detected draft season.
 - The **Forwards**, **Defencemen**, and **Utility** headings show each table's

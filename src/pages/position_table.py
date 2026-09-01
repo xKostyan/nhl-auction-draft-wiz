@@ -730,10 +730,11 @@ def handle_my_team_grid_update(
     """Persist a My Team table event and return its automatically placed rows."""
     if table not in MY_TEAM_TABLES:
         raise ValueError(f"Unsupported My Team table: {table!r}.")
+    tag_position = "G" if table == "G" else "F"
     if triggered_property == "cellRendererData":
-        handle_player_context_action("F", context_action)
+        handle_player_context_action(tag_position, context_action)
     elif triggered_property == "cellValueChanged":
-        handle_player_cell_change("F", cell_changes)
+        handle_player_cell_change(tag_position, cell_changes)
     else:
         raise ValueError(f"Unsupported player-grid trigger: {triggered_property!r}.")
     return get_my_team_table_rows(table)
