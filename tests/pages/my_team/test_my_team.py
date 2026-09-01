@@ -154,8 +154,8 @@ def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
 
     forward = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
     assert get_my_team_projected_tfp_total("F") == forward["projected_tfp"]
-    assert get_my_team_table_title("F") == f"Forwards Projection: {forward['projected_tfp']:.2f}"
-    assert get_my_team_table_title("G") == "Goalies Projection: (Warning: projected starts 0.0/140) 0.00"
+    assert get_my_team_table_title("F") == f"Forwards p projection: {forward['projected_tfp']:.2f}"
+    assert get_my_team_table_title("G") == "Goalies p projection: (Warning: projected starts 0.0/140) 0.00"
     assert get_my_team_table_title("bench") == "Bench"
 
 
@@ -207,7 +207,7 @@ def test_goalie_title_warns_when_ninety_percent_starts_are_below_cap(monkeypatch
         },
     )
 
-    assert get_my_team_table_title("G") == "Goalies Projection: (Warning: projected starts 120.0/140) 400.00"
+    assert get_my_team_table_title("G") == "Goalies p projection: (Warning: projected starts 120.0/140) 400.00"
 
 
 def test_projection_chart_uses_distinct_player_shades_within_each_group():
