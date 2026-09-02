@@ -15,7 +15,22 @@ A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft an
 
 ## Local environment setup
 
-From the repo root:
+From the repo root, run the platform-specific setup script:
+
+### Ubuntu / Linux
+
+```bash
+./setup.sh
+```
+
+### Windows
+
+```bat
+setup.bat
+```
+
+Each script creates the repo-local `.venv` when needed, upgrades `pip`, and
+installs `requirements.txt`. To perform those steps manually:
 
 ```bash
 python3 -m venv .venv
