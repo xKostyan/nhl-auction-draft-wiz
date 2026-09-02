@@ -50,7 +50,14 @@ def build_dashboard() -> Dash:
 
     # Importing the page modules triggers their `dash.register_page(...)` calls.
     # This must happen after the Dash(use_pages=True) app above is created.
-    from .pages import defencemen, forwards, goalies, import_data, my_team  # noqa: F401  (side-effect import)
+    from .pages import (  # noqa: F401  (side-effect import)
+        defencemen,
+        forwards,
+        goalies,
+        import_data,
+        my_team,
+        player_stats_table,
+    )
 
     app.layout = html.Div(
         className="app-shell",

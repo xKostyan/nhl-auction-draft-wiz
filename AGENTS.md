@@ -11,7 +11,7 @@ This repository is a Python dashboard project for NHL auction draft planning. Th
 
 The goal is to provide a single-agent-friendly environment for building and iterating on a draft planning dashboard without losing project context or conventions.
 
-**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering five pages: **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), and **5 - My Team** (`/my-team`). The position pages provide live draft tables and My Team shows the persisted roster subset in three position tables. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
+**Current implementation stage:** the app is a multi-page Dash app with a persistent top menu offering six pages: **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), **5 - My Team** (`/my-team`), and **6 - Player stats table** (`/player-stats-table`). The position pages provide live draft tables, My Team shows the persisted roster subset, and Player stats table renders a selected player's complete stored stat history. There is no ranking, valuation, analysis, or charting/visualization logic yet — do not add any of that until it is explicitly requested. **Whenever a page's functionality changes, update that page's file under `docs/pages/` in the same change** — see "Pages, menu, and documentation structure" below.
 
 ## Repo layout
 
@@ -47,6 +47,7 @@ Current pages (this table is the source of truth for page names/order used in fu
 | 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | `docs/pages/defencemen.md` | `tests/pages/defencemen/` | Implemented placeholder |
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` | Implemented placeholder |
 | 5 | My Team | `/my-team` | `src/pages/my_team.py` | `docs/pages/my-team.md` | `tests/pages/my_team/` | Implemented |
+| 6 | Player stats table | `/player-stats-table` | `src/pages/player_stats_table.py` | `docs/pages/player-stats-table.md` | `tests/pages/player_stats_table/` | Implemented |
 
 **Mandatory rule: whenever you implement, change, or extend a page's functionality, update its `docs/pages/<page-name>.md` file and its `tests/pages/<page_name>/` tests in the same change.** Do not let the docs or page-specific tests drift out of sync with the code — this is as required as the general testing rules below.
 

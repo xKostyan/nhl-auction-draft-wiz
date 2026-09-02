@@ -13,7 +13,14 @@ from src.storage import clear_workspace, configure_storage, import_yearly_datase
 def test_all_pages_are_registered_in_menu_order():
     pages = sorted(dash.page_registry.values(), key=lambda page: page.get("order", 0))
     paths_in_order = [page["relative_path"] for page in pages]
-    assert paths_in_order == ["/import-data", "/forwards", "/defencemen", "/goalies", "/my-team"]
+    assert paths_in_order == [
+        "/import-data",
+        "/forwards",
+        "/defencemen",
+        "/goalies",
+        "/my-team",
+        "/player-stats-table",
+    ]
 
 
 def test_every_registered_page_has_a_callable_layout():

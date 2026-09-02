@@ -2,7 +2,7 @@
 
 A Python + Dash + AG Grid + Plotly dashboard for evaluating NHL fantasy draft and auction decisions using CSV-based player and stat data.
 
-**Current implementation stage:** the app has a persistent top menu with five pages: **Import data**, dedicated **Forwards**, **Defencemen**, and **Goalies** live-auction tables, plus **My Team**. My Team shows the persisted subset of players added to the user's roster. There is no ranking, analysis, or chart/visualization functionality yet. See [Pages documentation](docs/pages/) for details on each page.
+**Current implementation stage:** the app has a persistent top menu with six pages: **Import data**, dedicated **Forwards**, **Defencemen**, and **Goalies** live-auction tables, **My Team**, and **Player stats table**. Player stats table searches every imported player and renders that player's complete stored stat history. There is no ranking or analysis functionality yet. See [Pages documentation](docs/pages/) for details on each page.
 
 ## Stack
 
@@ -56,7 +56,7 @@ Open that URL in your browser to use the app.
 
 ## App structure and pages
 
-The app has a persistent menu (top-left **☰ Menu** button) with 5 entries.
+The app has a persistent menu (top-left **☰ Menu** button) with 6 entries.
 Each corresponds to one page module and one documentation page:
 
 | # | Page name | Route | Module | Docs |
@@ -66,6 +66,7 @@ Each corresponds to one page module and one documentation page:
 | 3 | Defencemen | `/defencemen` | `src/pages/defencemen.py` | [docs/pages/defencemen.md](docs/pages/defencemen.md) |
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | [docs/pages/goalies.md](docs/pages/goalies.md) |
 | 5 | My Team | `/my-team` | `src/pages/my_team.py` | [docs/pages/my-team.md](docs/pages/my-team.md) |
+| 6 | Player stats table | `/player-stats-table` | `src/pages/player_stats_table.py` | [docs/pages/player-stats-table.md](docs/pages/player-stats-table.md) |
 
 Landing page (`/`) behavior: if the workspace already has imported players,
 it redirects to **My Team**; otherwise it redirects to **Import data**
