@@ -40,6 +40,7 @@ def test_layout_exposes_an_all_player_search_and_an_empty_stats_grid(tmp_path, w
         {"field": "year", "headerName": "year", "type": "numericColumn"},
         {"field": "stats_type", "headerName": "stats_type"},
     ]
+    assert grid.defaultColDef == {"resizable": True, "sortable": True, "width": 100}
 
 
 def test_selected_player_generates_a_dynamic_stats_table(tmp_path):

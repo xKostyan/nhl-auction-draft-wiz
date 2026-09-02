@@ -22,6 +22,7 @@ roster, notes, or tag metadata.
   player's available stat names.
 - Stat names are displayed exactly as they are stored in the database. No
   skater/goalie schema is hard-coded and missing values remain blank.
+- All columns initially use a 100px width and remain resizable.
 - Clearing the player selection restores the empty table structure.
 
 ## Related code

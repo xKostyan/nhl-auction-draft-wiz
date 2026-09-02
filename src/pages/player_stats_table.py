@@ -79,7 +79,7 @@ def layout(**_kwargs):
                 id=GRID_ID,
                 rowData=rows,
                 columnDefs=column_defs,
-                defaultColDef={"resizable": True, "sortable": True},
+                defaultColDef={"resizable": True, "sortable": True, "width": 100},
                 dashGridOptions={"pagination": True, "paginationPageSize": 25},
                 style={"flex": "1 1 0", "minHeight": 0, "width": "100%"},
             ),
