@@ -244,6 +244,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "}, String(gamesPlayed))" in renderer
     assert 'gap: "1px"' in renderer
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            width: "100%"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
     assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer

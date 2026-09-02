@@ -33,9 +33,10 @@ open in its own browser tab during the draft.
   shares a fixed 0-84 GP scale and has its actual GP value centered over the
   chart. Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and
   green for 72-84; hovering a bar shows its season and actual GP. The column
-  defaults to 150px wide, can be resized, and is vertically centered in a 50px
-  chart area, leaving 5px clearance above and below. Rows are 60px high to
-  accommodate current and future inline player graphs.
+  defaults to 150px wide, can be resized, and expands to fill the available
+  cell width. It is vertically centered in a 50px chart area, leaving 5px
+  clearance above and below. Rows are 60px high to accommodate current and
+  future inline player graphs.
 - **Average Performance** is a resizable 150px inline combination chart
   covering every imported defenceman season. A blue line shows projected
   average fantasy points and bars show actual average fantasy points, with

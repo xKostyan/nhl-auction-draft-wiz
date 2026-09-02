@@ -186,6 +186,7 @@ def test_my_team_health_renderer_displays_actual_games_played_values():
 
     assert "}, String(gamesPlayed))" in renderer
     assert 'bottom: "50%"' in renderer
+    assert 'width: "100%"' in renderer
 
 
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):

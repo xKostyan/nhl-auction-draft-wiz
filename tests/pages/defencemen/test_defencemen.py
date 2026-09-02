@@ -128,6 +128,7 @@ def test_health_renderer_displays_actual_games_played_values():
 
     assert "}, String(gamesPlayed))" in renderer
     assert 'bottom: "50%"' in renderer
+    assert 'width: "100%"' in renderer
 
 
 def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):
