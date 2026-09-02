@@ -95,7 +95,7 @@ SQLITE_COLUMN_DESCRIPTIONS: Final[dict[str, str]] = {
     "GP": "games played",
     "19": "???",
     "_5": "???",
-    "_12": "???",
+    "_12": "win percentage",
     "_16": "points",
     "_25": "???",
     "_35": "???",

@@ -25,5 +25,9 @@ def test_undocumented_numeric_stat_codes_remain_explicitly_unknown():
     assert SQLITE_COLUMN_DESCRIPTIONS["_99"] == "???"
 
 
+def test_goalie_win_percentage_has_a_description():
+    assert SQLITE_COLUMN_DESCRIPTIONS["_12"] == "win percentage"
+
+
 def test_shots_against_has_a_description():
     assert SQLITE_COLUMN_DESCRIPTIONS["SA"] == "shots against"
