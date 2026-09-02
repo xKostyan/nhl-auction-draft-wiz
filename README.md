@@ -72,6 +72,7 @@ Open that URL in your browser to use the app.
 ## App structure and pages
 
 The app has a persistent menu (top-left **☰ Menu** button) with 7 entries.
+It closes when you left-click outside it.
 Each corresponds to one page module and one documentation page:
 
 | # | Page name | Route | Module | Docs |
