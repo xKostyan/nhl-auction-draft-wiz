@@ -21,11 +21,14 @@ roster, notes, or tag metadata.
   dataset. The remaining columns are dynamically derived from the selected
   player's available stat names.
 - Stat names are displayed exactly as they are stored in the database. No
-  skater/goalie schema is hard-coded and missing values remain blank.
+  skater/goalie schema is hard-coded and missing values remain blank. Hover a
+  stat column header to see its canonical description (for example, `FP`
+  displays "fantasy points" and `GA` displays "goals against").
 - All columns initially use a 100px width and remain resizable.
 - Clearing the player selection restores the empty table structure.
 
 ## Related code
 
 - `src/pages/player_stats_table.py` — lookup, dynamic table shaping, and callback
+- `src/stat_mappings.py` — canonical stored-stat descriptions used by header tooltips
 - `src/storage.py` — player lookup and long-format stat-history access

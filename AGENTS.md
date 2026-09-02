@@ -143,6 +143,16 @@ Use `get_player_stat_history(player_id)` in `src/storage.py` to fetch a player's
 
 The storage layer lives in `src/storage.py` and writes to `.workspace/draft_workspace.sqlite3` by default.
 
+## Stat-name mappings
+
+`src/stat_mappings.py` is the committed source of truth for imported statistic
+names. `ESPN_TO_SQLITE_NAMES` maps the original ESPN API field name to the
+scraper's SQLite-safe field name, while `SQLITE_COLUMN_DESCRIPTIONS` explains
+the stored field's meaning. Future features that accept or display named
+statistics must use these mappings instead of inferring meanings from short
+column names. Entries described as `"???"` are intentionally unresolved and
+must not be guessed without an authoritative mapping.
+
 ## Browser automation and MCP
 
 This repo is prepared for browser-driven UI testing using Playwright MCP.
