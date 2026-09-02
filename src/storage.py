@@ -743,6 +743,22 @@ def get_player_stat_history(player_id: int) -> pd.DataFrame:
         conn.close()
 
 
+def get_players_for_stat_lookup() -> pd.DataFrame:
+    """Return every imported player for the Player stats table lookup."""
+    conn = db_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, name
+            FROM players
+            ORDER BY name COLLATE NOCASE ASC, id ASC
+            """
+        ).fetchall()
+        return pd.DataFrame([dict(row) for row in rows], columns=["id", "name"])
+    finally:
+        conn.close()
+
+
 def get_available_stat_years() -> list[int]:
     """Return the sorted list of years currently stored in the workspace's stat history."""
     conn = db_connection()
