@@ -76,8 +76,9 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Health (actual GP)",
             "cellRenderer": "actualGpSparkline",
             "sortable": False,
-            "resizable": False,
-            "width": 110,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
         },
         {
             "field": "average_performance_history",

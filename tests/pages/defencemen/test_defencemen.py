@@ -52,7 +52,9 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert grid.columnDefs[3]["cellRenderer"] == "actualGpSparkline"
-    assert grid.columnDefs[3]["width"] == 110
+    assert grid.columnDefs[3]["width"] == 150
+    assert grid.columnDefs[3]["resizable"] is True
+    assert grid.columnDefs[3]["suppressAutoSize"] is True
     assert grid.columnDefs[4] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",

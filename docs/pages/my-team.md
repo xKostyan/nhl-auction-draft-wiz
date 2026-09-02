@@ -32,7 +32,7 @@ membership flag is stored in the workspace and survives restarts.
 - My Team rows are 50px high, with 12px spacing between tables. Tables retain
   the same player data, inline charts, Tags, and Notes as their matching
   position page. Health charts show actual GP bars with centered value labels
-  and no projected-GP line. Utility has the
+  and no projected-GP line; their 150px columns can be resized. Utility has the
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress

@@ -338,8 +338,9 @@ def _health_column_def(position: str) -> list[dict]:
             "headerName": "Health (actual GP)",
             "cellRenderer": "actualGpSparkline",
             "sortable": False,
-            "resizable": False,
-            "width": 110,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
         }
     ]
 
