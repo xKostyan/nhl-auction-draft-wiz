@@ -34,7 +34,8 @@ open in its own browser tab during the draft.
   covering every imported goalie season. A blue line shows projected average
   fantasy points and bars show actual average fantasy points, with missing
   values shown as zero. Its fixed scale is 0-12; actual bars are red below
-  7.0, orange through 7.5, yellow through 8.0, and green above 8.0.
+  7.0, orange through 7.5, yellow below 7.9, light green from 7.9 up to
+  8.3, and green from 8.3.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
   `Starter`, `Backup`, `1A`, and `1B`, then click **Done** to close it. Tags

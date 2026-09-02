@@ -189,6 +189,15 @@ def test_my_team_health_renderer_displays_actual_games_played_values():
     assert 'width: "100%"' in renderer
 
 
+def test_my_team_average_performance_renderer_has_position_specific_green_bands():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
+    assert 'actual < 7.9 ? "#f9a825" : actual < 8.3 ? "#81c784" : "#388e3c"' in renderer
+
+
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()

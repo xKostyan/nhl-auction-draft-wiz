@@ -239,6 +239,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#ef6c00" in renderer
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
     assert 'boxSizing: "border-box"' in renderer
     assert 'height: "calc(100% - 10px)"' in renderer
     assert 'padding: "1px 4px"' in renderer

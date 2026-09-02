@@ -41,7 +41,8 @@ open in its own browser tab during the draft.
   covering every imported defenceman season. A blue line shows projected
   average fantasy points and bars show actual average fantasy points, with
   missing values shown as zero. Its fixed scale is 0-6; actual bars are red
-  through 3.1, orange through 3.5, yellow through 3.9, and green above 3.9.
+  through 3.1, orange through 3.5, yellow below 3.7, light green from 3.7
+  up to 4.1, and green from 4.1.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
   `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, and `Line2`, then click **Done** to

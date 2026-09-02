@@ -187,8 +187,8 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
         var percentage = actual / scaleMaximum * 100;
         var color = scaleMaximum === 6
-            ? actual <= 3.1 ? "#d32f2f" : actual <= 3.5 ? "#ef6c00" : actual <= 3.9 ? "#f9a825" : "#388e3c"
-            : actual < 7 ? "#d32f2f" : actual <= 7.5 ? "#ef6c00" : actual <= 8 ? "#f9a825" : "#388e3c";
+            ? actual <= 3.1 ? "#d32f2f" : actual <= 3.5 ? "#ef6c00" : actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"
+            : actual < 7 ? "#d32f2f" : actual <= 7.5 ? "#ef6c00" : actual < 7.9 ? "#f9a825" : actual < 8.3 ? "#81c784" : "#388e3c";
 
         return React.createElement("div", {
             key: season.year,

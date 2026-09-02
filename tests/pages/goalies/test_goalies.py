@@ -141,6 +141,14 @@ def test_goalie_rows_include_projected_and_actual_game_starts_for_every_season(t
     ]
 
 
+def test_average_performance_renderer_has_two_goalie_green_bands():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'actual < 7.9 ? "#f9a825" : actual < 8.3 ? "#81c784" : "#388e3c"' in renderer
+
+
 def test_goalie_rows_include_average_performance_for_every_season(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()

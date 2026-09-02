@@ -128,6 +128,14 @@ def test_health_renderer_displays_actual_games_played_values():
 
     assert "}, String(gamesPlayed))" in renderer
     assert 'bottom: "50%"' in renderer
+
+
+def test_average_performance_renderer_has_two_skater_green_bands():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
     assert 'width: "100%"' in renderer
 
 
