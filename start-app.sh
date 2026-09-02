@@ -3,17 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_PORT=8050
-VENV_DIR="$SCRIPT_DIR/.venv"
 ACTION="${1:-start}"
 
 if [[ "$ACTION" == "start" ]]; then
-    if [[ ! -d "$VENV_DIR" ]]; then
-        echo "Missing local virtual environment: $VENV_DIR"
-        echo "Create it with: python3 -m venv .venv"
-        echo "Then install deps with: . .venv/bin/activate && python -m pip install -r requirements.txt"
-        exit 1
-    fi
-
     if command -v gnome-terminal >/dev/null 2>&1; then
         gnome-terminal --working-directory="$SCRIPT_DIR" -- bash -lc "cd '$SCRIPT_DIR' && . .venv/bin/activate && python app.py"
     elif command -v x-terminal-emulator >/dev/null 2>&1; then
