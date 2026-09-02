@@ -137,6 +137,14 @@ Each stats file carries a `stats_type` field for `projected` vs `actual` values,
 
 **All years and both `projected`/`actual` data points found in the CSVs are imported and retained**, not just the upcoming draft season, so multi-year and projected-vs-actual historical comparisons remain possible once that analysis is built. Stats are stored per-player in a long format (one row per `year` / `stats_type` / stat name), which makes it easy to pull a single player's full history later.
 
+### Imported stat names
+
+The scraper's compact, SQLite-safe stat names and their meanings are committed
+in `src/stat_mappings.py`. Use `ESPN_TO_SQLITE_NAMES` to translate ESPN API
+field names and `SQLITE_COLUMN_DESCRIPTIONS` to display their descriptive
+meanings. A description of `"???"` marks an intentionally unresolved stat code;
+do not infer its meaning.
+
 ## Persistent workspace and yearly import flow (Import data page)
 
 The app stores imported data in a local SQLite database under `.workspace/draft_workspace.sqlite3`. Full details: [docs/pages/import-data.md](docs/pages/import-data.md).
