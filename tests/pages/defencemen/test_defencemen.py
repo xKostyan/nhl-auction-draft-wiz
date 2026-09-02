@@ -92,6 +92,10 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_defencem
     assert {option["value"] for option in search.options} == {
         int(row.id) for row in load_players().itertuples(index=False) if row.position == "D"
     }
+    assert defencemen.focus_searched_player(player["id"]) == (
+        [{"id": player["id"]}],
+        {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
+    )
 
 
 def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
@@ -105,10 +109,14 @@ def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
     )
 
     assert get_selected_player()["id"] == player["id"]
-    assert defencemen.focus_searched_player(player["id"]) == (
-        [{"id": player["id"]}],
-        {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
-    )
+
+
+def test_context_menu_labels_the_shared_selection_action_as_highlight():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'menuAction("Highlight the player", "select-player")' in renderer
 
 
 def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):

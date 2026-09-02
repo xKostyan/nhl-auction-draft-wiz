@@ -51,8 +51,8 @@ membership flag is stored in the workspace and survives restarts.
   starts when the roster projects fewer than 140 starts.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
-- Click a highlight circle or right-click a player name and choose **View
-  selected player graphs** to select the player for the shared
+- Click a highlight circle or right-click a player name and choose **Highlight
+  the player** to select and highlight the player for the shared
   [Selected player graphs](./selected-player-graphs.md) companion page.
   The context menu also provides **Clear Tags**, **Clear Notes**, or **Remove
   from My Team**. The menu is displayed above the tables and closes when you

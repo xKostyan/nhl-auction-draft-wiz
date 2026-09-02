@@ -15,7 +15,7 @@ highlighted from any live-auction or My Team table.
 
 - The page currently displays the selected player's name, or **No player
   highlighted.** until one is selected.
-- Click the highlight circle or select **View selected player graphs** from a
+- Click the highlight circle or select **Highlight the player** from a
   player-name context menu on the Forwards, Defencemen, Goalies, or My Team
   pages to replace the shared workspace selection.
 - The page checks the shared SQLite workspace once per second, so a dedicated

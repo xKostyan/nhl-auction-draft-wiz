@@ -351,6 +351,9 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var runAction = function (action, event) {
         event.preventDefault();
         event.stopPropagation();
+        if (action === "select-player") {
+            props.node.setSelected(true, true);
+        }
         if (action === "add-to-my-team" || action === "remove-from-my-team") {
             props.node.setData(Object.assign({}, props.data, {
                 on_my_team: action === "add-to-my-team"
@@ -413,7 +416,7 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
                 zIndex: "10000"
             }
         }, [
-            menuAction("View selected player graphs", "select-player"),
+            menuAction("Highlight the player", "select-player"),
             menuAction("Clear Tags", "clear-tags"),
             menuAction("Clear Notes", "clear-notes"),
             allowAddToMyTeam ? menuAction(

@@ -1,5 +1,7 @@
 """Tests for the My Team page."""
 
+from pathlib import Path
+
 import dash_ag_grid as dag
 import src.pages.position_table as position_table
 from dash import dcc, html
@@ -163,6 +165,14 @@ def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):
     )
 
     assert get_selected_player()["id"] == player_id
+
+
+def test_context_menu_labels_the_shared_selection_action_as_highlight():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'menuAction("Highlight the player", "select-player")' in renderer
 
 
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
