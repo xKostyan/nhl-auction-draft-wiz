@@ -13,16 +13,40 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             gamesPlayed <= 60 ? "#ef6c00" :
             gamesPlayed <= 71 ? "#f9a825" : "#388e3c";
 
-        return React.createElement("span", {
+        return React.createElement("div", {
             key: season.year,
             title: season.year + ": " + gamesPlayed + " actual GP",
             style: {
-                backgroundColor: color,
-                display: "block",
-                height: Math.max(2, percentage) + "%",
-                minWidth: "10px"
+                flex: "1 1 0",
+                height: "100%",
+                position: "relative"
             }
-        });
+        }, [
+            React.createElement("span", {
+                key: "bar",
+                style: {
+                    backgroundColor: color,
+                    bottom: "0",
+                    height: percentage + "%",
+                    left: "10%",
+                    position: "absolute",
+                    right: "10%"
+                }
+            }),
+            React.createElement("span", {
+                key: "label",
+                style: {
+                    bottom: "50%",
+                    color: "#333",
+                    fontSize: "9px",
+                    left: "50%",
+                    position: "absolute",
+                    transform: "translate(-50%, 50%)",
+                    whiteSpace: "nowrap",
+                    zIndex: "2"
+                }
+            }, String(gamesPlayed))
+        ]);
     });
 
     return React.createElement("div", {
@@ -30,7 +54,7 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             alignItems: "end",
             boxSizing: "border-box",
             display: "flex",
-            gap: "3px",
+            gap: "1px",
             height: "calc(100% - 10px)",
             justifyContent: "center",
             padding: "1px 4px"

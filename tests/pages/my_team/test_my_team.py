@@ -175,6 +175,15 @@ def test_context_menu_labels_the_shared_selection_action_as_highlight():
     assert 'menuAction("Highlight the player", "select-player")' in renderer
 
 
+def test_my_team_health_renderer_displays_actual_games_played_values():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert "}, String(gamesPlayed))" in renderer
+    assert 'bottom: "50%"' in renderer
+
+
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
