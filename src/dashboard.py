@@ -57,6 +57,7 @@ def build_dashboard() -> Dash:
         import_data,
         my_team,
         player_stats_table,
+        selected_player_graphs,
     )
 
     app.layout = html.Div(

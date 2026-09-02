@@ -20,6 +20,7 @@ def test_all_pages_are_registered_in_menu_order():
         "/goalies",
         "/my-team",
         "/player-stats-table",
+        "/selected-player-graphs",
     ]
 
 

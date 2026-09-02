@@ -15,6 +15,7 @@ from ..storage import (
     set_player_notes,
     set_player_on_my_team,
     set_player_tags,
+    set_selected_player,
 )
 
 POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
@@ -465,7 +466,13 @@ def _parse_context_action(value: object) -> str:
     if not isinstance(value, str):
         raise ValueError("Player context-menu updates require an action.")
     action = value.split(":", 1)[0]
-    if action not in {"clear-tags", "clear-notes", "add-to-my-team", "remove-from-my-team"}:
+    if action not in {
+        "clear-tags",
+        "clear-notes",
+        "add-to-my-team",
+        "remove-from-my-team",
+        "select-player",
+    }:
         raise ValueError("Player context-menu action is not recognized.")
     return action
 
@@ -494,7 +501,9 @@ def persist_player_context_action(position: str, context_action: dict | None) ->
     if not isinstance(value, dict):
         raise ValueError("Player context-menu updates require an action payload.")
     action = _parse_context_action(value.get("action"))
-    if action == "clear-tags":
+    if action == "select-player":
+        set_selected_player(player_id)
+    elif action == "clear-tags":
         set_player_tags(player_id, [])
     elif action == "clear-notes":
         set_player_notes(player_id, "")

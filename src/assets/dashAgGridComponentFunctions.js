@@ -413,6 +413,7 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
                 zIndex: "10000"
             }
         }, [
+            menuAction("View selected player graphs", "select-player"),
             menuAction("Clear Tags", "clear-tags"),
             menuAction("Clear Notes", "clear-notes"),
             allowAddToMyTeam ? menuAction(
@@ -487,7 +488,8 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
         "aria-pressed": selected,
         onClick: function (event) {
             event.stopPropagation();
-            props.node.setSelected(!selected, true);
+            props.node.setSelected(true, true);
+            props.setData({ action: "select-player", timestamp: Date.now() });
         },
         style: {
             backgroundColor: selected ? "#388e3c" : onMyTeam ? "#90caf9" : "#d3d3d3",

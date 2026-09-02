@@ -249,9 +249,11 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
     assert "playerNameContextMenuRenderer" in renderer
+    assert 'menuAction("View selected player graphs", "select-player")' in renderer
     assert "props.node.setData(Object.assign({}, props.data" in renderer
     assert 'on_my_team: action === "add-to-my-team"' in renderer
     assert "props.setData({ action: action, timestamp: Date.now() })" in renderer
+    assert 'props.setData({ action: "select-player", timestamp: Date.now() })' in renderer
     assert "ReactDOM.createPortal" in renderer
     assert 'position: "fixed"' in renderer
     assert 'zIndex: "10000"' in renderer
@@ -366,6 +368,21 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     assert player["tags"] == []
     assert player["notes"] == ""
     assert player["drafted"] is True
+
+
+def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
+    from src.storage import get_selected_player
+
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = get_position_rows("F")[0]
+
+    handle_player_context_action(
+        "F", {"rowId": player["id"], "value": {"action": "select-player"}}
+    )
+
+    assert get_selected_player()["id"] == player["id"]
 
 
 def test_cell_edit_is_not_blocked_by_a_previous_context_action(tmp_path):

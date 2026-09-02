@@ -7,8 +7,8 @@ from dash import dcc
 
 from src.data_loader import load_players
 from src.pages import defencemen
-from src.pages.position_table import get_position_rows, handle_drafted_cell_change
-from src.storage import clear_workspace, configure_storage, import_yearly_dataset
+from src.pages.position_table import get_position_rows, handle_drafted_cell_change, handle_player_context_action
+from src.storage import clear_workspace, configure_storage, get_selected_player, import_yearly_dataset
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -92,6 +92,19 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_defencem
     assert {option["value"] for option in search.options} == {
         int(row.id) for row in load_players().itertuples(index=False) if row.position == "D"
     }
+
+
+def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = get_position_rows("D")[0]
+
+    handle_player_context_action(
+        "D", {"rowId": player["id"], "value": {"action": "select-player"}}
+    )
+
+    assert get_selected_player()["id"] == player["id"]
     assert defencemen.focus_searched_player(player["id"]) == (
         [{"id": player["id"]}],
         {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},

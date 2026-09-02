@@ -60,8 +60,9 @@ open in its own browser tab during the draft.
   Selecting a suggestion (or confirming an exact full name) selects and
   centers that player in the table.
 - The 20px **highlight** circle is light gray by default, light blue for an
-  unselected player on **My Team**, and green for the selected player. It is
-  updated by player search and can be clicked to select a player.
+  unselected player on **My Team**, and green for the selected player. Clicking
+  it selects the player in the shared workspace, which refreshes the
+  [Selected player graphs](./selected-player-graphs.md) companion page.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
@@ -69,9 +70,10 @@ open in its own browser tab during the draft.
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row
   background.
-- Right-click a **Player name** for a custom menu. **Clear Tags** and **Clear
-  Notes** remove those persisted values. **Add to My Team** persistently adds
-  the player to the My Team roster (and marks them drafted), while **Remove
+- Right-click a **Player name** for a custom menu. **View selected player
+  graphs** selects the player for the shared companion page. **Clear Tags** and
+  **Clear Notes** remove those persisted values. **Add to My Team** persistently
+  adds the player to the My Team roster (and marks them drafted), while **Remove
   from My Team** only removes that roster membership. The menu is displayed
   above the grid and closes when you left-click outside it; the table reloads
   immediately after an action without affecting later Tags or Notes edits.

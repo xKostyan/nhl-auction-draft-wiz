@@ -17,7 +17,12 @@ from src.pages.position_table import (
     handle_player_context_action,
     handle_my_team_grid_update,
 )
-from src.storage import clear_workspace, configure_storage, import_yearly_dataset
+from src.storage import (
+    clear_workspace,
+    configure_storage,
+    get_selected_player,
+    import_yearly_dataset,
+)
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -141,6 +146,23 @@ def test_goalie_tags_persist_from_the_my_team_goalie_table(tmp_path):
 
     goalie = next(row for row in get_position_rows("G", my_team_only=True) if row["id"] == player_id)
     assert goalie["tags"] == ["Starter"]
+
+
+def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+
+    handle_my_team_grid_update(
+        "F",
+        None,
+        {"rowId": player_id, "value": {"action": "select-player"}},
+        "cellRendererData",
+    )
+
+    assert get_selected_player()["id"] == player_id
 
 
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
