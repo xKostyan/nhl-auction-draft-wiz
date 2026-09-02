@@ -7,6 +7,7 @@ from src.pages import player_stats_table
 from src.storage import (
     clear_workspace,
     configure_storage,
+    get_players_for_grid,
     get_players_for_stat_lookup,
     import_yearly_dataset,
 )
@@ -58,6 +59,15 @@ def test_selected_player_generates_a_dynamic_stats_table(tmp_path):
     assert all(set(row).issubset(set(fields)) for row in rows)
     assert all(isinstance(row["year"], int) for row in rows)
     assert {row["stats_type"] for row in rows}.issubset({"actual", "projected"})
+    columns_by_field = {column["field"]: column for column in column_defs}
+    assert columns_by_field["FP"]["headerTooltip"] == "fantasy points"
+    assert columns_by_field["GP"]["headerTooltip"] == "games played"
+
+    goalie = get_players_for_grid().query("position == 'G'").iloc[0]
+    _, goalie_column_defs = player_stats_table.build_player_stats_table(int(goalie["id"]))
+    goalie_columns_by_field = {column["field"]: column for column in goalie_column_defs}
+
+    assert goalie_columns_by_field["GA"]["headerTooltip"] == "goals against"
 
 
 def test_no_player_selection_leaves_the_table_empty():

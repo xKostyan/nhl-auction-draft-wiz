@@ -29,5 +29,10 @@ def test_goalie_win_percentage_has_a_description():
     assert SQLITE_COLUMN_DESCRIPTIONS["_12"] == "win percentage"
 
 
+def test_fantasy_point_fields_have_descriptions():
+    assert SQLITE_COLUMN_DESCRIPTIONS["FP"] == "fantasy points"
+    assert SQLITE_COLUMN_DESCRIPTIONS["FP_AVG"] == "fantasy points average"
+
+
 def test_shots_against_has_a_description():
     assert SQLITE_COLUMN_DESCRIPTIONS["SA"] == "shots against"

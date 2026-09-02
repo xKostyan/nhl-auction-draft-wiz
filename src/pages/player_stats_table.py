@@ -7,6 +7,7 @@ import dash_ag_grid as dag
 import pandas as pd
 from dash import Input, Output, callback, dcc, html
 
+from ..stat_mappings import SQLITE_COLUMN_DESCRIPTIONS
 from ..storage import get_player_stat_history, get_players_for_stat_lookup
 
 PATH = "/player-stats-table"
@@ -30,7 +31,8 @@ def build_player_stats_table(player_id: int | None) -> tuple[list[dict], list[di
 
     Stat columns are derived directly from the player's long-format history.
     Their database names remain unchanged so skater and goalie schemas render
-    without a page-level schema or name mapping.
+    without a page-level schema, while their canonical descriptions appear on
+    header hover when available.
     """
     column_defs = [
         {"field": "year", "headerName": "year", "type": "numericColumn"},
@@ -53,7 +55,12 @@ def build_player_stats_table(player_id: int | None) -> tuple[list[dict], list[di
     table.columns.name = None
     rows = table.where(pd.notna(table), None).to_dict("records")
     column_defs.extend(
-        {"field": stat_name, "headerName": stat_name, "type": "numericColumn"}
+        {
+            "field": stat_name,
+            "headerName": stat_name,
+            "headerTooltip": SQLITE_COLUMN_DESCRIPTIONS.get(stat_name),
+            "type": "numericColumn",
+        }
         for stat_name in stat_names
     )
     return rows, column_defs

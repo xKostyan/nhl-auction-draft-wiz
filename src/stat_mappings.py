@@ -68,6 +68,8 @@ SQLITE_COLUMN_DESCRIPTIONS: Final[dict[str, str]] = {
     "draft_keeper": "flag to indicate if player was kept from previous year as a keeper",
     "draft_price": "draft price",
     "draft_cap_percentage": "draft price as a percentage of the total draft cap for that year",
+    "FP": "fantasy points",
+    "FP_AVG": "fantasy points average",
     "G": "goals",
     "A": "assist",
     "P_M": "plus/minus",
