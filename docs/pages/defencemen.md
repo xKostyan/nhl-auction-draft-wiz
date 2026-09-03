@@ -57,8 +57,9 @@ open in its own browser tab during the draft.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only defencemen as you type.
-  Selecting a suggestion (or confirming an exact full name) selects and
-  centers that player in the table.
+  Selecting a suggestion (or confirming an exact full name) highlights,
+  centers, and persists that player for the **Selected player graphs**
+  companion page.
 - The 20px **highlight** circle is light gray by default, light blue for an
   unselected player on **My Team**, and green for the selected player. Clicking
   it selects the player in the shared workspace, which refreshes the

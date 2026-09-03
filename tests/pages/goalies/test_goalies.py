@@ -102,6 +102,7 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_goalie(t
         [{"id": player["id"]}],
         {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
     )
+    assert get_selected_player()["id"] == player["id"]
 
 
 def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):

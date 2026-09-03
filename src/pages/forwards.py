@@ -8,11 +8,11 @@ from dash import Input, Output, callback, ctx
 from .position_table import (
     build_position_layout,
     handle_player_grid_update_with_message,
-    get_player_search_target,
     handle_drafted_cell_change,
     position_grid_id,
     position_search_id,
     position_status_id,
+    select_searched_player,
 )
 
 PATH = "/forwards"
@@ -53,4 +53,4 @@ def update_drafted_status(cell_change, context_action):
     Input(SEARCH_ID, "value"),
 )
 def focus_searched_player(player_id):
-    return get_player_search_target(POSITION, player_id)
+    return select_searched_player(POSITION, player_id)

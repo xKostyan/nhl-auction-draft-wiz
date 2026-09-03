@@ -303,6 +303,14 @@ def get_player_search_target(position: str, player_id: object) -> tuple[list[dic
     raise ValueError(f"Player {selected_id} is not a {POSITION_NAMES[position].lower()} player.")
 
 
+def select_searched_player(position: str, player_id: object) -> tuple[list[dict], dict | None]:
+    """Persist a search-selected player and return its AG Grid focus targets."""
+    selected_rows, scroll_target = get_player_search_target(position, player_id)
+    if player_id is not None:
+        set_selected_player(_parse_player_id(player_id))
+    return selected_rows, scroll_target
+
+
 def _projected_points_column_defs() -> list[dict]:
     """Return projected fantasy-point columns labeled for the draft season."""
     current_season = get_workspace_value("current_season")

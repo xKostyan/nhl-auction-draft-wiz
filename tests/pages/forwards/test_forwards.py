@@ -17,6 +17,7 @@ from src.pages.position_table import (
 from src.storage import (
     clear_workspace,
     configure_storage,
+    get_selected_player,
     get_workspace_value,
     import_yearly_dataset,
 )
@@ -178,6 +179,7 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_forward(
         [{"id": player["id"]}],
         {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
     )
+    assert get_selected_player()["id"] == player["id"]
     assert get_player_search_target("F", None) == ([], None)
 
 
