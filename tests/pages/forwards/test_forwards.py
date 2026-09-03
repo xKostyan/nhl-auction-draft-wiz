@@ -17,6 +17,7 @@ from src.pages.position_table import (
 from src.storage import (
     clear_workspace,
     configure_storage,
+    get_selected_player,
     get_workspace_value,
     import_yearly_dataset,
 )
@@ -76,8 +77,9 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Health (actual GP)",
             "cellRenderer": "actualGpSparkline",
             "sortable": False,
-            "resizable": False,
-            "width": 110,
+            "resizable": True,
+            "suppressAutoSize": True,
+            "width": 150,
         },
         {
             "field": "average_performance_history",
@@ -177,6 +179,7 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_forward(
         [{"id": player["id"]}],
         {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
     )
+    assert get_selected_player()["id"] == player["id"]
     assert get_player_search_target("F", None) == ([], None)
 
 
@@ -238,9 +241,13 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "#ef6c00" in renderer
     assert "#f9a825" in renderer
     assert "#388e3c" in renderer
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
     assert 'boxSizing: "border-box"' in renderer
     assert 'height: "calc(100% - 10px)"' in renderer
     assert 'padding: "1px 4px"' in renderer
+    assert "}, String(gamesPlayed))" in renderer
+    assert 'gap: "1px"' in renderer
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            width: "100%"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
     assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
@@ -249,9 +256,13 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
     assert "playerNameContextMenuRenderer" in renderer
+    assert 'menuAction("Highlight the player", "select-player")' in renderer
     assert "props.node.setData(Object.assign({}, props.data" in renderer
     assert 'on_my_team: action === "add-to-my-team"' in renderer
     assert "props.setData({ action: action, timestamp: Date.now() })" in renderer
+    assert 'props.setData({ action: "select-player", timestamp: Date.now() })' in renderer
+    assert 'if (action === "select-player") {' in renderer
+    assert "props.node.setSelected(true, true);" in renderer
     assert "ReactDOM.createPortal" in renderer
     assert 'position: "fixed"' in renderer
     assert 'zIndex: "10000"' in renderer
@@ -366,6 +377,21 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     assert player["tags"] == []
     assert player["notes"] == ""
     assert player["drafted"] is True
+
+
+def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
+    from src.storage import get_selected_player
+
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = get_position_rows("F")[0]
+
+    handle_player_context_action(
+        "F", {"rowId": player["id"], "value": {"action": "select-player"}}
+    )
+
+    assert get_selected_player()["id"] == player["id"]
 
 
 def test_cell_edit_is_not_blocked_by_a_previous_context_action(tmp_path):

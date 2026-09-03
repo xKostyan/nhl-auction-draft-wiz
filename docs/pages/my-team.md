@@ -29,8 +29,13 @@ membership flag is stored in the workspace and survives restarts.
   (including goalies) fills Bench. Forwards, Defencemen, Utility, and Goalies
   are ordered by projected TFP from highest to lowest; Bench keeps spillover
   order.
-- My Team rows are 50px high, with 12px spacing between tables. Tables retain the same player data, inline
-  charts, Tags, and Notes as their matching position page. Utility has the
+- My Team rows are 50px high, with 12px spacing between tables. Tables retain
+  the same player data, inline charts, Tags, and Notes as their matching
+  position page. Health charts show actual GP bars with centered value labels
+  and no projected-GP line; their 150px columns can be resized and their charts
+  expand to fill the available cell width. Average Performance uses light green
+  and green bands at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to below
+  8.3 and 8.3+ for goalies. Utility has the
   skater columns plus **Position** after player name. Bench is intentionally
   limited to highlight, index, player name, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress
@@ -51,7 +56,10 @@ membership flag is stored in the workspace and survives restarts.
   starts when the roster projects fewer than 140 starts.
 - My Team tables intentionally omit the **#** availability column and do not
   gray rows: every displayed player is on the user's drafted team.
-- Right-click a player name for **Clear Tags**, **Clear Notes**, or **Remove
+- Click a highlight circle or right-click a player name and choose **Highlight
+  the player** to select and highlight the player for the shared
+  [Selected player graphs](./selected-player-graphs.md) companion page.
+  The context menu also provides **Clear Tags**, **Clear Notes**, or **Remove
   from My Team**. The menu is displayed above the tables and closes when you
   left-click outside it. **Add to My Team** is omitted because it is redundant
   here. Every table, heading, and chart refreshes from one snapshot after an

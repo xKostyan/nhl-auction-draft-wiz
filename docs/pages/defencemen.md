@@ -30,16 +30,19 @@ open in its own browser tab during the draft.
   (2px larger than the default table value size).
 - **Health (actual GP)** is an inline vertical-bar chart of up to the five
   most recent actual games-played seasons, ordered oldest to newest. Every bar
-  shares a fixed 0-84 GP scale. Bars are red for 0-50 GP, orange for 51-60,
-  yellow for 61-71, and green for 72-84; hovering a bar shows its season and
-  actual GP. The column is 110px wide and is vertically centered in a 50px
-  chart area, leaving 5px clearance above and below. Rows are 60px high to
-  accommodate current and future inline player graphs.
+  shares a fixed 0-84 GP scale and has its actual GP value centered over the
+  chart. Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and
+  green for 72-84; hovering a bar shows its season and actual GP. The column
+  defaults to 150px wide, can be resized, and expands to fill the available
+  cell width. It is vertically centered in a 50px chart area, leaving 5px
+  clearance above and below. Rows are 60px high to accommodate current and
+  future inline player graphs.
 - **Average Performance** is a resizable 150px inline combination chart
   covering every imported defenceman season. A blue line shows projected
   average fantasy points and bars show actual average fantasy points, with
   missing values shown as zero. Its fixed scale is 0-6; actual bars are red
-  through 3.1, orange through 3.5, yellow through 3.9, and green above 3.9.
+  through 3.1, orange through 3.5, yellow below 3.7, light green from 3.7
+  up to 4.1, and green from 4.1.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
   `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, and `Line2`, then click **Done** to
@@ -54,11 +57,13 @@ open in its own browser tab during the draft.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only defencemen as you type.
-  Selecting a suggestion (or confirming an exact full name) selects and
-  centers that player in the table.
+  Selecting a suggestion (or confirming an exact full name) highlights,
+  centers, and persists that player for the **Selected player graphs**
+  companion page.
 - The 20px **highlight** circle is light gray by default, light blue for an
-  unselected player on **My Team**, and green for the selected player. It is
-  updated by player search and can be clicked to select a player.
+  unselected player on **My Team**, and green for the selected player. Clicking
+  it selects the player in the shared workspace, which refreshes the
+  [Selected player graphs](./selected-player-graphs.md) companion page.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
@@ -66,9 +71,10 @@ open in its own browser tab during the draft.
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row
   background.
-- Right-click a **Player name** for a custom menu. **Clear Tags** and **Clear
-  Notes** remove those persisted values. **Add to My Team** persistently adds
-  the player to the My Team roster (and marks them drafted), while **Remove
+- Right-click a **Player name** for a custom menu. **Highlight the player**
+  selects and highlights the player for the shared companion page. **Clear Tags** and
+  **Clear Notes** remove those persisted values. **Add to My Team** persistently
+  adds the player to the My Team roster (and marks them drafted), while **Remove
   from My Team** only removes that roster membership. The menu is displayed
   above the grid and closes when you left-click outside it; the table reloads
   immediately after an action without affecting later Tags or Notes edits.

@@ -7,8 +7,8 @@ from dash import dcc
 
 from src.data_loader import load_players
 from src.pages import defencemen
-from src.pages.position_table import get_position_rows, handle_drafted_cell_change
-from src.storage import clear_workspace, configure_storage, import_yearly_dataset
+from src.pages.position_table import get_position_rows, handle_drafted_cell_change, handle_player_context_action
+from src.storage import clear_workspace, configure_storage, get_selected_player, import_yearly_dataset
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -52,7 +52,9 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
     assert grid.columnDefs[3]["cellRenderer"] == "actualGpSparkline"
-    assert grid.columnDefs[3]["width"] == 110
+    assert grid.columnDefs[3]["width"] == 150
+    assert grid.columnDefs[3]["resizable"] is True
+    assert grid.columnDefs[3]["suppressAutoSize"] is True
     assert grid.columnDefs[4] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",
@@ -96,6 +98,46 @@ def test_search_is_a_position_scoped_typeahead_and_focuses_the_selected_defencem
         [{"id": player["id"]}],
         {"rowId": str(player["id"]), "rowPosition": "middle", "column": "name"},
     )
+    assert get_selected_player()["id"] == player["id"]
+
+
+def test_select_player_context_action_updates_the_shared_graph_player(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = get_position_rows("D")[0]
+
+    handle_player_context_action(
+        "D", {"rowId": player["id"], "value": {"action": "select-player"}}
+    )
+
+    assert get_selected_player()["id"] == player["id"]
+
+
+def test_context_menu_labels_the_shared_selection_action_as_highlight():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'menuAction("Highlight the player", "select-player")' in renderer
+
+
+def test_health_renderer_displays_actual_games_played_values():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert "}, String(gamesPlayed))" in renderer
+    assert 'bottom: "50%"' in renderer
+
+
+def test_average_performance_renderer_has_two_skater_green_bands():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
+    assert 'width: "100%"' in renderer
 
 
 def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):

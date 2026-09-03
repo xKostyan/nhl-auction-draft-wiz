@@ -12,6 +12,7 @@ the relevant file in this directory whenever a page's behavior changes.
 | 4 | Goalies | `/goalies` | [goalies.md](goalies.md) |
 | 5 | My Team | `/my-team` | [my-team.md](my-team.md) |
 | 6 | Player stats table | `/player-stats-table` | [player-stats-table.md](player-stats-table.md) |
+| 7 | Selected player graphs | `/selected-player-graphs` | [selected-player-graphs.md](selected-player-graphs.md) |
 
 See the root [README.md](../../README.md) for setup/run instructions, and
 [AGENTS.md](../../AGENTS.md) for the AI-agent rules that govern how these

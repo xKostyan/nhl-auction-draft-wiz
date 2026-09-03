@@ -13,16 +13,40 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             gamesPlayed <= 60 ? "#ef6c00" :
             gamesPlayed <= 71 ? "#f9a825" : "#388e3c";
 
-        return React.createElement("span", {
+        return React.createElement("div", {
             key: season.year,
             title: season.year + ": " + gamesPlayed + " actual GP",
             style: {
-                backgroundColor: color,
-                display: "block",
-                height: Math.max(2, percentage) + "%",
-                minWidth: "10px"
+                flex: "1 1 0",
+                height: "100%",
+                position: "relative"
             }
-        });
+        }, [
+            React.createElement("span", {
+                key: "bar",
+                style: {
+                    backgroundColor: color,
+                    bottom: "0",
+                    height: percentage + "%",
+                    left: "10%",
+                    position: "absolute",
+                    right: "10%"
+                }
+            }),
+            React.createElement("span", {
+                key: "label",
+                style: {
+                    bottom: "50%",
+                    color: "#333",
+                    fontSize: "9px",
+                    left: "50%",
+                    position: "absolute",
+                    transform: "translate(-50%, 50%)",
+                    whiteSpace: "nowrap",
+                    zIndex: "2"
+                }
+            }, String(gamesPlayed))
+        ]);
     });
 
     return React.createElement("div", {
@@ -30,10 +54,11 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             alignItems: "end",
             boxSizing: "border-box",
             display: "flex",
-            gap: "3px",
+            gap: "1px",
             height: "calc(100% - 10px)",
             justifyContent: "center",
-            padding: "1px 4px"
+            padding: "1px 4px",
+            width: "100%"
         }
     }, bars);
 };
@@ -162,8 +187,8 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
         var percentage = actual / scaleMaximum * 100;
         var color = scaleMaximum === 6
-            ? actual <= 3.1 ? "#d32f2f" : actual <= 3.5 ? "#ef6c00" : actual <= 3.9 ? "#f9a825" : "#388e3c"
-            : actual < 7 ? "#d32f2f" : actual <= 7.5 ? "#ef6c00" : actual <= 8 ? "#f9a825" : "#388e3c";
+            ? actual <= 3.1 ? "#d32f2f" : actual <= 3.5 ? "#ef6c00" : actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"
+            : actual < 7 ? "#d32f2f" : actual <= 7.5 ? "#ef6c00" : actual < 7.9 ? "#f9a825" : actual < 8.3 ? "#81c784" : "#388e3c";
 
         return React.createElement("div", {
             key: season.year,
@@ -351,6 +376,9 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var runAction = function (action, event) {
         event.preventDefault();
         event.stopPropagation();
+        if (action === "select-player") {
+            props.node.setSelected(true, true);
+        }
         if (action === "add-to-my-team" || action === "remove-from-my-team") {
             props.node.setData(Object.assign({}, props.data, {
                 on_my_team: action === "add-to-my-team"
@@ -413,6 +441,7 @@ dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
                 zIndex: "10000"
             }
         }, [
+            menuAction("Highlight the player", "select-player"),
             menuAction("Clear Tags", "clear-tags"),
             menuAction("Clear Notes", "clear-notes"),
             allowAddToMyTeam ? menuAction(
@@ -487,7 +516,8 @@ dagcomponentfuncs.searchFocusCircleRenderer = function (props) {
         "aria-pressed": selected,
         onClick: function (event) {
             event.stopPropagation();
-            props.node.setSelected(!selected, true);
+            props.node.setSelected(true, true);
+            props.setData({ action: "select-player", timestamp: Date.now() });
         },
         style: {
             backgroundColor: selected ? "#388e3c" : onMyTeam ? "#90caf9" : "#d3d3d3",

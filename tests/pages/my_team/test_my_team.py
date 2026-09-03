@@ -1,5 +1,7 @@
 """Tests for the My Team page."""
 
+from pathlib import Path
+
 import dash_ag_grid as dag
 import src.pages.position_table as position_table
 from dash import dcc, html
@@ -17,7 +19,12 @@ from src.pages.position_table import (
     handle_player_context_action,
     handle_my_team_grid_update,
 )
-from src.storage import clear_workspace, configure_storage, import_yearly_dataset
+from src.storage import (
+    clear_workspace,
+    configure_storage,
+    get_selected_player,
+    import_yearly_dataset,
+)
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -77,6 +84,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert [column["field"] for column in utility.columnDefs][:4] == [
         "search_focus", "slot_number", "name", "position"
     ]
+    utility_health = next(column for column in utility.columnDefs if column["field"] == "actual_gp_history")
+    assert utility_health["width"] == 150
+    assert utility_health["resizable"] is True
+    assert utility_health["suppressAutoSize"] is True
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
         "search_focus", "slot_number", "name", "position", "projected_tfp", "projected_afp"
@@ -141,6 +152,50 @@ def test_goalie_tags_persist_from_the_my_team_goalie_table(tmp_path):
 
     goalie = next(row for row in get_position_rows("G", my_team_only=True) if row["id"] == player_id)
     assert goalie["tags"] == ["Starter"]
+
+
+def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+
+    handle_my_team_grid_update(
+        "F",
+        None,
+        {"rowId": player_id, "value": {"action": "select-player"}},
+        "cellRendererData",
+    )
+
+    assert get_selected_player()["id"] == player_id
+
+
+def test_context_menu_labels_the_shared_selection_action_as_highlight():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'menuAction("Highlight the player", "select-player")' in renderer
+
+
+def test_my_team_health_renderer_displays_actual_games_played_values():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert "}, String(gamesPlayed))" in renderer
+    assert 'bottom: "50%"' in renderer
+    assert 'width: "100%"' in renderer
+
+
+def test_my_team_average_performance_renderer_has_position_specific_green_bands():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert 'actual < 3.7 ? "#f9a825" : actual < 4.1 ? "#81c784" : "#388e3c"' in renderer
+    assert 'actual < 7.9 ? "#f9a825" : actual < 8.3 ? "#81c784" : "#388e3c"' in renderer
 
 
 def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):

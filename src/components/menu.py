@@ -9,8 +9,9 @@ here automatically, ordered by their `order` value.
 from __future__ import annotations
 
 import dash
-from dash import Input, Output, callback, html
+from dash import Input, Output, State, callback, html
 
+MENU_CONTAINER_ID = "app-menu"
 MENU_TOGGLE_ID = "app-menu-toggle"
 MENU_PANEL_ID = "app-menu-panel"
 PAGE_COLORS = {
@@ -53,6 +54,7 @@ def build_menu() -> html.Div:
     ]
 
     return html.Div(
+        id=MENU_CONTAINER_ID,
         style={"position": "relative", "marginBottom": "20px"},
         children=[
             html.Button("☰ Menu", id=MENU_TOGGLE_ID, n_clicks=0),
@@ -64,10 +66,11 @@ def build_menu() -> html.Div:
 @callback(
     Output(MENU_PANEL_ID, "style"),
     Input(MENU_TOGGLE_ID, "n_clicks"),
+    State(MENU_PANEL_ID, "style"),
     prevent_initial_call=True,
 )
-def toggle_menu(n_clicks: int):
-    """Show the dropdown on odd click counts, hide it on even ones."""
-    if n_clicks % 2 == 1:
-        return _PANEL_VISIBLE_STYLE
-    return _PANEL_HIDDEN_STYLE
+def toggle_menu(_n_clicks: int, current_style: dict | None):
+    """Toggle the dropdown from its current client-side visibility state."""
+    if current_style and current_style.get("display") != "none":
+        return _PANEL_HIDDEN_STYLE
+    return _PANEL_VISIBLE_STYLE

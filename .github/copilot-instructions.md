@@ -9,7 +9,7 @@ This repo is a Python dashboard project for NHL auction draft planning. The stac
 - Plotly
 - pandas
 
-The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering six pages — **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), **5 - My Team** (`/my-team`), and **6 - Player stats table** (`/player-stats-table`). My Team shows the persisted roster subset and Player stats table displays a selected player's complete stored stat history; no ranking/analysis logic exists yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
+The app will eventually analyze player and stat CSV data, compare projected vs actual performance, and present ranked draft options in an interactive dashboard. **Current implementation stage:** the app is a multi-page Dash app with a persistent menu offering seven pages — **1 - Import data** (`/import-data`), **2 - Forwards** (`/forwards`), **3 - Defencemen** (`/defencemen`), **4 - Goalies** (`/goalies`), **5 - My Team** (`/my-team`), **6 - Player stats table** (`/player-stats-table`), and **7 - Selected player graphs** (`/selected-player-graphs`). My Team shows the persisted roster subset, Player stats table displays a selected player's complete stored stat history, and Selected player graphs displays the shared highlighted player's name; no ranking/analysis logic exists yet. Do not add analysis, ranking, or visualization features until explicitly requested. **Whenever a page's functionality changes, update its `docs/pages/<page>.md` file and `tests/pages/<page>/` tests in the same change.**
 
 ## Required project setup
 
@@ -77,6 +77,7 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
    - `src/pages/forwards.py`, `src/pages/defencemen.py`, `src/pages/goalies.py` → dedicated live-auction tables with player names and drafted-status checkboxes; shared layout/persistence helpers live in `src/pages/position_table.py`
    - `src/pages/my_team.py` → persisted roster subset in separate forwards, defencemen, and goalies tables
    - `src/pages/player_stats_table.py` → searchable all-player stat-history table with dynamic columns
+   - `src/pages/selected_player_graphs.py` → shared highlighted-player display for a dedicated companion tab
    - **no Plotly charts or graphs are rendered at this stage** — do not add `dcc.Graph`/analysis views until requested
    - **Not implemented yet:** ranking/valuation logic (`src/analysis.py` does not exist — do not add it until analysis is explicitly requested)
 
@@ -94,6 +95,7 @@ The project is intentionally organized around a simple, AI-agent-friendly data f
 | 4 | Goalies | `/goalies` | `src/pages/goalies.py` | `docs/pages/goalies.md` | `tests/pages/goalies/` |
 | 5 | My Team | `/my-team` | `src/pages/my_team.py` | `docs/pages/my-team.md` | `tests/pages/my_team/` |
 | 6 | Player stats table | `/player-stats-table` | `src/pages/player_stats_table.py` | `docs/pages/player-stats-table.md` | `tests/pages/player_stats_table/` |
+| 7 | Selected player graphs | `/selected-player-graphs` | `src/pages/selected_player_graphs.py` | `docs/pages/selected-player-graphs.md` | `tests/pages/selected_player_graphs/` |
 
 Non-page-specific tests (data loading, storage, app shell/menu/routing) live in `tests/common/`. Whenever you implement or change a page, update its row's doc file and test directory in the same change — see `AGENTS.md` for the full rule.
 

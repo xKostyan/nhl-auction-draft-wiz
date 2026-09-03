@@ -144,7 +144,8 @@ def ensure_schema() -> None:
             INSERT OR IGNORE INTO workspace_meta (key, value) VALUES
                 ('workspace_name', 'default'),
                 ('current_season', '0'),
-                ('last_imported_at', '')
+                ('last_imported_at', ''),
+                ('selected_player_id', '')
             """
         )
         conn.commit()
@@ -173,6 +174,40 @@ def get_workspace_value(key: str) -> str:
         conn.close()
 
 
+def set_selected_player(player_id: int) -> None:
+    """Persist the one player currently highlighted across every browser tab."""
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot select player: player {player_id} does not exist.")
+        conn.execute(
+            "INSERT INTO workspace_meta (key, value) VALUES ('selected_player_id', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (str(player_id),),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_selected_player() -> dict[str, int | str] | None:
+    """Return the currently highlighted player, if the workspace has one."""
+    conn = db_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT p.id, p.name, p.position
+            FROM players p
+            JOIN workspace_meta wm
+                ON wm.key = 'selected_player_id' AND wm.value = CAST(p.id AS TEXT)
+            """
+        ).fetchone()
+        return dict(row) if row is not None else None
+    finally:
+        conn.close()
+
+
 def clear_workspace() -> None:
     """Delete all imported player/workspace state so a new season can be imported."""
     conn = db_connection()
@@ -188,6 +223,7 @@ def clear_workspace() -> None:
                 ("workspace_name", "default"),
                 ("current_season", "0"),
                 ("last_imported_at", ""),
+                ("selected_player_id", ""),
             ],
         )
         conn.commit()
@@ -320,6 +356,10 @@ def import_yearly_dataset(
         conn.execute(
             "INSERT INTO workspace_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             ("last_imported_at", str(pd.Timestamp.utcnow().isoformat())),
+        )
+        conn.execute(
+            "INSERT INTO workspace_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            ("selected_player_id", ""),
         )
         conn.commit()
         return {

@@ -9,6 +9,7 @@ from src.storage import (
     detect_draft_year,
     get_available_stat_years,
     get_player_stat_history,
+    get_selected_player,
     get_players_for_position_grid,
     get_players_for_grid,
     get_workspace_summary,
@@ -17,6 +18,7 @@ from src.storage import (
     set_player_notes,
     set_player_on_my_team,
     set_player_tags,
+    set_selected_player,
 )
 
 
@@ -112,6 +114,25 @@ def test_clear_workspace_resets_to_empty_state(tmp_path):
     assert summary["total_stat_rows"] == 0
     assert summary["current_season"] == 0
     assert summary["last_imported_at"] == ""
+    assert get_selected_player() is None
+
+
+def test_selected_player_is_persisted_and_reset_by_import(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = get_players_for_grid().iloc[0]
+
+    set_selected_player(int(player["id"]))
+
+    assert get_selected_player() == {
+        "id": int(player["id"]),
+        "name": player["name"],
+        "position": player["position"],
+    }
+
+    import_yearly_dataset()
+    assert get_selected_player() is None
 
 
 def test_detect_draft_year_picks_the_season_with_no_actual_data():
