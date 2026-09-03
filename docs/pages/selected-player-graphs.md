@@ -33,9 +33,10 @@ highlighted from any live-auction or My Team table.
 - **Time on Ice** compares actual (bars) and projected (line) minutes per
   game. Its actual bars are red below 15 minutes, orange below 16, yellow
   below 18, and green at 18 or more.
-- Skaters also receive actual-only **Hits**, **Blocks**, and **Shots on Goal
-  per Game** (total shots divided by games played), plus
-  actual-versus-projected **Points** and **Special Teams Points** charts.
+- Skaters also receive actual-versus-projected **Hits per Game**, **Blocks per
+  Game**, and **Shots on Goal per Game**, each calculated from the relevant
+  season total divided by games played, plus actual-versus-projected **Points**
+  and **Special Teams Points** charts.
 - Goalies receive **AVG Performance**, which compares actual fantasy points
   average (bars) with projected values (line) by year.
 - Forwards additionally receive actual-versus-projected **Shooting

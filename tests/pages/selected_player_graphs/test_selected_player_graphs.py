@@ -62,8 +62,8 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Time on Ice",
         "Points",
         "Special Teams Points",
-        "Hits",
-        "Blocks",
+        "Hits per Game",
+        "Blocks per Game",
         "Shots on Goal per Game",
         "Shooting Percentage",
         "Goals",
@@ -89,6 +89,11 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
     assert [trace.name for trace in time_on_ice.data] == ["Actual", "Projected"]
     assert time_on_ice.data[0].marker.color[0] == "#d32f2f"
+    assert all(
+        [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
+        for graph in graphs
+        if graph.figure.layout.title.text in {"Hits per Game", "Blocks per Game", "Shots on Goal per Game"}
+    )
 
 
 def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
@@ -124,8 +129,8 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Time on Ice",
         "Points",
         "Special Teams Points",
-        "Hits",
-        "Blocks",
+        "Hits per Game",
+        "Blocks per Game",
         "Shots on Goal per Game",
     ]
 
@@ -139,12 +144,17 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
 
     graphs = selected_player_graphs.build_player_graphs()
     time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
+    hits_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Hits per Game")
+    blocks_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Blocks per Game")
     shots_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shots on Goal per Game")
     shooting_percentage = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shooting Percentage")
 
     assert time_on_ice.data[0].y[0] == 33339 / 61 / 60
     assert time_on_ice.data[1].y[-1] == 57530.01 / 79 / 60
+    assert hits_per_game.data[0].y[0] == 101 / 61
+    assert blocks_per_game.data[0].y[0] == 25 / 61
     assert shots_per_game.data[0].y[0] == 66 / 61
+    assert shots_per_game.data[1].y[-1] == 99 / 79
     assert shooting_percentage.data[0].y[0] == 5 / 66 * 100
 
 

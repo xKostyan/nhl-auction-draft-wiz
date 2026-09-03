@@ -187,12 +187,14 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         charts.append(_build_chart("Points", actual, projected, yaxis_title="Points"))
         actual, projected = _metric_values(table, "STP")
         charts.append(_build_chart("Special Teams Points", actual, projected, yaxis_title="Points"))
-        actual, _ = _metric_values(table, "HIT")
-        charts.append(_build_chart("Hits", actual, yaxis_title="Hits"))
-        actual, _ = _metric_values(table, "BLK")
-        charts.append(_build_chart("Blocks", actual, yaxis_title="Blocks"))
-        actual, _ = _derived_metric_values(table, "SOG", "GP")
-        charts.append(_build_chart("Shots on Goal per Game", actual, yaxis_title="Shots per game"))
+        actual, projected = _derived_metric_values(table, "HIT", "GP")
+        charts.append(_build_chart("Hits per Game", actual, projected, yaxis_title="Hits per game"))
+        actual, projected = _derived_metric_values(table, "BLK", "GP")
+        charts.append(_build_chart("Blocks per Game", actual, projected, yaxis_title="Blocks per game"))
+        actual, projected = _derived_metric_values(table, "SOG", "GP")
+        charts.append(
+            _build_chart("Shots on Goal per Game", actual, projected, yaxis_title="Shots per game")
+        )
 
     if player["position"] == "F":
         actual, projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
