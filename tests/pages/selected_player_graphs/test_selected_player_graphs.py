@@ -155,12 +155,24 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         graph.figure.layout.yaxis.range[1]
         for graph in graphs
         if graph.figure.layout.title.text == "Hits per Game"
-    ) == 4
+    ) == 3
     assert next(
         graph.figure.layout.yaxis.range[1]
         for graph in graphs
         if graph.figure.layout.title.text == "Blocks per Game"
-    ) == 2.5
+    ) == 3
+    assert {
+        graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
+    } == {
+        "Health": 84,
+        "AVG Performance": 6,
+        "Time on Ice": 25,
+        "Points": 100,
+        "Special Teams Points": 50,
+        "Hits per Game": 3,
+        "Blocks per Game": 3,
+        "Shots on Goal per Game": 4,
+    }
 
 
 def test_derived_skater_rates_use_the_imported_totals(tmp_path):

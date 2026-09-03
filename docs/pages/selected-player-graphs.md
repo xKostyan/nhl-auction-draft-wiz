@@ -43,10 +43,10 @@ highlighted from any live-auction or My Team table.
 - Forwards additionally receive actual-versus-projected **Shooting
   Percentage** (goals divided by shots on goal), **Goals**, and **Assists per
   Game** (assists divided by games played) charts.
-- Fixed zero-based scales keep skater charts comparable: Health 0-84, AVG
-  Performance 0-6, Points 0-120, Special Teams Points 0-60, Hits per Game
-  0-2 for forwards and 0-4 for defencemen, Blocks per Game 0-1.5 for forwards
-  and 0-2.5 for defencemen, Shots on Goal per Game 0-6, Shooting Percentage
+- Fixed zero-based scales keep skater charts comparable: Health 0-84 and AVG
+  Performance 0-6. Forward Points, Special Teams Points, Hits per Game, Blocks
+  per Game, and Shots on Goal per Game use 0-120, 0-60, 0-2, 0-1.5, and 0-6;
+  defencemen use 0-100, 0-50, 0-3, 0-3, and 0-4. Shooting Percentage uses
   0-20, Goals 0-60, and Assists per Game 0-2. AVG Performance uses the same
   0-6 scale for goalies.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win

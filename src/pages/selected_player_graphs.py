@@ -188,10 +188,24 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
             )
         )
         actual, projected = _metric_values(table, "PTS")
-        charts.append(_build_chart("Points", actual, projected, yaxis_title="Points", yaxis_max=120))
+        charts.append(
+            _build_chart(
+                "Points",
+                actual,
+                projected,
+                yaxis_title="Points",
+                yaxis_max=120 if player["position"] == "F" else 100,
+            )
+        )
         actual, projected = _metric_values(table, "STP")
         charts.append(
-            _build_chart("Special Teams Points", actual, projected, yaxis_title="Points", yaxis_max=60)
+            _build_chart(
+                "Special Teams Points",
+                actual,
+                projected,
+                yaxis_title="Points",
+                yaxis_max=60 if player["position"] == "F" else 50,
+            )
         )
         actual, projected = _derived_metric_values(table, "HIT", "GP")
         charts.append(
@@ -200,7 +214,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Hits per game",
-                yaxis_max=2 if player["position"] == "F" else 4,
+                yaxis_max=2 if player["position"] == "F" else 3,
             )
         )
         actual, projected = _derived_metric_values(table, "BLK", "GP")
@@ -210,7 +224,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Blocks per game",
-                yaxis_max=1.5 if player["position"] == "F" else 2.5,
+                yaxis_max=1.5 if player["position"] == "F" else 3,
             )
         )
         actual, projected = _derived_metric_values(table, "SOG", "GP")
@@ -220,7 +234,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Shots per game",
-                yaxis_max=6,
+                yaxis_max=6 if player["position"] == "F" else 4,
             )
         )
 
