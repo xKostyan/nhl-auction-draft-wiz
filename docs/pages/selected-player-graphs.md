@@ -31,9 +31,10 @@ highlighted from any live-auction or My Team table.
   uses its player-table skater bands: red through 3.1, orange through 3.5,
   yellow below 3.7, light green below 4.1, then green.
 - **Time on Ice** compares actual (bars) and projected (line) minutes per
-  game on a 0-25 scale. Its actual forward bars are red below 15 minutes,
-  orange below 16, yellow below 18, and green at 18 or more. Defencemen use
-  the default actual bar color until their separate color bands are defined.
+  game on a 0-25 forward scale or 0-27 defencemen scale. Its actual forward
+  bars are red below 15 minutes, orange below 16, yellow below 18, and green
+  at 18 or more. Defencemen use the default actual bar color until their
+  separate color bands are defined.
 - Skaters also receive actual-versus-projected **Hits per Game**, **Blocks per
   Game**, and **Shots on Goal per Game**, each calculated from the relevant
   season total divided by games played, plus actual-versus-projected **Points**

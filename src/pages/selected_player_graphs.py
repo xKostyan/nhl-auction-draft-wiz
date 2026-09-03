@@ -183,7 +183,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Minutes per game",
-                yaxis_max=25,
+                yaxis_max=25 if player["position"] == "F" else 27,
                 actual_color=_time_on_ice_color if player["position"] == "F" else None,
             )
         )

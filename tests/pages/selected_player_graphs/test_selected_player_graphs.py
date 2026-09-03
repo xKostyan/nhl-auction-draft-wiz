@@ -166,7 +166,7 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
     } == {
         "Health": 84,
         "AVG Performance": 6,
-        "Time on Ice": 25,
+        "Time on Ice": 27,
         "Points": 100,
         "Special Teams Points": 50,
         "Hits per Game": 3,
