@@ -136,6 +136,14 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         "Win Percentage": 0.75,
         "Save Percentage": 0.95,
     }
+    assert {
+        graph.figure.layout.title.text: graph.figure.data[0].marker.color[0] for graph in graphs
+    } == {
+        "AVG Performance": "#388e3c",
+        "Game Starts": "#d32f2f",
+        "Win Percentage": "#388e3c",
+        "Save Percentage": "#388e3c",
+    }
 
 
 def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path):
@@ -224,6 +232,31 @@ def test_skater_bar_color_bands_match_the_player_tables():
         "#d32f2f",
         "#ef6c00",
         "#f9a825",
+        "#388e3c",
+    ]
+
+
+def test_goalie_bar_color_bands_match_the_requested_ranges():
+    assert [selected_player_graphs._goalie_game_starts_color(value) for value in (29, 30, 43)] == [
+        "#d32f2f",
+        "#f9a825",
+        "#388e3c",
+    ]
+    assert [
+        selected_player_graphs._goalie_average_performance_color(value)
+        for value in (6.9, 7, 7.6, 7.9, 8.3)
+    ] == ["#d32f2f", "#ef6c00", "#f9a825", "#81c784", "#388e3c"]
+    assert [selected_player_graphs._win_percentage_color(value) for value in (0.44, 0.45, 0.5, 0.55)] == [
+        "#d32f2f",
+        "#f9a825",
+        "#81c784",
+        "#388e3c",
+    ]
+    assert [selected_player_graphs._save_percentage_color(value) for value in (0.79, 0.8, 0.84, 0.88, 0.9)] == [
+        "#d32f2f",
+        "#ef6c00",
+        "#f9a825",
+        "#81c784",
         "#388e3c",
     ]
 

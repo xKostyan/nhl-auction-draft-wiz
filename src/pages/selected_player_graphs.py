@@ -89,6 +89,52 @@ def _time_on_ice_color(value: float) -> str:
     return "#388e3c"
 
 
+def _goalie_game_starts_color(value: float) -> str:
+    """Return the goalie table game-starts band color."""
+    if value < 30:
+        return "#d32f2f"
+    if value <= 42:
+        return "#f9a825"
+    return "#388e3c"
+
+
+def _goalie_average_performance_color(value: float) -> str:
+    """Return the goalie table average-performance band color."""
+    if value < 7:
+        return "#d32f2f"
+    if value <= 7.5:
+        return "#ef6c00"
+    if value < 7.9:
+        return "#f9a825"
+    if value < 8.3:
+        return "#81c784"
+    return "#388e3c"
+
+
+def _win_percentage_color(value: float) -> str:
+    """Return the requested goalie win-percentage band color."""
+    if value < 0.45:
+        return "#d32f2f"
+    if value < 0.5:
+        return "#f9a825"
+    if value < 0.55:
+        return "#81c784"
+    return "#388e3c"
+
+
+def _save_percentage_color(value: float) -> str:
+    """Return the requested goalie save-percentage band color."""
+    if value < 0.8:
+        return "#d32f2f"
+    if value < 0.84:
+        return "#ef6c00"
+    if value < 0.88:
+        return "#f9a825"
+    if value < 0.9:
+        return "#81c784"
+    return "#388e3c"
+
+
 def _build_chart(
     title: str,
     actual: pd.Series,
@@ -201,19 +247,41 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 projected,
                 yaxis_title="Fantasy points average",
                 yaxis_max=12,
+                actual_color=_goalie_average_performance_color,
             )
         )
         actual, projected = _metric_values(table, "GS")
         charts.append(
-            _build_chart("Game Starts", actual, projected, yaxis_title="Games started", yaxis_max=60)
+            _build_chart(
+                "Game Starts",
+                actual,
+                projected,
+                yaxis_title="Games started",
+                yaxis_max=60,
+                actual_color=_goalie_game_starts_color,
+            )
         )
         actual, projected = _metric_values(table, "_12")
         charts.append(
-            _build_chart("Win Percentage", actual, projected, yaxis_title="Win percentage", yaxis_max=0.75)
+            _build_chart(
+                "Win Percentage",
+                actual,
+                projected,
+                yaxis_title="Win percentage",
+                yaxis_max=0.75,
+                actual_color=_win_percentage_color,
+            )
         )
         actual, projected = _metric_values(table, "SVP")
         charts.append(
-            _build_chart("Save Percentage", actual, projected, yaxis_title="Save percentage", yaxis_max=0.95)
+            _build_chart(
+                "Save Percentage",
+                actual,
+                projected,
+                yaxis_title="Save percentage",
+                yaxis_max=0.95,
+                actual_color=_save_percentage_color,
+            )
         )
 
     return charts
