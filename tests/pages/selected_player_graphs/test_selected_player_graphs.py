@@ -67,7 +67,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Shots on Goal per Game",
         "Shooting Percentage",
         "Goals",
-        "Assists",
+        "Assists per Game",
     ]
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")
@@ -89,6 +89,22 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
     assert [trace.name for trace in time_on_ice.data] == ["Actual", "Projected"]
     assert time_on_ice.data[0].marker.color[0] == "#d32f2f"
+    expected_yaxis_maxima = {
+        "Health": 84,
+        "AVG Performance": 6,
+        "Time on Ice": 25,
+        "Points": 120,
+        "Special Teams Points": 60,
+        "Hits per Game": 4,
+        "Blocks per Game": 2.5,
+        "Shots on Goal per Game": 6,
+        "Shooting Percentage": 20,
+        "Goals": 60,
+        "Assists per Game": 2,
+    }
+    assert {
+        graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
+    } == expected_yaxis_maxima
     assert all(
         [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
         for graph in graphs
@@ -133,6 +149,8 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Blocks per Game",
         "Shots on Goal per Game",
     ]
+    time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
+    assert time_on_ice.data[0].marker.color == "#1f77b4"
 
 
 def test_derived_skater_rates_use_the_imported_totals(tmp_path):
@@ -148,6 +166,7 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     blocks_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Blocks per Game")
     shots_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shots on Goal per Game")
     shooting_percentage = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shooting Percentage")
+    assists_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Assists per Game")
 
     assert time_on_ice.data[0].y[0] == 33339 / 61 / 60
     assert time_on_ice.data[1].y[-1] == 57530.01 / 79 / 60
@@ -156,6 +175,8 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     assert shots_per_game.data[0].y[0] == 66 / 61
     assert shots_per_game.data[1].y[-1] == 99 / 79
     assert shooting_percentage.data[0].y[0] == 5 / 66 * 100
+    assert assists_per_game.data[0].y[0] == 7 / 61
+    assert assists_per_game.data[1].y[-1] == 14 / 79
 
 
 def test_skater_bar_color_bands_match_the_player_tables():

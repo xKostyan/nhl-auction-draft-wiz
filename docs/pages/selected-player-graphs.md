@@ -31,8 +31,9 @@ highlighted from any live-auction or My Team table.
   uses its player-table skater bands: red through 3.1, orange through 3.5,
   yellow below 3.7, light green below 4.1, then green.
 - **Time on Ice** compares actual (bars) and projected (line) minutes per
-  game. Its actual bars are red below 15 minutes, orange below 16, yellow
-  below 18, and green at 18 or more.
+  game on a 0-25 scale. Its actual forward bars are red below 15 minutes,
+  orange below 16, yellow below 18, and green at 18 or more. Defencemen use
+  the default actual bar color until their separate color bands are defined.
 - Skaters also receive actual-versus-projected **Hits per Game**, **Blocks per
   Game**, and **Shots on Goal per Game**, each calculated from the relevant
   season total divided by games played, plus actual-versus-projected **Points**
@@ -40,8 +41,13 @@ highlighted from any live-auction or My Team table.
 - Goalies receive **AVG Performance**, which compares actual fantasy points
   average (bars) with projected values (line) by year.
 - Forwards additionally receive actual-versus-projected **Shooting
-  Percentage** (goals divided by shots on goal), **Goals**, and **Assists**
-  charts.
+  Percentage** (goals divided by shots on goal), **Goals**, and **Assists per
+  Game** (assists divided by games played) charts.
+- Fixed zero-based scales keep skater charts comparable: Health 0-84, AVG
+  Performance 0-6, Points 0-120, Special Teams Points 0-60, Hits per Game
+  0-4, Blocks per Game 0-2.5, Shots on Goal per Game 0-6, Shooting Percentage
+  0-20, Goals 0-60, and Assists per Game 0-2. AVG Performance uses the same
+  0-6 scale for goalies.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win
   Percentage**, and **Save Percentage** charts.
 - Charts use a compact 260px height and a three-column grid so portrait

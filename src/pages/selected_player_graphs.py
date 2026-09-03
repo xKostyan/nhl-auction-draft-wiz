@@ -95,6 +95,7 @@ def _build_chart(
     projected: pd.Series | None = None,
     *,
     yaxis_title: str | None = None,
+    yaxis_max: float | None = None,
     actual_color: Callable[[float], str] | None = None,
 ) -> dcc.Graph:
     """Build one annual actual bar chart with an optional projected line."""
@@ -132,7 +133,7 @@ def _build_chart(
         title_font={"size": 16},
     )
     figure.update_xaxes(title="Year", type="category")
-    figure.update_yaxes(title=yaxis_title)
+    figure.update_yaxes(title=yaxis_title, range=[0, yaxis_max] if yaxis_max is not None else None)
     return dcc.Graph(
         figure=figure,
         config={"displayModeBar": False},
@@ -160,6 +161,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 "Health",
                 actual,
                 yaxis_title="Games played",
+                yaxis_max=84,
                 actual_color=_skater_health_color,
             )
         )
@@ -170,6 +172,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Fantasy points average",
+                yaxis_max=6,
                 actual_color=_skater_average_performance_color,
             )
         )
@@ -180,33 +183,58 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Minutes per game",
-                actual_color=_time_on_ice_color,
+                yaxis_max=25,
+                actual_color=_time_on_ice_color if player["position"] == "F" else None,
             )
         )
         actual, projected = _metric_values(table, "PTS")
-        charts.append(_build_chart("Points", actual, projected, yaxis_title="Points"))
+        charts.append(_build_chart("Points", actual, projected, yaxis_title="Points", yaxis_max=120))
         actual, projected = _metric_values(table, "STP")
-        charts.append(_build_chart("Special Teams Points", actual, projected, yaxis_title="Points"))
+        charts.append(
+            _build_chart("Special Teams Points", actual, projected, yaxis_title="Points", yaxis_max=60)
+        )
         actual, projected = _derived_metric_values(table, "HIT", "GP")
-        charts.append(_build_chart("Hits per Game", actual, projected, yaxis_title="Hits per game"))
+        charts.append(
+            _build_chart("Hits per Game", actual, projected, yaxis_title="Hits per game", yaxis_max=4)
+        )
         actual, projected = _derived_metric_values(table, "BLK", "GP")
-        charts.append(_build_chart("Blocks per Game", actual, projected, yaxis_title="Blocks per game"))
+        charts.append(
+            _build_chart("Blocks per Game", actual, projected, yaxis_title="Blocks per game", yaxis_max=2.5)
+        )
         actual, projected = _derived_metric_values(table, "SOG", "GP")
         charts.append(
-            _build_chart("Shots on Goal per Game", actual, projected, yaxis_title="Shots per game")
+            _build_chart(
+                "Shots on Goal per Game",
+                actual,
+                projected,
+                yaxis_title="Shots per game",
+                yaxis_max=6,
+            )
         )
 
     if player["position"] == "F":
         actual, projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
-        charts.append(_build_chart("Shooting Percentage", actual, projected, yaxis_title="Percent"))
+        charts.append(
+            _build_chart("Shooting Percentage", actual, projected, yaxis_title="Percent", yaxis_max=20)
+        )
         actual, projected = _metric_values(table, "G")
-        charts.append(_build_chart("Goals", actual, projected, yaxis_title="Goals"))
-        actual, projected = _metric_values(table, "A")
-        charts.append(_build_chart("Assists", actual, projected, yaxis_title="Assists"))
+        charts.append(_build_chart("Goals", actual, projected, yaxis_title="Goals", yaxis_max=60))
+        actual, projected = _derived_metric_values(table, "A", "GP")
+        charts.append(
+            _build_chart("Assists per Game", actual, projected, yaxis_title="Assists per game", yaxis_max=2)
+        )
 
     if player["position"] == "G":
         actual, projected = _metric_values(table, "FP_AVG")
-        charts.append(_build_chart("AVG Performance", actual, projected, yaxis_title="Fantasy points average"))
+        charts.append(
+            _build_chart(
+                "AVG Performance",
+                actual,
+                projected,
+                yaxis_title="Fantasy points average",
+                yaxis_max=6,
+            )
+        )
         actual, projected = _metric_values(table, "GS")
         charts.append(_build_chart("Game Starts", actual, projected, yaxis_title="Games started"))
         actual, projected = _metric_values(table, "_12")
