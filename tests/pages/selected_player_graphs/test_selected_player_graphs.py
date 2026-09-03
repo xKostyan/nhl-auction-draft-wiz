@@ -75,6 +75,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert [trace.name for trace in health.data] == ["Actual"]
     assert points.data[0].type == "bar"
     assert points.data[1].type == "scatter"
+    assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
     assert next(graph for graph in graphs if graph.figure is points).style == {
         "height": "260px",

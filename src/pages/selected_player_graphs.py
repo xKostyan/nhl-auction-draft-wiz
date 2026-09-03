@@ -128,7 +128,7 @@ def _build_chart(
         barmode="group",
         height=_CHART_HEIGHT,
         margin={"l": 45, "r": 12, "t": 42, "b": 38},
-        legend={"orientation": "h", "y": 1.12},
+        showlegend=False,
         title_font={"size": 16},
     )
     figure.update_xaxes(title="Year", type="category")

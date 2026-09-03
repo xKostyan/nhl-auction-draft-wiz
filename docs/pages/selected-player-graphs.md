@@ -45,6 +45,8 @@ highlighted from any live-auction or My Team table.
   Percentage**, and **Save Percentage** charts.
 - Charts use a compact 260px height and a three-column grid so portrait
   displays show three charts per row.
+- Legends are hidden because bars consistently represent actual values and
+  lines consistently represent projected values.
 
 ## Related code
 
