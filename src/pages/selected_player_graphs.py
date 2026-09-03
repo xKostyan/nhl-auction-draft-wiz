@@ -141,6 +141,7 @@ def _build_chart(
     projected: pd.Series | None = None,
     *,
     yaxis_title: str | None = None,
+    yaxis_min: float = 0,
     yaxis_max: float | None = None,
     actual_color: Callable[[float], str] | None = None,
 ) -> dcc.Graph:
@@ -179,7 +180,10 @@ def _build_chart(
         title_font={"size": 16},
     )
     figure.update_xaxes(title="Year", type="category")
-    figure.update_yaxes(title=yaxis_title, range=[0, yaxis_max] if yaxis_max is not None else None)
+    figure.update_yaxes(
+        title=yaxis_title,
+        range=[yaxis_min, yaxis_max] if yaxis_max is not None else None,
+    )
     return dcc.Graph(
         figure=figure,
         config={"displayModeBar": False},
@@ -268,7 +272,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Win percentage",
-                yaxis_max=0.75,
+                yaxis_max=0.8,
                 actual_color=_win_percentage_color,
             )
         )
@@ -279,7 +283,8 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Save percentage",
-                yaxis_max=0.95,
+                yaxis_min=0.6,
+                yaxis_max=1,
                 actual_color=_save_percentage_color,
             )
         )

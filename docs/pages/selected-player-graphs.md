@@ -58,8 +58,8 @@ highlighted from any live-auction or My Team table.
   0-20, Goals 0-60, and Assists per Game 0-2.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win
   Percentage**, and **Save Percentage** charts.
-- Goalie axes use fixed zero-based scales: AVG Performance 0-12, Game Starts
-  0-60, Win Percentage 0-0.75, and Save Percentage 0-0.95.
+- Goalie axes use fixed scales: AVG Performance 0-12, Game Starts 0-60, Win
+  Percentage 0-0.8, and Save Percentage 0.6-1.
 - Goalie **Game Starts** and **AVG Performance** bars use the same table bands:
   Game Starts is red below 30, yellow through 42, then green; AVG Performance
   is red below 7, orange through 7.5, yellow below 7.9, light green below 8.3,

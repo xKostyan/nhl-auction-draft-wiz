@@ -133,9 +133,13 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
     } == {
         "AVG Performance": 12,
         "Game Starts": 60,
-        "Win Percentage": 0.75,
-        "Save Percentage": 0.95,
+        "Win Percentage": 0.8,
+        "Save Percentage": 1,
     }
+    save_percentage = next(
+        graph.figure for graph in graphs if graph.figure.layout.title.text == "Save Percentage"
+    )
+    assert save_percentage.layout.yaxis.range[0] == 0.6
     assert {
         graph.figure.layout.title.text: graph.figure.data[0].marker.color[0] for graph in graphs
     } == {
