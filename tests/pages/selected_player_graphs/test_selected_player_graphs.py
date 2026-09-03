@@ -143,11 +143,11 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Health",
         "AVG Performance",
         "Time on Ice",
+        "Shots on Goal per Game",
         "Points",
         "Special Teams Points",
         "Hits per Game",
         "Blocks per Game",
-        "Shots on Goal per Game",
     ]
     time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
     assert time_on_ice.data[0].marker.color == "#1f77b4"

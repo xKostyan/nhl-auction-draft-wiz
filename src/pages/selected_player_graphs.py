@@ -187,56 +187,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual_color=_time_on_ice_color if player["position"] == "F" else None,
             )
         )
-        actual, projected = _metric_values(table, "PTS")
-        charts.append(
-            _build_chart(
-                "Points",
-                actual,
-                projected,
-                yaxis_title="Points",
-                yaxis_max=120 if player["position"] == "F" else 100,
-            )
-        )
-        actual, projected = _metric_values(table, "STP")
-        charts.append(
-            _build_chart(
-                "Special Teams Points",
-                actual,
-                projected,
-                yaxis_title="Points",
-                yaxis_max=60 if player["position"] == "F" else 50,
-            )
-        )
-        actual, projected = _derived_metric_values(table, "HIT", "GP")
-        charts.append(
-            _build_chart(
-                "Hits per Game",
-                actual,
-                projected,
-                yaxis_title="Hits per game",
-                yaxis_max=2 if player["position"] == "F" else 3,
-            )
-        )
-        actual, projected = _derived_metric_values(table, "BLK", "GP")
-        charts.append(
-            _build_chart(
-                "Blocks per Game",
-                actual,
-                projected,
-                yaxis_title="Blocks per game",
-                yaxis_max=1.5 if player["position"] == "F" else 3,
-            )
-        )
-        actual, projected = _derived_metric_values(table, "SOG", "GP")
-        charts.append(
-            _build_chart(
-                "Shots on Goal per Game",
-                actual,
-                projected,
-                yaxis_title="Shots per game",
-                yaxis_max=6 if player["position"] == "F" else 4,
-            )
-        )
+        charts.extend(_build_remaining_skater_charts(table, str(player["position"])))
 
     if player["position"] == "F":
         actual, projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
@@ -269,6 +220,58 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         charts.append(_build_chart("Save Percentage", actual, projected, yaxis_title="Save percentage"))
 
     return charts
+
+
+def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[dcc.Graph]:
+    """Build the position-specific chart order after the shared first skater row."""
+    points_actual, points_projected = _metric_values(table, "PTS")
+    special_teams_actual, special_teams_projected = _metric_values(table, "STP")
+    hits_actual, hits_projected = _derived_metric_values(table, "HIT", "GP")
+    blocks_actual, blocks_projected = _derived_metric_values(table, "BLK", "GP")
+    shots_actual, shots_projected = _derived_metric_values(table, "SOG", "GP")
+    charts_by_name = {
+        "Points": _build_chart(
+            "Points",
+            points_actual,
+            points_projected,
+            yaxis_title="Points",
+            yaxis_max=120 if position == "F" else 100,
+        ),
+        "Special Teams Points": _build_chart(
+            "Special Teams Points",
+            special_teams_actual,
+            special_teams_projected,
+            yaxis_title="Points",
+            yaxis_max=60 if position == "F" else 50,
+        ),
+        "Hits per Game": _build_chart(
+            "Hits per Game",
+            hits_actual,
+            hits_projected,
+            yaxis_title="Hits per game",
+            yaxis_max=2 if position == "F" else 3,
+        ),
+        "Blocks per Game": _build_chart(
+            "Blocks per Game",
+            blocks_actual,
+            blocks_projected,
+            yaxis_title="Blocks per game",
+            yaxis_max=1.5 if position == "F" else 3,
+        ),
+        "Shots on Goal per Game": _build_chart(
+            "Shots on Goal per Game",
+            shots_actual,
+            shots_projected,
+            yaxis_title="Shots per game",
+            yaxis_max=6 if position == "F" else 4,
+        ),
+    }
+    chart_order = (
+        ("Shots on Goal per Game", "Points", "Special Teams Points", "Hits per Game", "Blocks per Game")
+        if position == "D"
+        else ("Points", "Special Teams Points", "Hits per Game", "Blocks per Game", "Shots on Goal per Game")
+    )
+    return [charts_by_name[name] for name in chart_order]
 
 
 def get_selected_player_name() -> str:

@@ -26,6 +26,9 @@ highlighted from any live-auction or My Team table.
 - The page refreshes the graph set alongside the selected player's name.
 - Skater charts begin with **Health**, **AVG Performance**, and **Time on
   Ice**, in that order, filling the first three-column row.
+- Defencemen then show **Shots on Goal per Game**, **Points**, and **Special
+  Teams Points** in the second row, followed by **Hits per Game** and **Blocks
+  per Game** in the third row.
 - Skater **Health** bars use the player-table games-played bands: red through
   50, orange through 60, yellow through 71, then green. **AVG Performance**
   uses its player-table skater bands: red through 3.1, orange through 3.5,
