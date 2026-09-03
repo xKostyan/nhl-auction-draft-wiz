@@ -55,10 +55,11 @@ highlighted from any live-auction or My Team table.
   Performance 0-6. Forward Points, Special Teams Points, Hits per Game, Blocks
   per Game, and Shots on Goal per Game use 0-120, 0-60, 0-2, 0-1.5, and 0-6;
   defencemen use 0-100, 0-50, 0-3, 0-3, and 0-4. Shooting Percentage uses
-  0-20, Goals 0-60, and Assists per Game 0-2. AVG Performance uses the same
-  0-6 scale for goalies.
+  0-20, Goals 0-60, and Assists per Game 0-2.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win
   Percentage**, and **Save Percentage** charts.
+- Goalie axes use fixed zero-based scales: AVG Performance 0-12, Game Starts
+  0-60, Win Percentage 0-0.75, and Save Percentage 0-0.95.
 - Charts use a compact 260px height and a three-column grid so portrait
   displays show three charts per row.
 - Legends are hidden because bars consistently represent actual values and

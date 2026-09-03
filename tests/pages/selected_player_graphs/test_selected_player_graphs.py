@@ -128,6 +128,14 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         "Save Percentage",
     ]
     assert all([trace.name for trace in graph.figure.data] == ["Actual", "Projected"] for graph in graphs)
+    assert {
+        graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
+    } == {
+        "AVG Performance": 12,
+        "Game Starts": 60,
+        "Win Percentage": 0.75,
+        "Save Percentage": 0.95,
+    }
 
 
 def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path):

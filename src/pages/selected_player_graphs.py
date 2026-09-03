@@ -200,15 +200,21 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual,
                 projected,
                 yaxis_title="Fantasy points average",
-                yaxis_max=6,
+                yaxis_max=12,
             )
         )
         actual, projected = _metric_values(table, "GS")
-        charts.append(_build_chart("Game Starts", actual, projected, yaxis_title="Games started"))
+        charts.append(
+            _build_chart("Game Starts", actual, projected, yaxis_title="Games started", yaxis_max=60)
+        )
         actual, projected = _metric_values(table, "_12")
-        charts.append(_build_chart("Win Percentage", actual, projected, yaxis_title="Win percentage"))
+        charts.append(
+            _build_chart("Win Percentage", actual, projected, yaxis_title="Win percentage", yaxis_max=0.75)
+        )
         actual, projected = _metric_values(table, "SVP")
-        charts.append(_build_chart("Save Percentage", actual, projected, yaxis_title="Save percentage"))
+        charts.append(
+            _build_chart("Save Percentage", actual, projected, yaxis_title="Save percentage", yaxis_max=0.95)
+        )
 
     return charts
 
