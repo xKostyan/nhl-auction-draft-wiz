@@ -57,13 +57,13 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     graphs = selected_player_graphs.refresh_selected_player_graphs(1)
 
     assert [graph.figure.layout.title.text for graph in graphs] == [
-        "AVG Performance",
         "Health",
+        "AVG Performance",
+        "Time on Ice",
         "Points",
         "Special Teams Points",
         "Hits",
         "Blocks",
-        "Time on Ice",
         "Shots on Goal per Game",
         "Shooting Percentage",
         "Goals",
@@ -80,6 +80,14 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "height": "260px",
         "width": "100%",
     }
+    assert health.data[0].marker.color[0] == "#f9a825"
+    average_performance = next(
+        graph.figure for graph in graphs if graph.figure.layout.title.text == "AVG Performance"
+    )
+    assert average_performance.data[0].marker.color[0] == "#d32f2f"
+    time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
+    assert [trace.name for trace in time_on_ice.data] == ["Actual", "Projected"]
+    assert time_on_ice.data[0].marker.color[0] == "#d32f2f"
 
 
 def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
@@ -110,13 +118,13 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
     graphs = selected_player_graphs.build_player_graphs()
 
     assert [graph.figure.layout.title.text for graph in graphs] == [
-        "AVG Performance",
         "Health",
+        "AVG Performance",
+        "Time on Ice",
         "Points",
         "Special Teams Points",
         "Hits",
         "Blocks",
-        "Time on Ice",
         "Shots on Goal per Game",
     ]
 
@@ -134,8 +142,28 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     shooting_percentage = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shooting Percentage")
 
     assert time_on_ice.data[0].y[0] == 33339 / 61 / 60
+    assert time_on_ice.data[1].y[-1] == 57530.01 / 79 / 60
     assert shots_per_game.data[0].y[0] == 66 / 61
     assert shooting_percentage.data[0].y[0] == 5 / 66 * 100
+
+
+def test_skater_bar_color_bands_match_the_player_tables():
+    assert [selected_player_graphs._skater_health_color(value) for value in (50, 51, 61, 72)] == [
+        "#d32f2f",
+        "#ef6c00",
+        "#f9a825",
+        "#388e3c",
+    ]
+    assert [
+        selected_player_graphs._skater_average_performance_color(value)
+        for value in (3.1, 3.2, 3.6, 3.7, 4.1)
+    ] == ["#d32f2f", "#ef6c00", "#f9a825", "#81c784", "#388e3c"]
+    assert [selected_player_graphs._time_on_ice_color(value) for value in (14.9, 15, 16, 18)] == [
+        "#d32f2f",
+        "#ef6c00",
+        "#f9a825",
+        "#388e3c",
+    ]
 
 
 def test_graphs_use_a_compact_three_column_layout():

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import dash
 import pandas as pd
 import plotly.graph_objects as go
@@ -52,21 +54,63 @@ def _derived_metric_values(
     )
 
 
+def _skater_health_color(value: float) -> str:
+    """Return the player-table health band color for actual games played."""
+    if value <= 50:
+        return "#d32f2f"
+    if value <= 60:
+        return "#ef6c00"
+    if value <= 71:
+        return "#f9a825"
+    return "#388e3c"
+
+
+def _skater_average_performance_color(value: float) -> str:
+    """Return the player-table skater performance band color."""
+    if value <= 3.1:
+        return "#d32f2f"
+    if value <= 3.5:
+        return "#ef6c00"
+    if value < 3.7:
+        return "#f9a825"
+    if value < 4.1:
+        return "#81c784"
+    return "#388e3c"
+
+
+def _time_on_ice_color(value: float) -> str:
+    """Return the requested actual time-on-ice band color."""
+    if value < 15:
+        return "#d32f2f"
+    if value < 16:
+        return "#ef6c00"
+    if value < 18:
+        return "#f9a825"
+    return "#388e3c"
+
+
 def _build_chart(
     title: str,
     actual: pd.Series,
     projected: pd.Series | None = None,
     *,
     yaxis_title: str | None = None,
+    actual_color: Callable[[float], str] | None = None,
 ) -> dcc.Graph:
     """Build one annual actual bar chart with an optional projected line."""
     years = sorted(set(actual.index).union(projected.index if projected is not None else []))
+    actual_values = actual.reindex(years)
+    bar_color = (
+        [_ACTUAL_COLOR if pd.isna(value) else actual_color(float(value)) for value in actual_values]
+        if actual_color is not None
+        else _ACTUAL_COLOR
+    )
     figure = go.Figure(
         go.Bar(
             name="Actual",
             x=years,
-            y=actual.reindex(years),
-            marker_color=_ACTUAL_COLOR,
+            y=actual_values,
+            marker_color=bar_color,
         )
     )
     if projected is not None:
@@ -108,12 +152,37 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         return []
 
     charts = []
-    actual, projected = _metric_values(table, "FP_AVG")
-    charts.append(_build_chart("AVG Performance", actual, projected, yaxis_title="Fantasy points average"))
 
     if player["position"] in {"F", "D"}:
         actual, _ = _metric_values(table, "GP")
-        charts.append(_build_chart("Health", actual, yaxis_title="Games played"))
+        charts.append(
+            _build_chart(
+                "Health",
+                actual,
+                yaxis_title="Games played",
+                actual_color=_skater_health_color,
+            )
+        )
+        actual, projected = _metric_values(table, "FP_AVG")
+        charts.append(
+            _build_chart(
+                "AVG Performance",
+                actual,
+                projected,
+                yaxis_title="Fantasy points average",
+                actual_color=_skater_average_performance_color,
+            )
+        )
+        actual, projected = _derived_metric_values(table, "TTOI", "GP", multiplier=1 / 60)
+        charts.append(
+            _build_chart(
+                "Time on Ice",
+                actual,
+                projected,
+                yaxis_title="Minutes per game",
+                actual_color=_time_on_ice_color,
+            )
+        )
         actual, projected = _metric_values(table, "PTS")
         charts.append(_build_chart("Points", actual, projected, yaxis_title="Points"))
         actual, projected = _metric_values(table, "STP")
@@ -122,8 +191,6 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         charts.append(_build_chart("Hits", actual, yaxis_title="Hits"))
         actual, _ = _metric_values(table, "BLK")
         charts.append(_build_chart("Blocks", actual, yaxis_title="Blocks"))
-        actual, _ = _derived_metric_values(table, "TTOI", "GP", multiplier=1 / 60)
-        charts.append(_build_chart("Time on Ice", actual, yaxis_title="Minutes per game"))
         actual, _ = _derived_metric_values(table, "SOG", "GP")
         charts.append(_build_chart("Shots on Goal per Game", actual, yaxis_title="Shots per game"))
 
@@ -136,6 +203,8 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         charts.append(_build_chart("Assists", actual, projected, yaxis_title="Assists"))
 
     if player["position"] == "G":
+        actual, projected = _metric_values(table, "FP_AVG")
+        charts.append(_build_chart("AVG Performance", actual, projected, yaxis_title="Fantasy points average"))
         actual, projected = _metric_values(table, "GS")
         charts.append(_build_chart("Game Starts", actual, projected, yaxis_title="Games started"))
         actual, projected = _metric_values(table, "_12")

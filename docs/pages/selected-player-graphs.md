@@ -24,13 +24,20 @@ highlighted from any live-auction or My Team table.
   imported, preventing an old player selection from appearing in the next
   season's workspace.
 - The page refreshes the graph set alongside the selected player's name.
-- Every player receives **AVG Performance**, which compares actual fantasy
-  points average (bars) with projected values (line) by year.
-- Skaters also receive actual-only **Health** (games played), **Hits**,
-  **Blocks**, **Time on Ice** (total time on ice divided by games played and
-  converted to minutes), and **Shots on Goal per Game** (total shots divided
-  by games played), plus actual-versus-projected **Points** and **Special Teams
-  Points** charts.
+- Skater charts begin with **Health**, **AVG Performance**, and **Time on
+  Ice**, in that order, filling the first three-column row.
+- Skater **Health** bars use the player-table games-played bands: red through
+  50, orange through 60, yellow through 71, then green. **AVG Performance**
+  uses its player-table skater bands: red through 3.1, orange through 3.5,
+  yellow below 3.7, light green below 4.1, then green.
+- **Time on Ice** compares actual (bars) and projected (line) minutes per
+  game. Its actual bars are red below 15 minutes, orange below 16, yellow
+  below 18, and green at 18 or more.
+- Skaters also receive actual-only **Hits**, **Blocks**, and **Shots on Goal
+  per Game** (total shots divided by games played), plus
+  actual-versus-projected **Points** and **Special Teams Points** charts.
+- Goalies receive **AVG Performance**, which compares actual fantasy points
+  average (bars) with projected values (line) by year.
 - Forwards additionally receive actual-versus-projected **Shooting
   Percentage** (goals divided by shots on goal), **Goals**, and **Assists**
   charts.
