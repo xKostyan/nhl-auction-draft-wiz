@@ -60,14 +60,14 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Health",
         "AVG Performance",
         "Time on Ice",
+        "Assists per Game",
         "Points",
         "Special Teams Points",
-        "Hits per Game",
-        "Blocks per Game",
         "Shots on Goal per Game",
         "Shooting Percentage",
         "Goals",
-        "Assists per Game",
+        "Hits per Game",
+        "Blocks per Game",
     ]
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")

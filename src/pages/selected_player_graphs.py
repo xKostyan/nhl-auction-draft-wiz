@@ -187,19 +187,10 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 actual_color=_time_on_ice_color if player["position"] == "F" else None,
             )
         )
-        charts.extend(_build_remaining_skater_charts(table, str(player["position"])))
-
-    if player["position"] == "F":
-        actual, projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
-        charts.append(
-            _build_chart("Shooting Percentage", actual, projected, yaxis_title="Percent", yaxis_max=20)
-        )
-        actual, projected = _metric_values(table, "G")
-        charts.append(_build_chart("Goals", actual, projected, yaxis_title="Goals", yaxis_max=60))
-        actual, projected = _derived_metric_values(table, "A", "GP")
-        charts.append(
-            _build_chart("Assists per Game", actual, projected, yaxis_title="Assists per game", yaxis_max=2)
-        )
+        if player["position"] == "F":
+            charts.extend(_build_forward_charts(table))
+        else:
+            charts.extend(_build_remaining_skater_charts(table, "D"))
 
     if player["position"] == "G":
         actual, projected = _metric_values(table, "FP_AVG")
@@ -272,6 +263,43 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
         else ("Points", "Special Teams Points", "Hits per Game", "Blocks per Game", "Shots on Goal per Game")
     )
     return [charts_by_name[name] for name in chart_order]
+
+
+def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
+    """Build the forward-only charts in their requested row order."""
+    remaining_charts = {
+        chart.figure.layout.title.text: chart for chart in _build_remaining_skater_charts(table, "F")
+    }
+    shooting_actual, shooting_projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
+    goals_actual, goals_projected = _metric_values(table, "G")
+    assists_actual, assists_projected = _derived_metric_values(table, "A", "GP")
+    charts_by_name = {
+        "Shooting Percentage": _build_chart(
+            "Shooting Percentage",
+            shooting_actual,
+            shooting_projected,
+            yaxis_title="Percent",
+            yaxis_max=20,
+        ),
+        "Goals": _build_chart("Goals", goals_actual, goals_projected, yaxis_title="Goals", yaxis_max=60),
+        "Assists per Game": _build_chart(
+            "Assists per Game",
+            assists_actual,
+            assists_projected,
+            yaxis_title="Assists per game",
+            yaxis_max=2,
+        ),
+    }
+    return [
+        charts_by_name["Assists per Game"],
+        remaining_charts["Points"],
+        remaining_charts["Special Teams Points"],
+        remaining_charts["Shots on Goal per Game"],
+        charts_by_name["Shooting Percentage"],
+        charts_by_name["Goals"],
+        remaining_charts["Hits per Game"],
+        remaining_charts["Blocks per Game"],
+    ]
 
 
 def get_selected_player_name() -> str:
