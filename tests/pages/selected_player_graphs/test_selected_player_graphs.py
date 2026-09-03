@@ -1,5 +1,7 @@
 """Tests for the shared selected-player graphs surface."""
 
+from pathlib import Path
+
 from dash import dcc, html
 
 from src.pages import selected_player_graphs
@@ -73,6 +75,11 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert [trace.name for trace in health.data] == ["Actual"]
     assert points.data[0].type == "bar"
     assert points.data[1].type == "scatter"
+    assert points.layout.height == selected_player_graphs._CHART_HEIGHT
+    assert next(graph for graph in graphs if graph.figure is points).style == {
+        "height": "260px",
+        "width": "100%",
+    }
 
 
 def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
@@ -129,3 +136,10 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     assert time_on_ice.data[0].y[0] == 33339 / 61 / 60
     assert shots_per_game.data[0].y[0] == 66 / 61
     assert shooting_percentage.data[0].y[0] == 5 / 66 * 100
+
+
+def test_graphs_use_a_compact_three_column_layout():
+    stylesheet = (Path(__file__).parents[3] / "src" / "assets" / "app.css").read_text()
+
+    assert ".selected-player-graphs {" in stylesheet
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in stylesheet

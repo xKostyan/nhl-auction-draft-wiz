@@ -17,6 +17,7 @@ PLAYER_NAME_ID = "selected-player-graphs-player-name"
 GRAPH_CONTAINER_ID = "selected-player-graphs-container"
 _ACTUAL_COLOR = "#1f77b4"
 _PROJECTED_COLOR = "#ff7f0e"
+_CHART_HEIGHT = 260
 
 
 def _history_by_year(player_id: int) -> pd.DataFrame:
@@ -81,12 +82,19 @@ def _build_chart(
     figure.update_layout(
         title=title,
         barmode="group",
-        margin={"l": 50, "r": 20, "t": 50, "b": 45},
+        height=_CHART_HEIGHT,
+        margin={"l": 45, "r": 12, "t": 42, "b": 38},
         legend={"orientation": "h", "y": 1.12},
+        title_font={"size": 16},
     )
     figure.update_xaxes(title="Year", type="category")
     figure.update_yaxes(title=yaxis_title)
-    return dcc.Graph(figure=figure, config={"displayModeBar": False}, className="selected-player-graph")
+    return dcc.Graph(
+        figure=figure,
+        config={"displayModeBar": False},
+        className="selected-player-graph",
+        style={"height": f"{_CHART_HEIGHT}px", "width": "100%"},
+    )
 
 
 def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.Graph]:

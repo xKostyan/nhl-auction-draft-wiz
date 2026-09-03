@@ -36,6 +36,8 @@ highlighted from any live-auction or My Team table.
   charts.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win
   Percentage**, and **Save Percentage** charts.
+- Charts use a compact 260px height and a three-column grid so portrait
+  displays show three charts per row.
 
 ## Related code
 

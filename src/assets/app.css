@@ -78,6 +78,22 @@ body,
     max-width: 420px;
 }
 
+.selected-player-graphs-page {
+    overflow-y: auto;
+    width: 100%;
+}
+
+.selected-player-graphs {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-bottom: 12px;
+}
+
+.selected-player-graph {
+    min-width: 0;
+}
+
 .centered-column-header .ag-header-cell-label {
     justify-content: center;
 }
