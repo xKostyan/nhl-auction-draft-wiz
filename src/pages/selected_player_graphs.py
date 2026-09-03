@@ -195,11 +195,23 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
         )
         actual, projected = _derived_metric_values(table, "HIT", "GP")
         charts.append(
-            _build_chart("Hits per Game", actual, projected, yaxis_title="Hits per game", yaxis_max=4)
+            _build_chart(
+                "Hits per Game",
+                actual,
+                projected,
+                yaxis_title="Hits per game",
+                yaxis_max=2 if player["position"] == "F" else 4,
+            )
         )
         actual, projected = _derived_metric_values(table, "BLK", "GP")
         charts.append(
-            _build_chart("Blocks per Game", actual, projected, yaxis_title="Blocks per game", yaxis_max=2.5)
+            _build_chart(
+                "Blocks per Game",
+                actual,
+                projected,
+                yaxis_title="Blocks per game",
+                yaxis_max=1.5 if player["position"] == "F" else 2.5,
+            )
         )
         actual, projected = _derived_metric_values(table, "SOG", "GP")
         charts.append(

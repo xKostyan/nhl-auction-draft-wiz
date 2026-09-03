@@ -95,8 +95,8 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Time on Ice": 25,
         "Points": 120,
         "Special Teams Points": 60,
-        "Hits per Game": 4,
-        "Blocks per Game": 2.5,
+        "Hits per Game": 2,
+        "Blocks per Game": 1.5,
         "Shots on Goal per Game": 6,
         "Shooting Percentage": 20,
         "Goals": 60,
@@ -151,6 +151,16 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
     ]
     time_on_ice = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Time on Ice")
     assert time_on_ice.data[0].marker.color == "#1f77b4"
+    assert next(
+        graph.figure.layout.yaxis.range[1]
+        for graph in graphs
+        if graph.figure.layout.title.text == "Hits per Game"
+    ) == 4
+    assert next(
+        graph.figure.layout.yaxis.range[1]
+        for graph in graphs
+        if graph.figure.layout.title.text == "Blocks per Game"
+    ) == 2.5
 
 
 def test_derived_skater_rates_use_the_imported_totals(tmp_path):
