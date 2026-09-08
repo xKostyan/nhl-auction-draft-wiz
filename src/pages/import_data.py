@@ -10,11 +10,12 @@ import dash
 import dash_ag_grid as dag
 from dash import Input, Output, State, callback, ctx, dcc, html
 
-from ..data_loader import parse_uploaded_csv
+from ..data_loader import parse_uploaded_csv, parse_uploaded_keeper_prices
 from ..storage import (
     clear_workspace,
     get_players_for_grid,
     get_workspace_summary,
+    import_keeper_prices,
     import_yearly_dataset,
 )
 
@@ -38,6 +39,7 @@ UPLOAD_FIELDS = [
     ("upload-defense", "Defencemen stats CSV"),
     ("upload-goalies", "Goalies stats CSV"),
 ]
+KEEPER_PRICE_UPLOAD_ID = "upload-keeper-prices"
 
 
 def _upload_control(upload_id: str, label: str) -> html.Div:
@@ -113,11 +115,30 @@ def handle_workspace_action(
     return _initial_status_message(), get_players_for_grid().to_dict("records")
 
 
+def handle_keeper_price_import(keeper_prices_contents: str | None) -> tuple[str, list[dict]]:
+    """Import keeper prices and return the result message plus unmatched rows."""
+    if not keeper_prices_contents:
+        return "Please select a keeper prices CSV before importing.", []
+
+    try:
+        result = import_keeper_prices(parse_uploaded_keeper_prices(keeper_prices_contents))
+    except ValueError as exc:
+        return f"Keeper price import failed: {exc}", []
+
+    unmatched_players = result["unmatched_players"]
+    imported_count = result["prices_imported"]
+    message = f"Imported keeper prices for {imported_count} player{'s' if imported_count != 1 else ''}."
+    if unmatched_players:
+        unmatched_count = len(unmatched_players)
+        message += f" {unmatched_count} player{'s' if unmatched_count != 1 else ''} could not be matched."
+    return message, unmatched_players
+
+
 def layout(**_kwargs):
     """Build the page layout. A function (not a static value) so the status
     message and grid reflect the current workspace state on every page visit."""
     return html.Div(
-        style={"maxWidth": "760px"},
+        style={"width": "100%", "minWidth": 0},
         children=[
             html.H2("Import data"),
             html.P(
@@ -149,6 +170,32 @@ def layout(**_kwargs):
                 dashGridOptions={"pagination": True, "paginationPageSize": 25},
                 style={"height": "440px", "width": "100%"},
             ),
+            html.H3("Import keeper prices", style={"marginTop": "32px"}),
+            html.P(
+                "After importing season data, upload the headerless keeper prices CSV. "
+                "Rows are matched by player name and position."
+            ),
+            _upload_control(KEEPER_PRICE_UPLOAD_ID, "Keeper prices CSV"),
+            html.Button("Import keeper prices", id="import-keeper-prices-button", n_clicks=0),
+            html.Div(
+                id="keeper-price-import-status",
+                style={"margin": "16px 0", "fontWeight": "bold"},
+            ),
+            html.H3("Failed keeper price imports"),
+            dag.AgGrid(
+                id="keeper-price-unmatched-grid",
+                className="table-values-large",
+                rowData=[],
+                columnDefs=[
+                    {"field": "name"},
+                    {"field": "position"},
+                    {"field": "team"},
+                    {"field": "price", "headerName": "$$", "type": "numericColumn"},
+                ],
+                defaultColDef={"sortable": True, "resizable": True},
+                dashGridOptions={"domLayout": "autoHeight"},
+                style={"width": "100%"},
+            ),
         ],
     )
 
@@ -160,7 +207,7 @@ def layout(**_kwargs):
 dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
 
 
-for _upload_id, _ in UPLOAD_FIELDS:
+for _upload_id, _ in [*UPLOAD_FIELDS, (KEEPER_PRICE_UPLOAD_ID, "Keeper prices CSV")]:
 
     def _make_filename_callback(component_id: str):
         @callback(
@@ -179,26 +226,38 @@ for _upload_id, _ in UPLOAD_FIELDS:
 @callback(
     Output("workspace-status", "children"),
     Output("player-grid", "rowData"),
+    Output("keeper-price-import-status", "children"),
+    Output("keeper-price-unmatched-grid", "rowData"),
     Input("import-button", "n_clicks"),
     Input("clear-button", "n_clicks"),
+    Input("import-keeper-prices-button", "n_clicks"),
     State("upload-players", "contents"),
     State("upload-forwards", "contents"),
     State("upload-defense", "contents"),
     State("upload-goalies", "contents"),
+    State(KEEPER_PRICE_UPLOAD_ID, "contents"),
     prevent_initial_call=True,
 )
 def handle_workspace_actions(
     _import_clicks,
     _clear_clicks,
+    _keeper_price_import_clicks,
     players_contents,
     forwards_contents,
     defense_contents,
     goalies_contents,
+    keeper_prices_contents,
 ):
-    return handle_workspace_action(
-        ctx.triggered_id,
-        players_contents,
-        forwards_contents,
-        defense_contents,
-        goalies_contents,
+    if ctx.triggered_id == "import-keeper-prices-button":
+        message, unmatched_players = handle_keeper_price_import(keeper_prices_contents)
+        return (
+            _initial_status_message(),
+            get_players_for_grid().to_dict("records"),
+            message,
+            unmatched_players,
+        )
+
+    message, rows = handle_workspace_action(
+        ctx.triggered_id, players_contents, forwards_contents, defense_contents, goalies_contents
     )
+    return message, rows, "", []

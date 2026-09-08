@@ -426,6 +426,57 @@ def import_yearly_dataset(
         conn.close()
 
 
+def import_keeper_prices(keeper_prices_df: pd.DataFrame) -> dict[str, int | list[dict[str, int | str]]]:
+    """Update player prices from a parsed keeper-price export.
+
+    Names are matched case-insensitively after whitespace normalization, along
+    with their normalized workspace position. The source team is retained in
+    unmatched results for debugging because the workspace does not store team.
+    """
+    required_columns = {"name", "position", "team", "price"}
+    missing = required_columns - set(keeper_prices_df.columns)
+    if missing:
+        raise ValueError(f"keeper prices CSV is missing required columns: {sorted(missing)}")
+
+    conn = db_connection()
+    try:
+        players = conn.execute("SELECT id, name, position FROM players").fetchall()
+        if not players:
+            raise ValueError("Import season data before importing keeper prices.")
+
+        player_ids = {
+            (" ".join(str(player["name"]).split()).casefold(), str(player["position"]).upper()): int(player["id"])
+            for player in players
+        }
+        updates: list[tuple[int, int]] = []
+        unmatched_players: list[dict[str, int | str]] = []
+        for row in keeper_prices_df[["name", "position", "team", "price"]].itertuples(index=False):
+            name, position, team, price = row
+            normalized_name = " ".join(str(name).split()).casefold()
+            normalized_position = str(position).upper()
+            player_id = player_ids.get((normalized_name, normalized_position))
+            if player_id is None:
+                unmatched_players.append(
+                    {
+                        "name": str(name),
+                        "position": normalized_position,
+                        "team": str(team),
+                        "price": int(price),
+                    }
+                )
+                continue
+            updates.append((int(price), player_id))
+
+        conn.executemany("UPDATE players SET price = ? WHERE id = ?", updates)
+        conn.commit()
+        return {
+            "prices_imported": len(updates),
+            "unmatched_players": unmatched_players,
+        }
+    finally:
+        conn.close()
+
+
 def get_players_for_grid() -> pd.DataFrame:
     """Return a DataFrame for the dashboard confirming the imported players and their status."""
     conn = db_connection()

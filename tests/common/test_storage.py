@@ -17,6 +17,7 @@ from src.storage import (
     get_players_for_position_grid,
     get_players_for_grid,
     get_workspace_summary,
+    import_keeper_prices,
     import_yearly_dataset,
     set_player_drafted,
     set_draft_budget,
@@ -284,6 +285,52 @@ def test_player_price_is_retained_after_reconfiguring_storage(tmp_path):
     assert get_players_for_grid().loc[
         get_players_for_grid()["id"] == player_id, "price"
     ].item() == 24
+
+
+def test_import_keeper_prices_updates_matches_and_returns_unmatched_rows(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset(
+        players_df=pd.DataFrame(
+            {
+                "id": [1, 2],
+                "name": ["Test Forward", "Test Defender"],
+                "position": ["F", "D"],
+            }
+        ),
+        forward_df=pd.DataFrame({"id": [1], "year": [2026], "stats_type": ["projected"]}),
+        defense_df=pd.DataFrame({"id": [2], "year": [2026], "stats_type": ["projected"]}),
+        goalie_df=pd.DataFrame({"id": [3], "year": [2026], "stats_type": ["projected"]}),
+    )
+
+    result = import_keeper_prices(
+        pd.DataFrame(
+            [
+                {"name": "  test forward ", "position": "F", "team": "ABC", "price": 18},
+                {"name": "Missing Player", "position": "G", "team": "XYZ", "price": 7},
+            ]
+        )
+    )
+
+    assert result == {
+        "prices_imported": 1,
+        "unmatched_players": [
+            {"name": "Missing Player", "position": "G", "team": "XYZ", "price": 7}
+        ],
+    }
+    rows = get_players_for_grid()
+    assert rows.loc[rows["name"] == "Test Forward", "price"].item() == 18
+    assert rows.loc[rows["name"] == "Test Defender", "price"].isna().item()
+
+
+def test_import_keeper_prices_requires_imported_players(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+
+    with pytest.raises(ValueError, match="Import season data"):
+        import_keeper_prices(
+            pd.DataFrame([{"name": "Test Player", "position": "F", "team": "ABC", "price": 1}])
+        )
 
 
 def test_draft_budget_defaults_to_930_and_persists(tmp_path):
