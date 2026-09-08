@@ -144,6 +144,18 @@ def test_layout_is_json_serializable_for_dash_page_rendering(tmp_path):
     assert to_json(my_team.layout())
 
 
+def test_budget_metrics_are_direct_component_children(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    summary = my_team.build_budget_summary()
+    metrics = summary.children[0]
+
+    assert metrics.className == "budget-metrics"
+    assert [metric.className for metric in metrics.children] == ["budget-metric"] * 4
+
+
 def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()

@@ -304,9 +304,17 @@ def build_budget_summary(
     ]
     return html.Div([
         html.Div(
-            [[html.Span(label, className="budget-metric-label"), html.Strong(f"${value:,.0f}")]
-            for label, value in metrics
-            ]
+            [
+                html.Div(
+                    [
+                        html.Span(label, className="budget-metric-label"),
+                        html.Strong(f"${value:,.0f}"),
+                    ],
+                    className="budget-metric",
+                )
+                for label, value in metrics
+            ],
+            className="budget-metrics",
         ),
         html.P(
             f"{summary['empty_slots']} open slots; flexible budget: ${summary['flexible']:,.0f}; "

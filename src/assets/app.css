@@ -54,11 +54,17 @@ body,
     max-width: 110px;
 }
 
-.budget-panel > div:nth-of-type(1) {
+.budget-metrics {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
     margin-top: 12px;
+}
+
+.budget-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .budget-allocation-table {
