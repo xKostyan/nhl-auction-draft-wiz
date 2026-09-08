@@ -11,6 +11,7 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     MyTeamCapacityError,
+    PlayerPriceRequiredError,
     set_player_drafted,
     set_player_notes,
     set_player_on_my_team,
@@ -645,7 +646,7 @@ def handle_player_grid_update_with_message(
     """Return a visible capacity message instead of failing a stale add request."""
     try:
         return handle_player_grid_update(position, cell_changes, context_action, triggered_property), ""
-    except MyTeamCapacityError as error:
+    except (MyTeamCapacityError, PlayerPriceRequiredError) as error:
         return get_position_rows(position), str(error)
 
 

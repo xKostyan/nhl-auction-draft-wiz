@@ -21,10 +21,15 @@ MY_TEAM_UTILITY_SLOTS = 2
 MY_TEAM_BENCH_SKATER_SLOTS = 3
 MY_TEAM_BENCH_GOALIE_SLOTS = 2
 MY_TEAM_BENCH_TOTAL_SLOTS = 4
+DEFAULT_DRAFT_BUDGET = 930
 
 
 class MyTeamCapacityError(ValueError):
     """Raised when an added player cannot fit within the configured roster."""
+
+
+class PlayerPriceRequiredError(ValueError):
+    """Raised when a player without a price is added to My Team."""
 
 
 def configure_storage(path: str | Path | None = None) -> Path:
@@ -150,7 +155,14 @@ def ensure_schema() -> None:
                 ('workspace_name', 'default'),
                 ('current_season', '0'),
                 ('last_imported_at', ''),
-                ('selected_player_id', '')
+                ('selected_player_id', ''),
+                ('draft_budget', '930'),
+                ('budget_allocation_mode', 'slot-weighted'),
+                ('budget_skater_percent', '80'),
+                ('budget_goalie_percent', '20'),
+                ('budget_forward_percent', '50'),
+                ('budget_defenceman_percent', '30'),
+                ('budget_position_goalie_percent', '20')
             """
         )
         conn.commit()
@@ -177,6 +189,19 @@ def get_workspace_value(key: str) -> str:
         return row["value"] if row else ""
     finally:
         conn.close()
+
+
+def get_draft_budget() -> int:
+    """Return the persisted non-negative yearly auction budget."""
+    value = get_workspace_value("draft_budget")
+    return int(value) if value.isdecimal() else DEFAULT_DRAFT_BUDGET
+
+
+def set_draft_budget(budget: int) -> None:
+    """Persist a non-negative integer yearly auction budget."""
+    if isinstance(budget, bool) or not isinstance(budget, int) or budget < 0:
+        raise ValueError("Draft budget must be a non-negative integer.")
+    set_workspace_value("draft_budget", str(budget))
 
 
 def set_selected_player(player_id: int) -> None:
@@ -229,6 +254,13 @@ def clear_workspace() -> None:
                 ("current_season", "0"),
                 ("last_imported_at", ""),
                 ("selected_player_id", ""),
+                ("draft_budget", str(DEFAULT_DRAFT_BUDGET)),
+                ("budget_allocation_mode", "slot-weighted"),
+                ("budget_skater_percent", "80"),
+                ("budget_goalie_percent", "20"),
+                ("budget_forward_percent", "50"),
+                ("budget_defenceman_percent", "30"),
+                ("budget_position_goalie_percent", "20"),
             ],
         )
         conn.commit()
@@ -701,11 +733,17 @@ def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
 
     conn = db_connection()
     try:
-        player = conn.execute("SELECT id, position, on_my_team FROM players WHERE id = ?", (player_id,)).fetchone()
+        player = conn.execute(
+            "SELECT id, position, on_my_team, price FROM players WHERE id = ?", (player_id,)
+        ).fetchone()
         if player is None:
             raise ValueError(f"Cannot update My Team: player {player_id} does not exist.")
 
         if on_my_team and not player["on_my_team"]:
+            if player["price"] is None:
+                raise PlayerPriceRequiredError(
+                    "Set a player price before adding them to My Team."
+                )
             add_error = _my_team_add_error(conn, str(player["position"]))
             if add_error:
                 raise MyTeamCapacityError(add_error)

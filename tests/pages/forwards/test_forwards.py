@@ -397,6 +397,7 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     ])
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-tags"}})
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-notes"}})
+    handle_drafted_cell_change("F", [{"colId": "price", "value": 1, "data": {"id": player_id}}])
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
 
     player = next(row for row in get_position_rows("F") if row["id"] == player_id)

@@ -36,6 +36,47 @@ body,
     margin-bottom: 12px;
 }
 
+.budget-panel {
+    border: 1px solid #ccc;
+    margin-bottom: 16px;
+    padding: 12px;
+}
+
+.budget-panel > label,
+.budget-panel > div > label {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 12px 8px 0;
+}
+
+.budget-panel input {
+    max-width: 110px;
+}
+
+.budget-panel > div:nth-of-type(1) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.budget-allocation-table {
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.budget-allocation-table th,
+.budget-allocation-table td {
+    padding: 4px 10px;
+    text-align: right;
+}
+
+.budget-allocation-table th:first-child,
+.budget-allocation-table td:first-child {
+    text-align: left;
+}
+
 .my-team-table-heading {
     column-gap: 16px;
     display: grid;

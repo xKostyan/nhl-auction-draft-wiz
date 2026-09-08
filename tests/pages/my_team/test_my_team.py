@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import dash_ag_grid as dag
+import pytest
 import src.pages.position_table as position_table
 from dash import dcc, html
 
@@ -22,9 +23,20 @@ from src.pages.position_table import (
 from src.storage import (
     clear_workspace,
     configure_storage,
+    get_draft_budget,
+    get_workspace_value,
     get_selected_player,
     import_yearly_dataset,
+    set_player_price,
 )
+
+
+def add_to_my_team(position, player_id, price=1):
+    """Add a priced player through the same context action used by the grid."""
+    set_player_price(player_id, price)
+    handle_player_context_action(
+        position, {"rowId": player_id, "value": {"action": "add-to-my-team"}}
+    )
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -41,7 +53,12 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     page_layout = my_team.layout()
     grids = [node for node in walk_components(page_layout) if isinstance(node, dag.AgGrid)]
     chart = next(node for node in walk_components(page_layout) if isinstance(node, dcc.Graph))
+    budget_input = next(
+        node for node in walk_components(page_layout) if isinstance(node, dcc.Input)
+        and node.id == my_team.BUDGET_INPUT_ID
+    )
 
+    assert budget_input.value == 930
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
@@ -49,7 +66,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.figure.data[0].domain.x == (0.1, 0.9)
     assert chart.figure.data[1].hole == 0.84
     assert chart.figure.layout.height == 460
-    assert page_layout.children[1] is chart
+    assert page_layout.children[2] is chart
     headings = [node for node in walk_components(page_layout) if isinstance(node, html.H3)]
     assert [heading.id for heading in headings] == [
         "my-team-f-title",
@@ -118,13 +135,74 @@ def test_layout_builds_one_my_team_snapshot(monkeypatch):
     ]
 
 
+def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    add_to_my_team("F", player_id, price=30)
+    snapshot = position_table.build_my_team_snapshot()
+
+    summary = my_team.get_budget_summary(snapshot=snapshot, budget=930)
+
+    assert summary == {
+        "total_budget": 930,
+        "committed": 30,
+        "empty_slots": 21,
+        "reserved_minimums": 21,
+        "available": 900,
+        "flexible": 879,
+        "max_next_bid": 880,
+        "average_open_slot": 879 / 21,
+    }
+
+
+def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
+    add_to_my_team("G", player_id, price=40)
+    snapshot = position_table.build_my_team_snapshot()
+
+    rows = my_team.get_budget_allocation(
+        "skaters-goalies", {"skaters": 80, "goalies": 20}, snapshot=snapshot, budget=930
+    )
+
+    assert rows[0]["planned"] == 744
+    assert rows[1]["planned"] == 186
+    assert rows[1]["committed"] == 40
+    with pytest.raises(ValueError, match="total 100"):
+        my_team.get_budget_allocation(
+            "positions", {"forwards": 50, "defencemen": 30, "goalies": 10}, snapshot=snapshot
+        )
+
+
+def test_budget_update_persists_the_budget_and_switches_allocation_controls(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    _, status, skater_style, position_style = my_team.build_budget_update(
+        850, "positions", 80, 20, 50, 30, 20
+    )
+
+    assert get_draft_budget() == 850
+    assert get_workspace_value("budget_allocation_mode") == "positions"
+    assert get_workspace_value("budget_forward_percent") == "50"
+    assert get_workspace_value("budget_position_goalie_percent") == "20"
+    assert status == ""
+    assert skater_style == {"display": "none"}
+    assert position_style == {"display": "flex"}
+
+
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
 
-    handle_player_context_action("G", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+    add_to_my_team("G", player_id)
     assert [row["id"] for row in get_position_rows("G", my_team_only=True)] == [player_id]
     assert get_position_rows("G", my_team_only=True)[0]["average_performance_history"]
 
@@ -141,7 +219,7 @@ def test_goalie_tags_persist_from_the_my_team_goalie_table(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
-    handle_player_context_action("G", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+    add_to_my_team("G", player_id)
 
     handle_my_team_grid_update(
         "G",
@@ -159,7 +237,7 @@ def test_price_changes_persist_from_the_my_team_table(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+    add_to_my_team("F", player_id)
 
     handle_my_team_grid_update(
         "F",
@@ -177,7 +255,7 @@ def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+    add_to_my_team("F", player_id)
 
     handle_my_team_grid_update(
         "F",
@@ -222,9 +300,7 @@ def test_skater_table_titles_include_current_projected_tfp_totals(tmp_path):
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
 
-    handle_player_context_action(
-        "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
-    )
+    add_to_my_team("F", player_id)
 
     forward = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
     assert get_my_team_projected_tfp_total("F") == forward["projected_tfp"]
@@ -313,9 +389,7 @@ def test_skater_overflow_is_automatically_placed_in_utility_then_bench(tmp_path)
     ][:12]
 
     for player_id in player_ids:
-        handle_player_context_action(
-            "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
-        )
+        add_to_my_team("F", player_id)
 
     expected_ids = [
         row["id"]
@@ -359,9 +433,7 @@ def test_my_team_update_refreshes_all_tables_after_removal(tmp_path):
         int(row.id) for row in load_players().itertuples(index=False) if row.position == "F"
     ][:10]
     for player_id in player_ids:
-        handle_player_context_action(
-            "F", {"rowId": player_id, "value": {"action": "add-to-my-team"}}
-        )
+        add_to_my_team("F", player_id)
 
     promoted_player_id = get_my_team_table_rows("utility")[0]["id"]
     removed_player_id = get_my_team_table_rows("F")[0]["id"]

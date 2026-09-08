@@ -15,6 +15,23 @@ membership flag is stored in the workspace and survives restarts.
 
 ## UI and behavior
 
+- A **Draft budget** panel persists a non-negative whole-number annual budget,
+  defaulting to `$930`. It reports committed My Team price, remaining budget,
+  the `$1` minimum reserved for every unfilled roster slot, flexible budget,
+  and the maximum legal next bid after preserving the minimum for every other
+  open slot. Only My Team players consume the budget; players drafted by other
+  managers remain unavailable but do not affect it.
+- A player must have a Price before **Add to My Team** succeeds. Adding them
+  then marks the player drafted and charges that price to the budget. Keepers
+  and auction purchases follow this same workflow.
+- The budget panel offers advisory **Slot weighted**, **Skaters / Goalies**,
+  and **Forwards / Defencemen / Goalies** allocation views. Percentage
+  allocations and the selected view persist in the workspace, must total 100,
+  and show planned budget, price spent, primary
+  open slots, their `$1` minimum, remaining allocation, and a per-slot guide.
+  Utility and Bench slots remain flexible and their required minimum is
+  reflected in the global budget summary. These views do not prevent bids;
+  **Max next bid** is the hard auction reference.
 - A two-layer donut chart at the top shows the grand projected-TFP total in
   its center. Its inner ring is split among Forwards, Defencemen, Utility,
   and Goalies; its outer ring splits each group into its players. A white gap
@@ -36,7 +53,7 @@ membership flag is stored in the workspace and survives restarts.
   expand to fill the available cell width. Average Performance uses light green
   and green bands at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to below
   8.3 and 8.3+ for goalies. Utility has the
-  skater columns plus **Position** after player name. Bench is intentionally
+  skater columns plus **Position** after Price. Bench is intentionally
   limited to highlight, index, player name, **Price**, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress
   their unused internal vertical scrollbars through both their AG Grid settings

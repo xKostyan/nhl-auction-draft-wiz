@@ -10,6 +10,7 @@ from src.storage import (
     configure_storage,
     detect_draft_year,
     get_available_stat_years,
+    get_draft_budget,
     get_player_stat_history,
     get_selected_player,
     get_players_for_position_grid,
@@ -17,11 +18,13 @@ from src.storage import (
     get_workspace_summary,
     import_yearly_dataset,
     set_player_drafted,
+    set_draft_budget,
     set_player_notes,
     set_player_on_my_team,
     set_player_price,
     set_player_tags,
     set_selected_player,
+    PlayerPriceRequiredError,
 )
 
 
@@ -281,6 +284,30 @@ def test_player_price_is_retained_after_reconfiguring_storage(tmp_path):
     ].item() == 24
 
 
+def test_draft_budget_defaults_to_930_and_persists(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    configure_storage(database_path)
+
+    assert get_draft_budget() == 930
+
+    set_draft_budget(875)
+    configure_storage(database_path)
+
+    assert get_draft_budget() == 875
+    with pytest.raises(ValueError, match="non-negative integer"):
+        set_draft_budget(-1)
+
+
+def test_adding_an_unpriced_player_to_my_team_is_rejected(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = int(get_players_for_grid().iloc[0]["id"])
+
+    with pytest.raises(PlayerPriceRequiredError, match="Set a player price"):
+        set_player_on_my_team(player_id, True)
+
+
 def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
     database_path = tmp_path / "draft_workspace.sqlite3"
     conn = sqlite3.connect(database_path)
@@ -318,6 +345,7 @@ def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_pat
     import_yearly_dataset()
     forwards = get_players_for_position_grid("F")
     player_id = int(forwards.iloc[0]["id"])
+    set_player_price(player_id, 1)
     set_player_on_my_team(player_id, True)
 
     original_get_position_stat_rows = storage._get_position_stat_rows
