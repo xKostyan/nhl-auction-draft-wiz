@@ -324,12 +324,12 @@ def build_budget_summary(
         html.Table(
             [
                 html.Thead(html.Tr([html.Th(name) for name in (
-                    "Allocation", "Planned", "Spent", "Open slots", "Minimum", "Remaining", "Avg / slot"
+                    "Allocation", "Planned", "Spent", "Minimum", "Remaining", "Avg / slot"
                 )])),
                 html.Tbody([
                     html.Tr([html.Td(value) for value in (
                         row["label"], f"${row['planned']:,.0f}", f"${row['committed']:,.0f}",
-                        row["open_slots"], f"${row['minimum_reserve']:,.0f}",
+                        f"${row['minimum_reserve']:,.0f}",
                         f"${row['remaining']:,.0f}", f"${row['average']:,.2f}",
                     )])
                     for row in allocation_rows

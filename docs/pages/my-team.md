@@ -27,8 +27,9 @@ membership flag is stored in the workspace and survives restarts.
 - The budget panel offers advisory **Slot weighted**, **Skaters / Goalies**,
   and **Forwards / Defencemen / Goalies** allocation views. Percentage
   allocations and the selected view persist in the workspace, must total 100,
-  and show planned budget, price spent, primary
-  open slots, their `$1` minimum, remaining allocation, and a per-slot guide.
+  and show planned budget, price spent, the required `$1` minimum, remaining
+  allocation, and a per-slot guide. The allocation table spans the same width
+  as the projected-TFP chart.
   Utility and Bench slots remain flexible and their required minimum is
   reflected in the global budget summary. These views do not prevent bids;
   **Max next bid** is the hard auction reference.

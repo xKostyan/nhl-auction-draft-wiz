@@ -38,8 +38,10 @@ body,
 
 .budget-panel {
     border: 1px solid #ccc;
+    box-sizing: border-box;
     margin-bottom: 16px;
     padding: 12px;
+    width: 100%;
 }
 
 .budget-panel > label,
@@ -70,6 +72,7 @@ body,
 .budget-allocation-table {
     border-collapse: collapse;
     margin-top: 8px;
+    width: 100%;
 }
 
 .budget-allocation-table th,

@@ -156,6 +156,20 @@ def test_budget_metrics_are_direct_component_children(tmp_path):
     assert [metric.className for metric in metrics.children] == ["budget-metric"] * 4
 
 
+def test_budget_allocation_table_uses_the_full_width_without_open_slots(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    summary = my_team.build_budget_summary()
+    table = summary.children[2]
+
+    assert [header.children for header in table.children[0].children.children] == [
+        "Allocation", "Planned", "Spent", "Minimum", "Remaining", "Avg / slot"
+    ]
+    assert len(table.children[1].children[0].children) == 6
+
+
 def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
