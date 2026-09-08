@@ -15,7 +15,36 @@ membership flag is stored in the workspace and survives restarts.
 
 ## UI and behavior
 
-- A two-layer donut chart at the top shows the grand projected-TFP total in
+- A **Draft budget** panel persists a non-negative whole-number annual budget,
+  defaulting to `$930`. It reports committed My Team price, remaining budget,
+  the `$1` minimum reserved for every unfilled roster slot, flexible budget,
+  and the maximum legal next bid after preserving the minimum for every other
+  open slot. Only My Team players consume the budget; players drafted by other
+  managers remain unavailable but do not affect it.
+- An optional **Target total FP** text input (without increment/decrement
+  controls) persists a projected-FP stretch goal. Remaining target FP is
+  calculated from active Forwards, Defencemen, Utility, and the goalie
+  90%-starts calculation (including bench goalies), then divided across empty
+  active F, D, Utility, and Goalie slots. The aggregate status line is omitted
+  to keep the budget panel compact.
+- A player must have a Price before **Add to My Team** succeeds. Adding them
+  then marks the player drafted and charges that price to the budget. Keepers
+  and auction purchases follow this same workflow.
+- The budget panel provides an advisory **Skaters / Goalies** allocation view.
+  Its two persisted percentage inputs must total 100 and show planned budget,
+  price spent, the required `$1` minimum, remaining allocation, and a per-slot
+  guide. The budget panel is on the left of the projected-TFP chart; both use
+  equal width on larger screens and stack on narrow screens.
+- Empty active player slots show the remaining budget and average for their
+  Skaters or Goalies allocation, followed by the target-FP average needed per
+  empty active slot. Utility is included in the Skaters allocation. Empty Bench
+  slots intentionally show neither budget nor target-FP guidance; bench skaters
+  do not contribute to acquired projected FP, while bench goalie contribution
+  remains part of the shared goalie calculation.
+  Utility and Bench slots remain flexible and their required minimum is
+  reflected in the global budget summary. These views do not prevent bids;
+  **Max next bid** is the hard auction reference.
+- A two-layer donut chart at the top-right shows the grand projected-TFP total in
   its center. Its inner ring is split among Forwards, Defencemen, Utility,
   and Goalies; its outer ring splits each group into its players. A white gap
   separates the rings. The groups use orange (F), green (D), blue (Utility),
@@ -30,14 +59,14 @@ membership flag is stored in the workspace and survives restarts.
   are ordered by projected TFP from highest to lowest; Bench keeps spillover
   order.
 - My Team rows are 50px high, with 12px spacing between tables. Tables retain
-  the same player data, inline charts, Tags, and Notes as their matching
+  the same player data, editable **$$** price, inline charts, Tags, and Notes as their matching
   position page. Health charts show actual GP bars with centered value labels
   and no projected-GP line; their 150px columns can be resized and their charts
   expand to fill the available cell width. Average Performance uses light green
   and green bands at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to below
   8.3 and 8.3+ for goalies. Utility has the
-  skater columns plus **Position** after player name. Bench is intentionally
-  limited to highlight, index, player name, **Position**, projected TFP, and
+  skater columns plus **Position** after Price. Bench is intentionally
+  limited to highlight, index, player name, **$$**, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress
   their unused internal vertical scrollbars through both their AG Grid settings
   and My Team-scoped styling.

@@ -16,7 +16,7 @@ open in its own browser tab during the draft.
 - The page header contains only the page title and player search control.
 - The table header and menu entry use the forward orange `#ff8533`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, **Health (actual GP)**, **Average Performance**,
+  name**, editable **$$** (price), **Health (actual GP)**, **Average Performance**,
   **p TFP `<upcoming year>`**, **p AFP `<upcoming year>`**, **Tags**, and
   **Notes** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
@@ -67,6 +67,9 @@ open in its own browser tab during the draft.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
+- **$$** is an editable non-negative whole-number keeper or auction cost.
+  Leave it blank when no value is known; entered values persist in the
+  workspace across app restarts.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,
   including every change in a batched update.
 - Drafted players remain in the table, with gray text and a light gray row

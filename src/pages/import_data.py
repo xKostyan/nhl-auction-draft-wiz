@@ -141,6 +141,7 @@ def layout(**_kwargs):
                     {"field": "id"},
                     {"field": "name"},
                     {"field": "position"},
+                    {"field": "price", "headerName": "$$", "type": "numericColumn"},
                     {"field": "status"},
                     {"field": "current_season"},
                 ],

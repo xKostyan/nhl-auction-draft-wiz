@@ -11,9 +11,11 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     MyTeamCapacityError,
+    PlayerPriceRequiredError,
     set_player_drafted,
     set_player_notes,
     set_player_on_my_team,
+    set_player_price,
     set_player_tags,
     set_selected_player,
 )
@@ -91,6 +93,7 @@ def get_position_grid_rows(
                 "position": "",
                 "is_empty_slot": True,
                 "drafted": False,
+                "price": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -267,6 +270,7 @@ def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
                 "is_empty_slot": True,
                 "drafted": False,
                 "on_my_team": False,
+                "price": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -326,6 +330,23 @@ def _projected_points_column_defs() -> list[dict]:
             "headerName": f"p AFP {year_label}",
             "type": "numericColumn",
         },
+    ]
+
+
+def _price_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
+    """Return the editable integer keeper or auction price column."""
+    return [
+        {
+            "field": "price",
+            "headerName": "$$",
+            "type": "numericColumn",
+            "cellEditor": "agNumberCellEditor",
+            "cellEditorParams": {"min": 0, "precision": 0},
+            "editable": (
+                {"function": "!params.data.is_empty_slot"} if disable_empty_slots else True
+            ),
+            "width": 75,
+        }
     ]
 
 
@@ -470,6 +491,23 @@ def _parse_player_tags(position: str, value: object) -> list[str]:
     return value
 
 
+def _parse_player_price(value: object) -> int | None:
+    """Validate an optional integral price emitted by AG Grid."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Player price updates require a non-negative integer or blank value.")
+    if isinstance(value, int) and value >= 0:
+        return value
+    if isinstance(value, float) and value.is_integer() and value >= 0:
+        return int(value)
+    if isinstance(value, str):
+        normalized = value.strip()
+        if normalized.isdecimal():
+            return int(normalized)
+    raise ValueError("Player price updates require a non-negative integer or blank value.")
+
+
 def _parse_context_action(value: object) -> str:
     """Extract the action from the timestamp-suffixed browser menu payload."""
     if not isinstance(value, str):
@@ -527,7 +565,7 @@ def handle_player_cell_change(
     my_team_only: bool = False,
     slot_count: int | None = None,
 ) -> list[dict]:
-    """Persist drafted and tag cell edits and return fresh grid rows.
+    """Persist drafted, price, tag, and note edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
     even when exactly one cell was changed. Process every event because a
@@ -545,7 +583,7 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
         column_id = cell_change.get("colId")
-        if column_id not in {"drafted", "notes", "tags", "context_action"}:
+        if column_id not in {"drafted", "price", "notes", "tags", "context_action"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -558,6 +596,8 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
             value = cell_change.get("value")
         if column_id == "drafted":
             set_player_drafted(player_id, _parse_drafted_value(value))
+        elif column_id == "price":
+            set_player_price(player_id, _parse_player_price(value))
         elif column_id == "tags":
             set_player_tags(player_id, _parse_player_tags(position, value))
         elif column_id == "context_action":
@@ -606,7 +646,7 @@ def handle_player_grid_update_with_message(
     """Return a visible capacity message instead of failing a stale add request."""
     try:
         return handle_player_grid_update(position, cell_changes, context_action, triggered_property), ""
-    except MyTeamCapacityError as error:
+    except (MyTeamCapacityError, PlayerPriceRequiredError) as error:
         return get_position_rows(position), str(error)
 
 
@@ -661,6 +701,7 @@ def build_position_grid(
                 "width": 32,
             }]),
             _player_name_column_def(allow_add_to_my_team=not my_team_only),
+            *_price_column_def(disable_empty_slots=slot_count is not None),
             *_health_column_def(position),
             *_game_starts_column_def(position),
             *_average_performance_column_def(position),
@@ -733,6 +774,7 @@ def build_my_team_grid(
             "width": 32,
         },
         _player_name_column_def(allow_add_to_my_team=False),
+        *_price_column_def(disable_empty_slots=True),
         *([{"field": "position", "headerName": "Position"}] if table in {"utility", "bench"} else []),
         *(_health_column_def("F") if is_skater_table else []),
         *(_game_starts_column_def("G") if is_goalie_table else []),

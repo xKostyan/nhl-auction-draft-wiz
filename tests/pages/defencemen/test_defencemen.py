@@ -38,6 +38,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "",
         "#",
         "Player name",
+        "$$",
         "Health (actual GP)",
         "Average Performance",
         "p TFP 2027",
@@ -51,11 +52,14 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.defaultColDef["wrapHeaderText"] is True
     assert grid.defaultColDef["autoHeaderHeight"] is True
     assert grid.defaultColDef["cellStyle"] == {"alignItems": "center", "display": "flex"}
-    assert grid.columnDefs[3]["cellRenderer"] == "actualGpSparkline"
-    assert grid.columnDefs[3]["width"] == 150
-    assert grid.columnDefs[3]["resizable"] is True
-    assert grid.columnDefs[3]["suppressAutoSize"] is True
-    assert grid.columnDefs[4] == {
+    assert grid.columnDefs[3]["cellEditor"] == "agNumberCellEditor"
+    assert grid.columnDefs[3]["cellEditorParams"] == {"min": 0, "precision": 0}
+    assert grid.columnDefs[3]["editable"] is True
+    assert grid.columnDefs[4]["cellRenderer"] == "actualGpSparkline"
+    assert grid.columnDefs[4]["width"] == 150
+    assert grid.columnDefs[4]["resizable"] is True
+    assert grid.columnDefs[4]["suppressAutoSize"] is True
+    assert grid.columnDefs[5] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",
         "cellRenderer": "averagePerformanceChart",
@@ -65,12 +69,12 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "suppressAutoSize": True,
         "width": 150,
     }
-    assert grid.columnDefs[7]["headerName"] == "Tags"
-    assert grid.columnDefs[7]["cellRenderer"] == "playerTagsRenderer"
-    assert grid.columnDefs[8]["headerName"] == "Notes"
-    assert grid.columnDefs[8]["editable"] is True
-    assert grid.columnDefs[8]["wrapText"] is True
-    assert grid.columnDefs[8]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[8]["headerName"] == "Tags"
+    assert grid.columnDefs[8]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[9]["headerName"] == "Notes"
+    assert grid.columnDefs[9]["editable"] is True
+    assert grid.columnDefs[9]["wrapText"] is True
+    assert grid.columnDefs[9]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"
@@ -149,6 +153,19 @@ def test_checking_a_defenceman_uses_the_ag_grid_event_list(tmp_path):
     rows = handle_drafted_cell_change("D", [{"colId": "drafted", "value": "true", "data": {"id": str(player_id)}}])
 
     assert next(row for row in rows if row["id"] == player_id)["drafted"] is True
+
+
+def test_price_changes_persist_for_a_defenceman(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "D")
+    rows = handle_drafted_cell_change(
+        "D", [{"colId": "price", "value": 19, "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["price"] == 19
 
 
 def test_drafted_switch_is_visually_on_only_for_available_players():

@@ -1,3 +1,5 @@
+import sqlite3
+
 import pandas as pd
 import pytest
 
@@ -8,6 +10,8 @@ from src.storage import (
     configure_storage,
     detect_draft_year,
     get_available_stat_years,
+    get_draft_budget,
+    get_target_total_fp,
     get_player_stat_history,
     get_selected_player,
     get_players_for_position_grid,
@@ -15,10 +19,14 @@ from src.storage import (
     get_workspace_summary,
     import_yearly_dataset,
     set_player_drafted,
+    set_draft_budget,
+    set_target_total_fp,
     set_player_notes,
     set_player_on_my_team,
+    set_player_price,
     set_player_tags,
     set_selected_player,
+    PlayerPriceRequiredError,
 )
 
 
@@ -33,7 +41,8 @@ def test_import_uses_bundled_sample_data_by_default(tmp_path):
 
     rows = get_players_for_grid()
     assert not rows.empty
-    assert set(["id", "name", "position", "status", "current_season"]).issubset(rows.columns)
+    assert set(["id", "name", "position", "price", "status", "current_season"]).issubset(rows.columns)
+    assert rows["price"].isna().all()
     assert rows["status"].isin(["available"]).all()
 
     summary = get_workspace_summary()
@@ -197,6 +206,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "on_my_team",
         "my_team_add_error",
         "drafted",
+        "price",
         "projected_tfp",
         "projected_afp",
         "actual_gp_history",
@@ -216,6 +226,10 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_drafted(player_id, True)
     drafted_forwards = get_players_for_position_grid("F")
     assert drafted_forwards.loc[drafted_forwards["id"] == player_id, "drafted"].item() is True
+
+    set_player_price(player_id, 42)
+    priced_forwards = get_players_for_position_grid("F")
+    assert priced_forwards.loc[priced_forwards["id"] == player_id, "price"].item() == 42
 
     set_player_tags(player_id, ["PP1", "Line2"])
     tagged_forwards = get_players_for_position_grid("F")
@@ -239,12 +253,115 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     assert get_players_for_position_grid("F", my_team_only=True).empty
 
 
+def test_player_price_requires_a_non_negative_integer_or_blank(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = int(get_players_for_grid().iloc[0]["id"])
+
+    set_player_price(player_id, 7)
+    set_player_price(player_id, None)
+
+    assert get_players_for_grid().loc[
+        get_players_for_grid()["id"] == player_id, "price"
+    ].isna().item()
+    with pytest.raises(ValueError, match="non-negative integer"):
+        set_player_price(player_id, -1)
+    with pytest.raises(ValueError, match="non-negative integer"):
+        set_player_price(player_id, 3.5)
+
+
+def test_player_price_is_retained_after_reconfiguring_storage(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    configure_storage(database_path)
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = int(get_players_for_grid().iloc[0]["id"])
+
+    set_player_price(player_id, 24)
+    configure_storage(database_path)
+
+    assert get_players_for_grid().loc[
+        get_players_for_grid()["id"] == player_id, "price"
+    ].item() == 24
+
+
+def test_draft_budget_defaults_to_930_and_persists(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    configure_storage(database_path)
+
+    assert get_draft_budget() == 930
+
+    set_draft_budget(875)
+    configure_storage(database_path)
+
+    assert get_draft_budget() == 875
+    with pytest.raises(ValueError, match="non-negative integer"):
+        set_draft_budget(-1)
+
+
+def test_target_total_fp_is_optional_and_persists(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    configure_storage(database_path)
+
+    assert get_target_total_fp() is None
+
+    set_target_total_fp(2650.5)
+    configure_storage(database_path)
+
+    assert get_target_total_fp() == 2650.5
+    with pytest.raises(ValueError, match="non-negative number"):
+        set_target_total_fp(-1)
+
+
+def test_adding_an_unpriced_player_to_my_team_is_rejected(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = int(get_players_for_grid().iloc[0]["id"])
+
+    with pytest.raises(PlayerPriceRequiredError, match="Set a player price"):
+        set_player_on_my_team(player_id, True)
+
+
+def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    conn = sqlite3.connect(database_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE players (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
+                selected INTEGER NOT NULL DEFAULT 0,
+                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+                current_season INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    configure_storage(database_path)
+    conn = sqlite3.connect(database_path)
+    try:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(players)")}
+    finally:
+        conn.close()
+
+    assert "price" in columns
+
+
 def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_path, monkeypatch):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
     forwards = get_players_for_position_grid("F")
     player_id = int(forwards.iloc[0]["id"])
+    set_player_price(player_id, 1)
     set_player_on_my_team(player_id, True)
 
     original_get_position_stat_rows = storage._get_position_stat_rows
