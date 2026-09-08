@@ -36,6 +36,23 @@ body,
     margin-bottom: 12px;
 }
 
+.my-team-overview {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-bottom: 16px;
+}
+
+.my-team-overview .budget-panel {
+    margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+    .my-team-overview {
+        grid-template-columns: 1fr;
+    }
+}
+
 .budget-panel {
     border: 1px solid #ccc;
     box-sizing: border-box;

@@ -67,7 +67,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert chart.figure.data[0].domain.x == (0.1, 0.9)
     assert chart.figure.data[1].hole == 0.84
     assert chart.figure.layout.height == 460
-    assert page_layout.children[2] is chart
+    overview = page_layout.children[1]
+    assert overview.className == "my-team-overview"
+    assert overview.children[0].className == "budget-panel"
+    assert overview.children[1] is chart
     headings = [node for node in walk_components(page_layout) if isinstance(node, html.H3)]
     assert [heading.id for heading in headings] == [
         "my-team-f-title",

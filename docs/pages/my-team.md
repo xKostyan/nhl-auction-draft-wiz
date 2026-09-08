@@ -28,12 +28,13 @@ membership flag is stored in the workspace and survives restarts.
   and **Forwards / Defencemen / Goalies** allocation views. Percentage
   allocations and the selected view persist in the workspace, must total 100,
   and show planned budget, price spent, the required `$1` minimum, remaining
-  allocation, and a per-slot guide. The allocation table spans the same width
-  as the projected-TFP chart.
+  allocation, and a per-slot guide. The budget panel is on the left of the
+  projected-TFP chart; both use equal width on larger screens and stack on
+  narrow screens.
   Utility and Bench slots remain flexible and their required minimum is
   reflected in the global budget summary. These views do not prevent bids;
   **Max next bid** is the hard auction reference.
-- A two-layer donut chart at the top shows the grand projected-TFP total in
+- A two-layer donut chart at the top-right shows the grand projected-TFP total in
   its center. Its inner ring is split among Forwards, Defencemen, Utility,
   and Goalies; its outer ring splits each group into its players. A white gap
   separates the rings. The groups use orange (F), green (D), blue (Utility),

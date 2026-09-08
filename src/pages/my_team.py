@@ -449,11 +449,16 @@ def layout(**_kwargs):
         className="my-team-page",
         children=[
             html.H2("My Team"),
-            _budget_controls(snapshot=snapshot),
-            dcc.Graph(
-                id=CHART_ID,
-                figure=build_projection_chart(snapshot=snapshot),
-                config={"displayModeBar": False},
+            html.Div(
+                className="my-team-overview",
+                children=[
+                    _budget_controls(snapshot=snapshot),
+                    dcc.Graph(
+                        id=CHART_ID,
+                        figure=build_projection_chart(snapshot=snapshot),
+                        config={"displayModeBar": False},
+                    ),
+                ],
             ),
             *[
                 html.Section(
