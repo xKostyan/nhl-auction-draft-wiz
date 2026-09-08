@@ -6,6 +6,7 @@ import dash_ag_grid as dag
 import pytest
 import src.pages.position_table as position_table
 from dash import dcc, html
+from dash._utils import to_json
 
 from src.data_loader import load_players
 from src.pages import my_team
@@ -133,6 +134,14 @@ def test_layout_builds_one_my_team_snapshot(monkeypatch):
         ("D", {"my_team_only": True}),
         ("G", {"my_team_only": True}),
     ]
+
+
+def test_layout_is_json_serializable_for_dash_page_rendering(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    assert to_json(my_team.layout())
 
 
 def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path):
