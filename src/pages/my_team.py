@@ -375,10 +375,6 @@ def build_budget_summary(
             f"{summary['empty_slots']} open slots; flexible budget: ${summary['flexible']:,.0f}",
             className="budget-explanation",
         ),
-        html.P(
-            _target_fp_status_text(get_target_fp_summary(snapshot=snapshot)),
-            className="budget-explanation",
-        ),
         html.Table(
             [
                 html.Thead(html.Tr([html.Th(name) for name in (
@@ -396,16 +392,6 @@ def build_budget_summary(
             className="budget-allocation-table",
         ),
     ])
-
-
-def _target_fp_status_text(summary: dict[str, float | int | None]) -> str:
-    """Format target-FP status without obscuring an unset optional stretch goal."""
-    if summary["target_total_fp"] is None:
-        return "Set Target total FP to calculate active-slot projected FP guidance."
-    return (
-        f"Target FP: {summary['target_total_fp']:,.2f}; acquired FP: {summary['acquired_fp']:,.2f}; "
-        f"remaining: {summary['remaining_fp']:,.2f} across {summary['empty_active_slots']} active slots."
-    )
 
 
 def build_budget_update(

@@ -182,12 +182,13 @@ def test_budget_allocation_table_uses_the_full_width_without_open_slots(tmp_path
     import_yearly_dataset()
 
     summary = my_team.build_budget_summary()
-    table = summary.children[3]
+    table = summary.children[2]
 
     assert [header.children for header in table.children[0].children.children] == [
         "Allocation", "Planned", "Spent", "Minimum", "Remaining", "Avg / slot"
     ]
     assert len(table.children[1].children[0].children) == 6
+    assert all("Target FP:" not in str(child.children) for child in summary.children)
 
 
 def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path):
