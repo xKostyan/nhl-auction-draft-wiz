@@ -50,11 +50,15 @@ def parse_uploaded_keeper_prices(contents: str) -> pd.DataFrame:
     except (ValueError, base64.binascii.Error) as exc:
         raise ValueError("Keeper prices CSV could not be decoded.") from exc
 
+    try:
+        csv_text = decoded.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        # Mac Roman is used by the keeper-price export; e.g. 0x9f is "ü".
+        csv_text = decoded.decode("mac_roman")
+
     position_map = {"LW": "F", "RW": "F", "C": "F", "D": "D", "G": "G"}
     rows: list[dict[str, str | int]] = []
-    for line_number, row in enumerate(
-        csv.reader(io.StringIO(decoded.decode("utf-8-sig"))), start=1
-    ):
+    for line_number, row in enumerate(csv.reader(io.StringIO(csv_text)), start=1):
         if not row:
             continue
         if len(row) != 2:

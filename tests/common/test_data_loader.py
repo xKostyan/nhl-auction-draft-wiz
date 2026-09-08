@@ -54,6 +54,15 @@ def test_parse_uploaded_keeper_prices_decodes_headerless_rows():
     ]
 
 
+def test_parse_uploaded_keeper_prices_supports_mac_roman_names():
+    csv_bytes = b'"Tim St\x9ftzle, LW, Ott",$95\n'
+    contents = "data:text/csv;base64," + base64.b64encode(csv_bytes).decode()
+
+    df = parse_uploaded_keeper_prices(contents)
+
+    assert df.iloc[0]["name"] == "Tim Stützle"
+
+
 def test_parse_uploaded_keeper_prices_rejects_invalid_rows():
     csv_bytes = b'"Test Player, X, ABC",$17\n'
     contents = "data:text/csv;base64," + base64.b64encode(csv_bytes).decode()
