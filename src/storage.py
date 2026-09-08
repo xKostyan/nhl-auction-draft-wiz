@@ -71,6 +71,7 @@ def ensure_schema() -> None:
                 position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
                 selected INTEGER NOT NULL DEFAULT 0,
                 on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+                price INTEGER CHECK(price IS NULL OR price >= 0),
                 current_season INTEGER NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
@@ -83,6 +84,10 @@ def ensure_schema() -> None:
             conn.execute(
                 "ALTER TABLE players ADD COLUMN on_my_team INTEGER NOT NULL DEFAULT 0 "
                 "CHECK(on_my_team IN (0, 1))"
+            )
+        if "price" not in player_columns:
+            conn.execute(
+                "ALTER TABLE players ADD COLUMN price INTEGER CHECK(price IS NULL OR price >= 0)"
             )
         conn.execute(
             """
@@ -377,14 +382,16 @@ def get_players_for_grid() -> pd.DataFrame:
     try:
         rows = conn.execute(
             """
-            SELECT p.id, p.name, p.position, COALESCE(ps.status, 'available') AS status, p.current_season
+            SELECT p.id, p.name, p.position, p.price, COALESCE(ps.status, 'available') AS status, p.current_season
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
             ORDER BY p.name ASC
             """
         ).fetchall()
         data = [dict(row) for row in rows]
-        return pd.DataFrame(data, columns=["id", "name", "position", "status", "current_season"])
+        return pd.DataFrame(
+            data, columns=["id", "name", "position", "price", "status", "current_season"]
+        )
     finally:
         conn.close()
 
@@ -416,6 +423,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                 p.name,
                 p.position,
                 p.on_my_team,
+                p.price,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
                 COALESCE(ps.notes, '') AS notes,
                 MAX(
@@ -441,7 +449,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
             WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
-            GROUP BY p.id, p.name, p.position, p.on_my_team, ps.status
+            GROUP BY p.id, p.name, p.position, p.on_my_team, p.price, ps.status
             ORDER BY p.name ASC
             """,
             (normalized_position, int(my_team_only)),
@@ -476,6 +484,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                     if row["on_my_team"]
                     else add_error,
                     "drafted": bool(row["drafted"]),
+                    "price": row["price"],
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
@@ -579,6 +588,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             "on_my_team",
             "my_team_add_error",
             "drafted",
+            "price",
             "projected_tfp",
             "projected_afp",
             "actual_gp_history",
@@ -651,6 +661,29 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
             """,
             (player_id, status),
         )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_price(player_id: int, price: int | None) -> None:
+    """Persist a player's optional non-negative integer keeper or auction price."""
+    if (
+        price is not None
+        and (
+            isinstance(price, bool)
+            or not isinstance(price, int)
+            or price < 0
+        )
+    ):
+        raise ValueError("Player price must be a non-negative integer or blank.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update price: player {player_id} does not exist.")
+        conn.execute("UPDATE players SET price = ? WHERE id = ?", (price, player_id))
         conn.commit()
     finally:
         conn.close()

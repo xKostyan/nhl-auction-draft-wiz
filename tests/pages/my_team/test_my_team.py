@@ -81,8 +81,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
     utility = grids[2]
-    assert [column["field"] for column in utility.columnDefs][:4] == [
-        "search_focus", "slot_number", "name", "position"
+    assert [column["field"] for column in utility.columnDefs][:5] == [
+        "search_focus", "slot_number", "name", "price", "position"
     ]
     utility_health = next(column for column in utility.columnDefs if column["field"] == "actual_gp_history")
     assert utility_health["width"] == 150
@@ -90,10 +90,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert utility_health["suppressAutoSize"] is True
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
-        "search_focus", "slot_number", "name", "position", "projected_tfp", "projected_afp"
+        "search_focus", "slot_number", "name", "price", "position", "projected_tfp", "projected_afp"
     ]
     goalie = grids[3]
-    assert [column["field"] for column in goalie.columnDefs][4:8] == [
+    assert [column["field"] for column in goalie.columnDefs][5:9] == [
         "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
     ]
 
@@ -152,6 +152,24 @@ def test_goalie_tags_persist_from_the_my_team_goalie_table(tmp_path):
 
     goalie = next(row for row in get_position_rows("G", my_team_only=True) if row["id"] == player_id)
     assert goalie["tags"] == ["Starter"]
+
+
+def test_price_changes_persist_from_the_my_team_table(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
+
+    handle_my_team_grid_update(
+        "F",
+        [{"colId": "price", "value": 28, "data": {"id": player_id}}],
+        None,
+        "cellValueChanged",
+    )
+
+    player = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
+    assert player["price"] == 28
 
 
 def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):
