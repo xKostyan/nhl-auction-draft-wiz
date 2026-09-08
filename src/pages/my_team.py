@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import dash
 import plotly.graph_objects as go
 from dash import Input, Output, callback, ctx, dcc, html

@@ -208,9 +208,10 @@ def test_budget_summary_treats_a_legacy_blank_roster_price_as_zero(tmp_path):
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
     add_to_my_team("F", player_id, price=30)
-    set_player_price(player_id, None)
+    snapshot = position_table.build_my_team_snapshot()
+    next(row for row in snapshot["F"] if row.get("id") == player_id)["price"] = float("nan")
 
-    summary = my_team.get_budget_summary()
+    summary = my_team.get_budget_summary(snapshot=snapshot)
 
     assert summary["committed"] == 0
 
