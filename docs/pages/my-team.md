@@ -24,13 +24,11 @@ membership flag is stored in the workspace and survives restarts.
 - A player must have a Price before **Add to My Team** succeeds. Adding them
   then marks the player drafted and charges that price to the budget. Keepers
   and auction purchases follow this same workflow.
-- The budget panel offers advisory **Slot weighted**, **Skaters / Goalies**,
-  and **Forwards / Defencemen / Goalies** allocation views. Percentage
-  allocations and the selected view persist in the workspace, must total 100,
-  and show planned budget, price spent, the required `$1` minimum, remaining
-  allocation, and a per-slot guide. The budget panel is on the left of the
-  projected-TFP chart; both use equal width on larger screens and stack on
-  narrow screens.
+- The budget panel provides an advisory **Skaters / Goalies** allocation view.
+  Its two persisted percentage inputs must total 100 and show planned budget,
+  price spent, the required `$1` minimum, remaining allocation, and a per-slot
+  guide. The budget panel is on the left of the projected-TFP chart; both use
+  equal width on larger screens and stack on narrow screens.
   Utility and Bench slots remain flexible and their required minimum is
   reflected in the global budget summary. These views do not prevent bids;
   **Max next bid** is the hard auction reference.

@@ -128,7 +128,15 @@ def test_layout_builds_one_my_team_snapshot(monkeypatch):
 
     monkeypatch.setattr(position_table, "get_position_rows", get_rows)
     monkeypatch.setattr(position_table, "get_workspace_value", lambda _key: "2027")
-    monkeypatch.setattr(my_team, "get_workspace_value", lambda _key: "2027")
+    monkeypatch.setattr(
+        my_team,
+        "get_workspace_value",
+        lambda key: {
+            "current_season": "2027",
+            "budget_skater_percent": "80",
+            "budget_goalie_percent": "20",
+        }.get(key, ""),
+    )
 
     my_team.layout()
 
@@ -191,7 +199,6 @@ def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path)
         "available": 900,
         "flexible": 879,
         "max_next_bid": 880,
-        "average_open_slot": 879 / 21,
     }
 
 
@@ -204,7 +211,7 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     snapshot = position_table.build_my_team_snapshot()
 
     rows = my_team.get_budget_allocation(
-        "skaters-goalies", {"skaters": 80, "goalies": 20}, snapshot=snapshot, budget=930
+        {"skaters": 80, "goalies": 20}, snapshot=snapshot, budget=930
     )
 
     assert rows[0]["planned"] == 744
@@ -212,7 +219,7 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     assert rows[1]["committed"] == 40
     with pytest.raises(ValueError, match="total 100"):
         my_team.get_budget_allocation(
-            "positions", {"forwards": 50, "defencemen": 30, "goalies": 10}, snapshot=snapshot
+            {"skaters": 80, "goalies": 10}, snapshot=snapshot
         )
 
 
@@ -221,17 +228,12 @@ def test_budget_update_persists_the_budget_and_switches_allocation_controls(tmp_
     clear_workspace()
     import_yearly_dataset()
 
-    _, status, skater_style, position_style = my_team.build_budget_update(
-        850, "positions", 80, 20, 50, 30, 20
-    )
+    _, status = my_team.build_budget_update(850, 80, 20)
 
     assert get_draft_budget() == 850
-    assert get_workspace_value("budget_allocation_mode") == "positions"
-    assert get_workspace_value("budget_forward_percent") == "50"
-    assert get_workspace_value("budget_position_goalie_percent") == "20"
+    assert get_workspace_value("budget_skater_percent") == "80"
+    assert get_workspace_value("budget_goalie_percent") == "20"
     assert status == ""
-    assert skater_style == {"display": "none"}
-    assert position_style == {"display": "flex"}
 
 
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):

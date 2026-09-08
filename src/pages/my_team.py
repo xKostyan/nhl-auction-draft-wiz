@@ -23,21 +23,10 @@ ORDER = 4
 TABLES = ("F", "D", "utility", "G", "bench")
 CHART_ID = "my-team-projection-chart"
 BUDGET_INPUT_ID = "draft-budget"
-ALLOCATION_MODE_ID = "budget-allocation-mode"
 BUDGET_SUMMARY_ID = "budget-summary"
 BUDGET_STATUS_ID = "budget-status"
 SKATER_ALLOCATION_ID = "budget-skater-percent"
 GOALIE_ALLOCATION_ID = "budget-goalie-percent"
-FORWARD_ALLOCATION_ID = "budget-forward-percent"
-DEFENCEMAN_ALLOCATION_ID = "budget-defenceman-percent"
-POSITION_GOALIE_ALLOCATION_ID = "budget-position-goalie-percent"
-SKATER_ALLOCATION_CONTROLS_ID = "budget-skater-goalie-controls"
-POSITION_ALLOCATION_CONTROLS_ID = "budget-position-controls"
-ALLOCATION_MODES = {
-    "slot-weighted": "Slot weighted",
-    "skaters-goalies": "Skaters / Goalies",
-    "positions": "Forwards / Defencemen / Goalies",
-}
 _GROUPS = (("F", "Forwards"), ("D", "Defencemen"), ("utility", "Utility"), ("G", "Goalies"))
 _GROUP_COLORS = {"F": "#ff8533", "D": "#5cd65c", "utility": "#33adff", "G": "#cc33ff"}
 _PLAYER_COLORS = {
@@ -211,41 +200,18 @@ def get_budget_summary(
         "available": available,
         "flexible": flexible,
         "max_next_bid": max(0, available - max(0, empty_slots - 1)),
-        "average_open_slot": flexible / empty_slots if empty_slots else 0,
     }
 
 
 def get_budget_allocation(
-    mode: str,
     percentages: dict[str, object],
     *,
     snapshot: dict[str, list[dict]] | None = None,
     budget: int | None = None,
 ) -> list[dict[str, int | float | str]]:
-    """Return advisory allocation rows; the global maximum bid remains authoritative."""
-    if mode not in ALLOCATION_MODES:
-        raise ValueError("Budget allocation mode is not recognized.")
+    """Return advisory Skaters/Goalies allocations; the maximum bid remains authoritative."""
     summary = get_budget_summary(snapshot=snapshot, budget=budget)
-    if mode == "slot-weighted":
-        return [{
-            "label": "All open slots",
-            "planned": summary["flexible"],
-            "committed": summary["committed"],
-            "open_slots": summary["empty_slots"],
-            "minimum_reserve": summary["reserved_minimums"],
-            "remaining": summary["flexible"],
-            "average": summary["average_open_slot"],
-        }]
-
-    groups = (
-        (("Skaters", {"F", "D"}, "skaters"), ("Goalies", {"G"}, "goalies"))
-        if mode == "skaters-goalies"
-        else (
-            ("Forwards", {"F"}, "forwards"),
-            ("Defencemen", {"D"}, "defencemen"),
-            ("Goalies", {"G"}, "goalies"),
-        )
-    )
+    groups = (("Skaters", {"F", "D"}, "skaters"), ("Goalies", {"G"}, "goalies"))
     percentage_total = sum(_budget_int(percentages[key], f"{label} allocation") for label, _, key in groups)
     if percentage_total != 100:
         raise ValueError("Budget allocation percentages must total 100.")
@@ -282,7 +248,6 @@ def get_budget_allocation(
 
 
 def build_budget_summary(
-    mode: str = "slot-weighted",
     percentages: dict[str, object] | None = None,
     *,
     snapshot: dict[str, list[dict]] | None = None,
@@ -292,10 +257,8 @@ def build_budget_summary(
     percentages = percentages or {
         "skaters": 80,
         "goalies": 20,
-        "forwards": 50,
-        "defencemen": 30,
     }
-    allocation_rows = get_budget_allocation(mode, percentages, snapshot=snapshot)
+    allocation_rows = get_budget_allocation(percentages, snapshot=snapshot)
     metrics = [
         ("Committed", summary["committed"]),
         ("Available", summary["available"]),
@@ -317,8 +280,7 @@ def build_budget_summary(
             className="budget-metrics",
         ),
         html.P(
-            f"{summary['empty_slots']} open slots; flexible budget: ${summary['flexible']:,.0f}; "
-            f"slot-weighted average: ${summary['average_open_slot']:,.2f}",
+            f"{summary['empty_slots']} open slots; flexible budget: ${summary['flexible']:,.0f}",
             className="budget-explanation",
         ),
         html.Table(
@@ -342,59 +304,32 @@ def build_budget_summary(
 
 def build_budget_update(
     budget: object,
-    mode: str,
     skater_percentage: object,
     goalie_percentage: object,
-    forward_percentage: object,
-    defenceman_percentage: object,
-    position_goalie_percentage: object,
-) -> tuple[list, str, dict, dict]:
+) -> tuple[list, str]:
     """Persist valid budget settings and return refreshed budget-panel outputs."""
-    skater_controls_style = {"display": "flex"} if mode == "skaters-goalies" else {"display": "none"}
-    position_controls_style = {"display": "flex"} if mode == "positions" else {"display": "none"}
     percentages = {
         "skaters": skater_percentage,
-        "goalies": goalie_percentage if mode == "skaters-goalies" else position_goalie_percentage,
-        "forwards": forward_percentage,
-        "defencemen": defenceman_percentage,
+        "goalies": goalie_percentage,
     }
     try:
         parsed_budget = _budget_int(budget, "Draft budget")
-        get_budget_allocation(mode, percentages, budget=parsed_budget)
+        get_budget_allocation(percentages, budget=parsed_budget)
         set_draft_budget(parsed_budget)
-        set_workspace_value("budget_allocation_mode", mode)
         set_workspace_value("budget_skater_percent", str(_budget_int(skater_percentage, "Skaters allocation")))
         set_workspace_value("budget_goalie_percent", str(_budget_int(goalie_percentage, "Goalies allocation")))
-        set_workspace_value("budget_forward_percent", str(_budget_int(forward_percentage, "Forwards allocation")))
-        set_workspace_value("budget_defenceman_percent", str(_budget_int(defenceman_percentage, "Defencemen allocation")))
-        set_workspace_value(
-            "budget_position_goalie_percent",
-            str(_budget_int(position_goalie_percentage, "Goalies allocation")),
-        )
-        return build_budget_summary(mode, percentages).children, "", skater_controls_style, position_controls_style
+        return build_budget_summary(percentages).children, ""
     except ValueError as error:
-        return (
-            build_budget_summary().children,
-            str(error),
-            skater_controls_style,
-            position_controls_style,
-        )
+        return build_budget_summary().children, str(error)
 
 
 def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
     """Build the persistent budget inputs and their initial allocation view."""
-    mode = get_workspace_value("budget_allocation_mode")
-    mode = mode if mode in ALLOCATION_MODES else "slot-weighted"
     skater_percentage = _stored_percentage("budget_skater_percent", 80)
     goalie_percentage = _stored_percentage("budget_goalie_percent", 20)
-    forward_percentage = _stored_percentage("budget_forward_percent", 50)
-    defenceman_percentage = _stored_percentage("budget_defenceman_percent", 30)
-    position_goalie_percentage = _stored_percentage("budget_position_goalie_percent", 20)
     percentages = {
         "skaters": skater_percentage,
-        "goalies": goalie_percentage if mode == "skaters-goalies" else position_goalie_percentage,
-        "forwards": forward_percentage,
-        "defencemen": defenceman_percentage,
+        "goalies": goalie_percentage,
     }
     return html.Section(
         className="budget-panel",
@@ -403,23 +338,12 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
             html.Label(["Total budget", dcc.Input(
                 id=BUDGET_INPUT_ID, type="number", min=0, step=1, value=get_draft_budget()
             )]),
-            dcc.RadioItems(
-                id=ALLOCATION_MODE_ID,
-                options=[{"label": label, "value": value} for value, label in ALLOCATION_MODES.items()],
-                value=mode,
-                inline=True,
-            ),
-            html.Div(id=SKATER_ALLOCATION_CONTROLS_ID, children=[
-                html.Label(["Skaters %", dcc.Input(id=SKATER_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=80)]),
-                html.Label(["Goalies %", dcc.Input(id=GOALIE_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=20)]),
-            ], style={"display": "flex" if mode == "skaters-goalies" else "none"}),
-            html.Div(id=POSITION_ALLOCATION_CONTROLS_ID, children=[
-                html.Label(["Forwards %", dcc.Input(id=FORWARD_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=50)]),
-                html.Label(["Defencemen %", dcc.Input(id=DEFENCEMAN_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=30)]),
-                html.Label(["Goalies %", dcc.Input(id=POSITION_GOALIE_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=20)]),
-            ], style={"display": "flex" if mode == "positions" else "none"}),
+            html.Div([
+                html.Label(["Skaters %", dcc.Input(id=SKATER_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=skater_percentage)]),
+                html.Label(["Goalies %", dcc.Input(id=GOALIE_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=goalie_percentage)]),
+            ]),
             html.Div(id=BUDGET_STATUS_ID, role="status"),
-            html.Div(id=BUDGET_SUMMARY_ID, children=build_budget_summary(mode, percentages, snapshot=snapshot)),
+            html.Div(id=BUDGET_SUMMARY_ID, children=build_budget_summary(percentages, snapshot=snapshot)),
         ],
     )
 
@@ -507,15 +431,9 @@ dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
     Output(CHART_ID, "figure"),
     Output(BUDGET_SUMMARY_ID, "children"),
     Output(BUDGET_STATUS_ID, "children"),
-    Output(SKATER_ALLOCATION_CONTROLS_ID, "style"),
-    Output(POSITION_ALLOCATION_CONTROLS_ID, "style"),
     Input(BUDGET_INPUT_ID, "value"),
-    Input(ALLOCATION_MODE_ID, "value"),
     Input(SKATER_ALLOCATION_ID, "value"),
     Input(GOALIE_ALLOCATION_ID, "value"),
-    Input(FORWARD_ALLOCATION_ID, "value"),
-    Input(DEFENCEMAN_ALLOCATION_ID, "value"),
-    Input(POSITION_GOALIE_ALLOCATION_ID, "value"),
     *(Input(grid_id(table), "cellValueChanged") for table in TABLES),
     *(Input(grid_id(table), "cellRendererData") for table in TABLES),
     prevent_initial_call=True,
@@ -525,7 +443,7 @@ def update_my_team_player(*values):
     triggered_id = ctx.triggered_id
     if not isinstance(triggered_id, str):
         raise ValueError("My Team grid updates require a triggered grid id.")
-    budget_values = values[:7]
+    budget_values = values[:3]
     table = next(
         (
             current_table
@@ -535,21 +453,13 @@ def update_my_team_player(*values):
         None,
     )
     budget_update = build_budget_update(*budget_values)
-    if table is None and triggered_id in {
-        BUDGET_INPUT_ID,
-        ALLOCATION_MODE_ID,
-        SKATER_ALLOCATION_ID,
-        GOALIE_ALLOCATION_ID,
-        FORWARD_ALLOCATION_ID,
-        DEFENCEMAN_ALLOCATION_ID,
-        POSITION_GOALIE_ALLOCATION_ID,
-    }:
+    if table is None and triggered_id in {BUDGET_INPUT_ID, SKATER_ALLOCATION_ID, GOALIE_ALLOCATION_ID}:
         return (*_build_my_team_outputs(build_my_team_snapshot()), *budget_update)
     if table is None:
         raise ValueError(f"Unsupported My Team grid id: {triggered_id!r}.")
 
     table_index = TABLES.index(table)
-    cell_changes = values[7 + table_index]
-    context_action = values[7 + len(TABLES) + table_index]
+    cell_changes = values[3 + table_index]
+    context_action = values[3 + len(TABLES) + table_index]
     triggered_property = ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1]
     return (*build_my_team_update(table, cell_changes, context_action, triggered_property), *budget_update)

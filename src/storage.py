@@ -157,12 +157,8 @@ def ensure_schema() -> None:
                 ('last_imported_at', ''),
                 ('selected_player_id', ''),
                 ('draft_budget', '930'),
-                ('budget_allocation_mode', 'slot-weighted'),
                 ('budget_skater_percent', '80'),
-                ('budget_goalie_percent', '20'),
-                ('budget_forward_percent', '50'),
-                ('budget_defenceman_percent', '30'),
-                ('budget_position_goalie_percent', '20')
+                ('budget_goalie_percent', '20')
             """
         )
         conn.commit()
@@ -255,12 +251,8 @@ def clear_workspace() -> None:
                 ("last_imported_at", ""),
                 ("selected_player_id", ""),
                 ("draft_budget", str(DEFAULT_DRAFT_BUDGET)),
-                ("budget_allocation_mode", "slot-weighted"),
                 ("budget_skater_percent", "80"),
                 ("budget_goalie_percent", "20"),
-                ("budget_forward_percent", "50"),
-                ("budget_defenceman_percent", "30"),
-                ("budget_position_goalie_percent", "20"),
             ],
         )
         conn.commit()
