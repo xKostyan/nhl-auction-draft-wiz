@@ -202,6 +202,19 @@ def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path)
     }
 
 
+def test_budget_summary_treats_a_legacy_blank_roster_price_as_zero(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    add_to_my_team("F", player_id, price=30)
+    set_player_price(player_id, None)
+
+    summary = my_team.get_budget_summary()
+
+    assert summary["committed"] == 0
+
+
 def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()

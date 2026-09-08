@@ -166,7 +166,9 @@ def _budget_int(value: object, label: str) -> int:
 
 def _player_price(value: object) -> int:
     """Treat legacy blank roster prices as zero while validating populated prices."""
-    return 0 if value is None else _budget_int(value, "Player price")
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return 0
+    return _budget_int(value, "Player price")
 
 
 def _stored_percentage(key: str, default: int) -> int:
