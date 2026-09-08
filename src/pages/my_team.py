@@ -12,12 +12,19 @@ from .position_table import (
     build_my_team_snapshot,
     build_my_team_grid,
     get_my_team_goalie_projection,
+    get_my_team_projected_tfp_total,
     get_my_team_table_heading,
     get_my_team_table_rows,
     get_workspace_value,
     persist_my_team_grid_update,
 )
-from ..storage import get_draft_budget, set_draft_budget, set_workspace_value
+from ..storage import (
+    get_draft_budget,
+    get_target_total_fp,
+    set_draft_budget,
+    set_target_total_fp,
+    set_workspace_value,
+)
 
 PATH = "/my-team"
 NAME = "My Team"
@@ -25,6 +32,7 @@ ORDER = 4
 TABLES = ("F", "D", "utility", "G", "bench")
 CHART_ID = "my-team-projection-chart"
 BUDGET_INPUT_ID = "draft-budget"
+TARGET_TOTAL_FP_INPUT_ID = "target-total-fp"
 BUDGET_SUMMARY_ID = "budget-summary"
 BUDGET_STATUS_ID = "budget-status"
 SKATER_ALLOCATION_ID = "budget-skater-percent"
@@ -173,6 +181,21 @@ def _player_price(value: object) -> int:
     return _budget_int(value, "Player price")
 
 
+def _target_fp_value(value: object) -> float | None:
+    """Parse an optional non-negative target total from Dash input data."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Target total FP must be a non-negative number or blank.")
+    try:
+        target = float(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError("Target total FP must be a non-negative number or blank.") from error
+    if not math.isfinite(target) or target < 0:
+        raise ValueError("Target total FP must be a non-negative number or blank.")
+    return target
+
+
 def _stored_percentage(key: str, default: int) -> int:
     """Read a stored allocation percentage, falling back for legacy workspaces."""
     value = get_workspace_value(key)
@@ -224,10 +247,14 @@ def get_budget_allocation(
         row for table_rows in (snapshot or build_my_team_snapshot()).values()
         for row in table_rows if not row.get("is_empty_slot")
     ]
-    open_primary_slots = {
+    open_active_slots = {
         "F": sum(row.get("is_empty_slot", False) for row in (snapshot or build_my_team_snapshot())["F"]),
         "D": sum(row.get("is_empty_slot", False) for row in (snapshot or build_my_team_snapshot())["D"]),
         "G": sum(row.get("is_empty_slot", False) for row in (snapshot or build_my_team_snapshot())["G"]),
+        "utility": sum(
+            row.get("is_empty_slot", False)
+            for row in (snapshot or build_my_team_snapshot())["utility"]
+        ),
     }
     rows = []
     for label, positions, key in groups:
@@ -236,7 +263,9 @@ def get_budget_allocation(
             _player_price(row["price"])
             for row in roster_rows if row["position"] in positions
         )
-        open_slots = sum(open_primary_slots[position] for position in positions)
+        open_slots = sum(open_active_slots[position] for position in positions)
+        if "F" in positions:
+            open_slots += open_active_slots["utility"]
         minimum_reserve = open_slots
         remaining = planned - committed - minimum_reserve
         rows.append({
@@ -249,6 +278,65 @@ def get_budget_allocation(
             "average": max(0, remaining) / open_slots if open_slots else 0,
         })
     return rows
+
+
+def get_target_fp_summary(
+    *, snapshot: dict[str, list[dict]] | None = None, target_total_fp: float | None = None
+) -> dict[str, float | int | None]:
+    """Calculate the remaining stretch-goal FP needed from active open roster slots."""
+    if snapshot is None:
+        snapshot = build_my_team_snapshot()
+    acquired_fp = (
+        get_my_team_projected_tfp_total("F", snapshot=snapshot)
+        + get_my_team_projected_tfp_total("D", snapshot=snapshot)
+        + get_my_team_projected_tfp_total("utility", snapshot=snapshot)
+        + get_my_team_goalie_projection(snapshot=snapshot)["projected_points"]
+    )
+    empty_active_slots = sum(
+        row.get("is_empty_slot", False)
+        for table in ("F", "D", "utility", "G")
+        for row in snapshot[table]
+    )
+    target = get_target_total_fp() if target_total_fp is None else target_total_fp
+    remaining = None if target is None else max(0.0, target - acquired_fp)
+    return {
+        "target_total_fp": target,
+        "acquired_fp": acquired_fp,
+        "remaining_fp": remaining,
+        "empty_active_slots": empty_active_slots,
+        "average_fp_per_active_slot": (
+            remaining / empty_active_slots
+            if remaining is not None and empty_active_slots
+            else None
+        ),
+    }
+
+
+def _add_empty_slot_guidance(snapshot: dict[str, list[dict]]) -> dict[str, list[dict]]:
+    """Add budget and stretch-goal guidance to empty active roster slot labels."""
+    percentages = {
+        "skaters": _stored_percentage("budget_skater_percent", 80),
+        "goalies": _stored_percentage("budget_goalie_percent", 20),
+    }
+    allocations = {
+        row["label"]: row
+        for row in get_budget_allocation(percentages, snapshot=snapshot)
+    }
+    target = get_target_fp_summary(snapshot=snapshot)
+    fp_guidance = (
+        "Set Target total FP"
+        if target["average_fp_per_active_slot"] is None
+        else f"{target['average_fp_per_active_slot']:,.2f} FP"
+    )
+    for table, allocation_label in (("F", "Skaters"), ("D", "Skaters"), ("utility", "Skaters"), ("G", "Goalies")):
+        allocation = allocations[allocation_label]
+        budget_guidance = (
+            f"${allocation['remaining']:,.2f} / ${allocation['average']:,.2f}"
+        )
+        for row in snapshot[table]:
+            if row.get("is_empty_slot"):
+                row["name"] = f"Empty slot - {budget_guidance} | {fp_guidance}"
+    return snapshot
 
 
 def build_budget_summary(
@@ -287,6 +375,10 @@ def build_budget_summary(
             f"{summary['empty_slots']} open slots; flexible budget: ${summary['flexible']:,.0f}",
             className="budget-explanation",
         ),
+        html.P(
+            _target_fp_status_text(get_target_fp_summary(snapshot=snapshot)),
+            className="budget-explanation",
+        ),
         html.Table(
             [
                 html.Thead(html.Tr([html.Th(name) for name in (
@@ -306,8 +398,19 @@ def build_budget_summary(
     ])
 
 
+def _target_fp_status_text(summary: dict[str, float | int | None]) -> str:
+    """Format target-FP status without obscuring an unset optional stretch goal."""
+    if summary["target_total_fp"] is None:
+        return "Set Target total FP to calculate active-slot projected FP guidance."
+    return (
+        f"Target FP: {summary['target_total_fp']:,.2f}; acquired FP: {summary['acquired_fp']:,.2f}; "
+        f"remaining: {summary['remaining_fp']:,.2f} across {summary['empty_active_slots']} active slots."
+    )
+
+
 def build_budget_update(
     budget: object,
+    target_total_fp: object,
     skater_percentage: object,
     goalie_percentage: object,
 ) -> tuple[list, str]:
@@ -318,8 +421,10 @@ def build_budget_update(
     }
     try:
         parsed_budget = _budget_int(budget, "Draft budget")
+        parsed_target = _target_fp_value(target_total_fp)
         get_budget_allocation(percentages, budget=parsed_budget)
         set_draft_budget(parsed_budget)
+        set_target_total_fp(parsed_target)
         set_workspace_value("budget_skater_percent", str(_budget_int(skater_percentage, "Skaters allocation")))
         set_workspace_value("budget_goalie_percent", str(_budget_int(goalie_percentage, "Goalies allocation")))
         return build_budget_summary(percentages).children, ""
@@ -341,6 +446,13 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
             html.H4("Draft budget"),
             html.Label(["Total budget", dcc.Input(
                 id=BUDGET_INPUT_ID, type="number", min=0, step=1, value=get_draft_budget()
+            )]),
+            html.Label(["Target total FP", dcc.Input(
+                id=TARGET_TOTAL_FP_INPUT_ID,
+                type="number",
+                min=0,
+                step=1,
+                value=get_target_total_fp(),
             )]),
             html.Div([
                 html.Label(["Skaters %", dcc.Input(id=SKATER_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=skater_percentage)]),
@@ -373,6 +485,7 @@ def build_my_team_table_heading(
 def layout(**_kwargs):
     """Build separate position tables from the persisted My Team subset."""
     snapshot = build_my_team_snapshot()
+    _add_empty_slot_guidance(snapshot)
     return html.Div(
         className="my-team-page",
         children=[
@@ -416,6 +529,7 @@ def build_my_team_update(
 
 def _build_my_team_outputs(snapshot: dict[str, list[dict]]) -> tuple[list[dict], ...]:
     """Build the shared grid, heading, and chart outputs from one roster snapshot."""
+    _add_empty_slot_guidance(snapshot)
     return (
         *(snapshot[current_table] for current_table in TABLES),
         *(
@@ -436,6 +550,7 @@ dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
     Output(BUDGET_SUMMARY_ID, "children"),
     Output(BUDGET_STATUS_ID, "children"),
     Input(BUDGET_INPUT_ID, "value"),
+    Input(TARGET_TOTAL_FP_INPUT_ID, "value"),
     Input(SKATER_ALLOCATION_ID, "value"),
     Input(GOALIE_ALLOCATION_ID, "value"),
     *(Input(grid_id(table), "cellValueChanged") for table in TABLES),
@@ -447,7 +562,7 @@ def update_my_team_player(*values):
     triggered_id = ctx.triggered_id
     if not isinstance(triggered_id, str):
         raise ValueError("My Team grid updates require a triggered grid id.")
-    budget_values = values[:3]
+    budget_values = values[:4]
     table = next(
         (
             current_table
@@ -457,13 +572,18 @@ def update_my_team_player(*values):
         None,
     )
     budget_update = build_budget_update(*budget_values)
-    if table is None and triggered_id in {BUDGET_INPUT_ID, SKATER_ALLOCATION_ID, GOALIE_ALLOCATION_ID}:
+    if table is None and triggered_id in {
+        BUDGET_INPUT_ID,
+        TARGET_TOTAL_FP_INPUT_ID,
+        SKATER_ALLOCATION_ID,
+        GOALIE_ALLOCATION_ID,
+    }:
         return (*_build_my_team_outputs(build_my_team_snapshot()), *budget_update)
     if table is None:
         raise ValueError(f"Unsupported My Team grid id: {triggered_id!r}.")
 
     table_index = TABLES.index(table)
-    cell_changes = values[3 + table_index]
-    context_action = values[3 + len(TABLES) + table_index]
+    cell_changes = values[4 + table_index]
+    context_action = values[4 + len(TABLES) + table_index]
     triggered_property = ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1]
     return (*build_my_team_update(table, cell_changes, context_action, triggered_property), *budget_update)

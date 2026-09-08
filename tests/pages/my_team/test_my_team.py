@@ -25,10 +25,12 @@ from src.storage import (
     clear_workspace,
     configure_storage,
     get_draft_budget,
+    get_target_total_fp,
     get_workspace_value,
     get_selected_player,
     import_yearly_dataset,
     set_player_price,
+    set_target_total_fp,
 )
 
 
@@ -58,8 +60,13 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         node for node in walk_components(page_layout) if isinstance(node, dcc.Input)
         and node.id == my_team.BUDGET_INPUT_ID
     )
+    target_input = next(
+        node for node in walk_components(page_layout) if isinstance(node, dcc.Input)
+        and node.id == my_team.TARGET_TOTAL_FP_INPUT_ID
+    )
 
     assert budget_input.value == 930
+    assert target_input.value is None
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
@@ -173,7 +180,7 @@ def test_budget_allocation_table_uses_the_full_width_without_open_slots(tmp_path
     import_yearly_dataset()
 
     summary = my_team.build_budget_summary()
-    table = summary.children[2]
+    table = summary.children[3]
 
     assert [header.children for header in table.children[0].children.children] == [
         "Allocation", "Planned", "Spent", "Minimum", "Remaining", "Avg / slot"
@@ -229,6 +236,7 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     )
 
     assert rows[0]["planned"] == 744
+    assert rows[0]["open_slots"] == 16
     assert rows[1]["planned"] == 186
     assert rows[1]["committed"] == 40
     with pytest.raises(ValueError, match="total 100"):
@@ -237,17 +245,48 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
         )
 
 
-def test_budget_update_persists_the_budget_and_switches_allocation_controls(tmp_path):
+def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
 
-    _, status = my_team.build_budget_update(850, 80, 20)
+    _, status = my_team.build_budget_update(850, 2650, 80, 20)
 
     assert get_draft_budget() == 850
+    assert get_target_total_fp() == 2650
     assert get_workspace_value("budget_skater_percent") == "80"
     assert get_workspace_value("budget_goalie_percent") == "20"
     assert status == ""
+
+
+def test_target_fp_summary_uses_active_slots_and_bench_goalie_projection(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    snapshot = position_table.build_my_team_snapshot()
+
+    summary = my_team.get_target_fp_summary(snapshot=snapshot, target_total_fp=2200)
+
+    assert summary == {
+        "target_total_fp": 2200,
+        "acquired_fp": 0.0,
+        "remaining_fp": 2200.0,
+        "empty_active_slots": 18,
+        "average_fp_per_active_slot": 2200 / 18,
+    }
+
+
+def test_empty_active_slots_show_budget_and_target_guidance_but_bench_does_not(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    set_target_total_fp(2200)
+    snapshot = my_team._add_empty_slot_guidance(position_table.build_my_team_snapshot())
+
+    assert snapshot["F"][0]["name"].startswith("Empty slot - $")
+    assert snapshot["utility"][0]["name"].endswith("| 122.22 FP")
+    assert snapshot["G"][0]["name"].endswith("| 122.22 FP")
+    assert snapshot["bench"][0]["name"] == "Empty slot"
 
 
 def test_my_team_rows_are_the_persisted_team_subset_and_can_be_removed(tmp_path):

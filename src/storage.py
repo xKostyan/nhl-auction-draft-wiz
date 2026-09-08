@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import sqlite3
 from pathlib import Path
 
@@ -157,6 +158,7 @@ def ensure_schema() -> None:
                 ('last_imported_at', ''),
                 ('selected_player_id', ''),
                 ('draft_budget', '930'),
+                ('target_total_fp', ''),
                 ('budget_skater_percent', '80'),
                 ('budget_goalie_percent', '20')
             """
@@ -198,6 +200,29 @@ def set_draft_budget(budget: int) -> None:
     if isinstance(budget, bool) or not isinstance(budget, int) or budget < 0:
         raise ValueError("Draft budget must be a non-negative integer.")
     set_workspace_value("draft_budget", str(budget))
+
+
+def get_target_total_fp() -> float | None:
+    """Return the optional persisted projected-fantasy-points stretch goal."""
+    value = get_workspace_value("target_total_fp")
+    try:
+        target = float(value)
+    except ValueError:
+        return None
+    return target if math.isfinite(target) and target >= 0 else None
+
+
+def set_target_total_fp(target: float | int | None) -> None:
+    """Persist an optional non-negative projected-fantasy-points stretch goal."""
+    if target is None:
+        set_workspace_value("target_total_fp", "")
+        return
+    if isinstance(target, bool) or not isinstance(target, (int, float)):
+        raise ValueError("Target total FP must be a non-negative number or blank.")
+    numeric_target = float(target)
+    if not math.isfinite(numeric_target) or numeric_target < 0:
+        raise ValueError("Target total FP must be a non-negative number or blank.")
+    set_workspace_value("target_total_fp", str(numeric_target))
 
 
 def set_selected_player(player_id: int) -> None:
@@ -251,6 +276,7 @@ def clear_workspace() -> None:
                 ("last_imported_at", ""),
                 ("selected_player_id", ""),
                 ("draft_budget", str(DEFAULT_DRAFT_BUDGET)),
+                ("target_total_fp", ""),
                 ("budget_skater_percent", "80"),
                 ("budget_goalie_percent", "20"),
             ],

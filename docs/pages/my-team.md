@@ -21,6 +21,11 @@ membership flag is stored in the workspace and survives restarts.
   and the maximum legal next bid after preserving the minimum for every other
   open slot. Only My Team players consume the budget; players drafted by other
   managers remain unavailable but do not affect it.
+- An optional **Target total FP** input persists a projected-FP stretch goal.
+  The panel shows the team's acquired projected FP from active Forwards,
+  Defencemen, Utility, and the goalie 90%-starts calculation (including bench
+  goalies). It then divides remaining target FP across empty active F, D,
+  Utility, and Goalie slots.
 - A player must have a Price before **Add to My Team** succeeds. Adding them
   then marks the player drafted and charges that price to the budget. Keepers
   and auction purchases follow this same workflow.
@@ -29,6 +34,12 @@ membership flag is stored in the workspace and survives restarts.
   price spent, the required `$1` minimum, remaining allocation, and a per-slot
   guide. The budget panel is on the left of the projected-TFP chart; both use
   equal width on larger screens and stack on narrow screens.
+- Empty active player slots show the remaining budget and average for their
+  Skaters or Goalies allocation, followed by the target-FP average needed per
+  empty active slot. Utility is included in the Skaters allocation. Empty Bench
+  slots intentionally show neither budget nor target-FP guidance; bench skaters
+  do not contribute to acquired projected FP, while bench goalie contribution
+  remains part of the shared goalie calculation.
   Utility and Bench slots remain flexible and their required minimum is
   reflected in the global budget summary. These views do not prevent bids;
   **Max next bid** is the hard auction reference.

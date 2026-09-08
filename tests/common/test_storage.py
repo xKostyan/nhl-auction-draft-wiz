@@ -11,6 +11,7 @@ from src.storage import (
     detect_draft_year,
     get_available_stat_years,
     get_draft_budget,
+    get_target_total_fp,
     get_player_stat_history,
     get_selected_player,
     get_players_for_position_grid,
@@ -19,6 +20,7 @@ from src.storage import (
     import_yearly_dataset,
     set_player_drafted,
     set_draft_budget,
+    set_target_total_fp,
     set_player_notes,
     set_player_on_my_team,
     set_player_price,
@@ -296,6 +298,20 @@ def test_draft_budget_defaults_to_930_and_persists(tmp_path):
     assert get_draft_budget() == 875
     with pytest.raises(ValueError, match="non-negative integer"):
         set_draft_budget(-1)
+
+
+def test_target_total_fp_is_optional_and_persists(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    configure_storage(database_path)
+
+    assert get_target_total_fp() is None
+
+    set_target_total_fp(2650.5)
+    configure_storage(database_path)
+
+    assert get_target_total_fp() == 2650.5
+    with pytest.raises(ValueError, match="non-negative number"):
+        set_target_total_fp(-1)
 
 
 def test_adding_an_unpriced_player_to_my_team_is_rejected(tmp_path):
