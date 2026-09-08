@@ -7,7 +7,7 @@ from dash import dcc
 
 from src.data_loader import load_players, load_stats
 from src.pages import import_data
-from src.storage import clear_workspace, configure_storage, get_workspace_summary
+from src.storage import clear_workspace, configure_storage, get_players_for_grid, get_workspace_summary
 
 
 def test_page_is_registered_at_the_expected_path_and_order():
@@ -32,6 +32,10 @@ def test_layout_exposes_upload_import_and_clear_controls(tmp_path, collect_compo
         "clear-button",
         "workspace-status",
         "player-grid",
+        "upload-keeper-prices",
+        "import-keeper-prices-button",
+        "keeper-price-import-status",
+        "keeper-price-unmatched-grid",
     ):
         assert expected_id in ids
 
@@ -90,3 +94,29 @@ def test_clear_action_resets_workspace(tmp_path, csv_data_url):
     assert "cleared" in message.lower()
     assert rows == []
     assert get_workspace_summary()["total_players"] == 0
+
+
+def test_keeper_price_import_updates_players_and_lists_unmatched_rows(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    from src.storage import import_yearly_dataset
+
+    import_yearly_dataset()
+    player = get_players_for_grid().iloc[0]
+    source_position = {"F": "LW", "D": "D", "G": "G"}[player["position"]]
+    price_csv = (
+        f'"{player["name"]}, {source_position}, ABC",${17}\n'
+        '"Missing Player, G, XYZ",$4\n'
+    )
+    import base64
+
+    contents = "data:text/csv;base64," + base64.b64encode(price_csv.encode()).decode()
+    message, unmatched_rows = import_data.handle_keeper_price_import(contents)
+
+    assert message == "Imported keeper prices for 1 player. 1 player could not be matched."
+    assert unmatched_rows == [
+        {"name": "Missing Player", "position": "G", "team": "XYZ", "price": 4}
+    ]
+    assert get_players_for_grid().loc[
+        get_players_for_grid()["id"] == player["id"], "price"
+    ].item() == 17

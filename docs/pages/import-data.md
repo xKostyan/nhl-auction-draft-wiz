@@ -27,6 +27,10 @@ season's import.
 - A read-only AG Grid table listing every imported player with id, name,
   position, **$$** (price), status, and current season. Its cell text is 16px (2px larger
   than the default table value size).
+- A separate **Import keeper prices** section, available after the season data
+  import, with a headerless CSV upload and an import button.
+- A **Failed keeper price imports** table that lists source name, position,
+  team, and price for every keeper-price row that could not be matched.
 
 ## Data behavior
 
@@ -39,8 +43,13 @@ season's import.
   are entirely empty; this is stored as `current_season` for display only
   and does not limit what history is imported.
 - Every imported player defaults to `available` status.
-- Every imported player starts with a blank **price**. Prices are manually
-  entered on the position pages and persist in the workspace.
+- Every imported player starts with a blank **price**. The keeper-price import
+  accepts rows formatted as `"player name, position (LW/RW/C/D/G), team",$value`;
+  it normalizes LW/RW/C to `F`, then matches by name and position and persists
+  the whole-dollar price. Player team is not stored in the workspace, so it is
+  included only in the unmatched-rows debugging table.
+- Keeper-price importing requires season data to be imported first. Prices can
+  still be edited manually on the position pages and persist in the workspace.
 
 ## Not yet implemented
 
