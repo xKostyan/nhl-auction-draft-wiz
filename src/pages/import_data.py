@@ -138,7 +138,7 @@ def layout(**_kwargs):
     """Build the page layout. A function (not a static value) so the status
     message and grid reflect the current workspace state on every page visit."""
     return html.Div(
-        style={"maxWidth": "760px"},
+        style={"width": "100%", "minWidth": 0},
         children=[
             html.H2("Import data"),
             html.P(
@@ -193,7 +193,8 @@ def layout(**_kwargs):
                     {"field": "price", "headerName": "$$", "type": "numericColumn"},
                 ],
                 defaultColDef={"sortable": True, "resizable": True},
-                style={"height": "240px", "width": "100%"},
+                dashGridOptions={"domLayout": "autoHeight"},
+                style={"width": "100%"},
             ),
         ],
     )

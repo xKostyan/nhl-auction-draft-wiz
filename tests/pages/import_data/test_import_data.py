@@ -46,6 +46,11 @@ def test_layout_exposes_upload_import_and_clear_controls(tmp_path, collect_compo
         "headerName": "$$",
         "type": "numericColumn",
     }
+    unmatched_grid = next(
+        node for node in walk_components(layout) if getattr(node, "id", None) == "keeper-price-unmatched-grid"
+    )
+    assert unmatched_grid.style == {"width": "100%"}
+    assert unmatched_grid.dashGridOptions == {"domLayout": "autoHeight"}
 
     # This page has no charts/graphs yet.
     assert not any(isinstance(node, dcc.Graph) for node in walk_components(layout))

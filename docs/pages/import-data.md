@@ -30,7 +30,8 @@ season's import.
 - A separate **Import keeper prices** section, available after the season data
   import, with a headerless CSV upload and an import button.
 - A **Failed keeper price imports** table that lists source name, position,
-  team, and price for every keeper-price row that could not be matched.
+  team, and price for every keeper-price row that could not be matched. It
+  spans the page width and expands vertically to show all unmatched rows.
 
 ## Data behavior
 
