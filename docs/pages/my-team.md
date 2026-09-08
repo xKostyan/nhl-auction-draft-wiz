@@ -21,7 +21,8 @@ membership flag is stored in the workspace and survives restarts.
   and the maximum legal next bid after preserving the minimum for every other
   open slot. Only My Team players consume the budget; players drafted by other
   managers remain unavailable but do not affect it.
-- An optional **Target total FP** input persists a projected-FP stretch goal.
+- An optional **Target total FP** text input (without increment/decrement
+  controls) persists a projected-FP stretch goal.
   The panel shows the team's acquired projected FP from active Forwards,
   Defencemen, Utility, and the goalie 90%-starts calculation (including bench
   goalies). It then divides remaining target FP across empty active F, D,

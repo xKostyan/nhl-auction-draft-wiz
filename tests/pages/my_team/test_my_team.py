@@ -67,6 +67,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
 
     assert budget_input.value == 930
     assert target_input.value is None
+    assert target_input.type == "text"
+    assert target_input.inputMode == "decimal"
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")

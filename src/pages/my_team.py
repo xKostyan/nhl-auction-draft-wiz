@@ -449,9 +449,8 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
             )]),
             html.Label(["Target total FP", dcc.Input(
                 id=TARGET_TOTAL_FP_INPUT_ID,
-                type="number",
-                min=0,
-                step=1,
+                type="text",
+                inputMode="decimal",
                 value=get_target_total_fp(),
             )]),
             html.Div([
