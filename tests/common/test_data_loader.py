@@ -63,6 +63,18 @@ def test_parse_uploaded_keeper_prices_supports_mac_roman_names():
     assert df.iloc[0]["name"] == "Tim Stützle"
 
 
+def test_parse_uploaded_keeper_prices_supports_cr_line_endings():
+    csv_bytes = b'"Test Player, C, ABC",$17\r"Goalie, G, XYZ",$0\r'
+    contents = "data:text/csv;base64," + base64.b64encode(csv_bytes).decode()
+
+    df = parse_uploaded_keeper_prices(contents)
+
+    assert df.to_dict("records") == [
+        {"name": "Test Player", "position": "F", "team": "ABC", "price": 17},
+        {"name": "Goalie", "position": "G", "team": "XYZ", "price": 0},
+    ]
+
+
 def test_parse_uploaded_keeper_prices_rejects_invalid_rows():
     csv_bytes = b'"Test Player, X, ABC",$17\n'
     contents = "data:text/csv;base64," + base64.b64encode(csv_bytes).decode()

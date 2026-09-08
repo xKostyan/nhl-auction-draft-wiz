@@ -58,7 +58,7 @@ def parse_uploaded_keeper_prices(contents: str) -> pd.DataFrame:
 
     position_map = {"LW": "F", "RW": "F", "C": "F", "D": "D", "G": "G"}
     rows: list[dict[str, str | int]] = []
-    for line_number, row in enumerate(csv.reader(io.StringIO(csv_text)), start=1):
+    for line_number, row in enumerate(csv.reader(io.StringIO(csv_text, newline="")), start=1):
         if not row:
             continue
         if len(row) != 2:
