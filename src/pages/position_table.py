@@ -338,7 +338,7 @@ def _price_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
     return [
         {
             "field": "price",
-            "headerName": "Price",
+            "headerName": "$$",
             "type": "numericColumn",
             "cellEditor": "agNumberCellEditor",
             "cellEditorParams": {"min": 0, "precision": 0},

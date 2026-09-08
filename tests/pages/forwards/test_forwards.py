@@ -74,7 +74,7 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         },
         {
             "field": "price",
-            "headerName": "Price",
+            "headerName": "$$",
             "type": "numericColumn",
             "cellEditor": "agNumberCellEditor",
             "cellEditorParams": {"min": 0, "precision": 0},

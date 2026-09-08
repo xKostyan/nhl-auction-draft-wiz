@@ -38,7 +38,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "",
         "#",
         "Player name",
-        "Price",
+        "$$",
         "Health (actual GP)",
         "Average Performance",
         "p TFP 2027",

@@ -25,7 +25,7 @@ season's import.
 - A status message showing the current workspace state or the result of the
   last action.
 - A read-only AG Grid table listing every imported player with id, name,
-  position, price, status, and current season. Its cell text is 16px (2px larger
+  position, **$$** (price), status, and current season. Its cell text is 16px (2px larger
   than the default table value size).
 
 ## Data behavior
