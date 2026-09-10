@@ -86,6 +86,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert allocation_slider.step == 1
     assert allocation_slider.value == 20
     assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
+    assert allocation_slider.reverse is True
     assert all(
         getattr(node, "id", None) not in {"budget-skater-percent", "budget-goalie-percent"}
         for node in walk_components(page_layout)

@@ -470,6 +470,7 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
                     step=1,
                     value=goalie_percentage,
                     marks={0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"},
+                    reverse=True,
                     tooltip={"always_visible": False, "placement": "bottom"},
                 ),
                 className="budget-allocation-controls",

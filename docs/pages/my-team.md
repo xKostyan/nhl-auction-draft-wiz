@@ -33,11 +33,12 @@ membership flag is stored in the workspace and survives restarts.
 - The budget panel provides an advisory **Skaters / Goalies** allocation view.
   Its persisted percentage split drives planned budget, price spent, the
   required `$1` minimum, remaining allocation, and a per-slot guide. A 1%
-  increment slider is the only split input: its left endpoint sets Skaters to
-  100% and Goalies to 0%, its midpoint sets both to 50%, and its right endpoint
-  reverses that split. Its floating value tooltip is hidden, leaving the drag
-  handle as the only visible split control. Draft Budget panel text is one
-  pixel smaller than the page default.
+  increment slider is the only split input: its left endpoint sets Goalies to
+  100% and Skaters to 0%, its midpoint sets both to 50%, and its right endpoint
+  sets Skaters to 100%. The active fill is mirrored with that direction. Its
+  floating value tooltip is hidden, leaving the drag handle as the only visible
+  split control. Draft Budget panel text is one pixel smaller than the page
+  default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 60% of the
   allocation-controls row width and is inset so its endpoint labels remain
