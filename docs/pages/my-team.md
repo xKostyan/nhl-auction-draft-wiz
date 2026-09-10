@@ -37,7 +37,8 @@ membership flag is stored in the workspace and survives restarts.
   Skaters to 100% and Goalies to 0%, its midpoint sets both to 50%, and its
   right endpoint reverses that split. Moving it synchronizes both percentage
   inputs. Adjacent cells display the dollar amount allocated to Skaters and
-  Goalies from the total budget. The budget panel is on the left of the
+  Goalies from the total budget. The slider uses no more than 75% of the
+  allocation-controls row width. The budget panel is on the left of the
   projected-TFP chart; both use equal width on larger screens and stack on
   narrow screens.
 - Empty active player slots show the remaining budget and average for their

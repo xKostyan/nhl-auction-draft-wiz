@@ -290,6 +290,14 @@ def test_budget_allocation_amounts_are_derived_from_the_total_budget():
     ) == {"skaters": "$0", "goalies": "$931"}
 
 
+def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
+    stylesheet = (Path(__file__).parents[3] / "src" / "assets" / "app.css").read_text()
+
+    assert ".budget-allocation-controls .rc-slider {" in stylesheet
+    assert "max-width: 75%;" in stylesheet
+    assert "min-width: 0;" in stylesheet
+
+
 def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
