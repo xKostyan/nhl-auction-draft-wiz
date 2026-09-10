@@ -35,8 +35,9 @@ membership flag is stored in the workspace and survives restarts.
   required `$1` minimum, remaining allocation, and a per-slot guide. A 1%
   increment slider is the only split input: its left endpoint sets Skaters to
   100% and Goalies to 0%, its midpoint sets both to 50%, and its right endpoint
-  reverses that split. Draft Budget panel text is one pixel smaller than the
-  page default.
+  reverses that split. Its floating value tooltip is hidden, leaving the drag
+  handle as the only visible split control. Draft Budget panel text is one
+  pixel smaller than the page default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 75% of the
   allocation-controls row width. The budget panel is on the left of the

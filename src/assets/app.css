@@ -79,6 +79,10 @@ body,
     max-width: 75%;
 }
 
+.budget-allocation-controls .rc-slider-tooltip {
+    display: none !important;
+}
+
 .budget-allocation-amounts {
     display: flex;
     gap: 16px;
