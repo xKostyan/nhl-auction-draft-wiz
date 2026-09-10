@@ -88,6 +88,24 @@ body,
     display: none !important;
 }
 
+.budget-allocation-controls .rc-slider-rail {
+    background-color: #33adff;
+}
+
+.budget-allocation-controls .rc-slider-handle {
+    background-color: #555;
+    border-color: #555;
+    opacity: 1;
+}
+
+.budget-allocation-controls .rc-slider-handle:hover,
+.budget-allocation-controls .rc-slider-handle:focus,
+.budget-allocation-controls .rc-slider-handle:active {
+    background-color: #444;
+    border-color: #444;
+    box-shadow: 0 0 0 3px rgba(68, 68, 68, 0.2);
+}
+
 .budget-allocation-amounts {
     display: flex;
     gap: 16px;

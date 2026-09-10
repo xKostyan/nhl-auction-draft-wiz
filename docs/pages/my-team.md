@@ -37,8 +37,9 @@ membership flag is stored in the workspace and survives restarts.
   100% and Skaters to 0%, its midpoint sets both to 50%, and its right endpoint
   sets Skaters to 100%. The active fill is mirrored with that direction. Its
   floating value tooltip is hidden, leaving the drag handle as the only visible
-  split control. Draft Budget panel text is one pixel smaller than the page
-  default.
+  split control. Its inactive rail uses the Utility table blue `#33adff`, and
+  its drag handle is dark gray. Draft Budget panel text is one pixel smaller
+  than the page default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 60% of the
   allocation-controls row width and is inset so its endpoint labels remain
