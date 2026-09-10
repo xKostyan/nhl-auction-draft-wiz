@@ -69,6 +69,29 @@ body,
     margin: 0 12px 8px 0;
 }
 
+.budget-allocation-controls {
+    align-items: flex-end;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.budget-allocation-controls > label {
+    margin-right: 0;
+}
+
+.budget-allocation-controls .rc-slider {
+    flex: 1 1 220px;
+    margin: 0 12px 12px 0;
+    min-width: 220px;
+}
+
+.budget-allocation-amounts {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
 .budget-panel input {
     max-width: 110px;
 }

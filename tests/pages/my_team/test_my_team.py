@@ -64,11 +64,30 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         node for node in walk_components(page_layout) if isinstance(node, dcc.Input)
         and node.id == my_team.TARGET_TOTAL_FP_INPUT_ID
     )
+    allocation_slider = next(
+        node for node in walk_components(page_layout) if isinstance(node, dcc.Slider)
+    )
+    skater_allocation_amount = next(
+        node for node in walk_components(page_layout)
+        if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_AMOUNT_ID
+    )
+    goalie_allocation_amount = next(
+        node for node in walk_components(page_layout)
+        if getattr(node, "id", None) == my_team.GOALIE_ALLOCATION_AMOUNT_ID
+    )
 
     assert budget_input.value == 930
     assert target_input.value is None
     assert target_input.type == "text"
     assert target_input.inputMode == "numeric"
+    assert allocation_slider.id == my_team.ALLOCATION_SLIDER_ID
+    assert allocation_slider.min == 0
+    assert allocation_slider.max == 100
+    assert allocation_slider.step == 1
+    assert allocation_slider.value == 20
+    assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
+    assert skater_allocation_amount.children == "$744"
+    assert goalie_allocation_amount.children == "$186"
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
@@ -251,6 +270,24 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
         my_team.get_budget_allocation(
             {"skaters": 80, "goalies": 10}, snapshot=snapshot
         )
+
+
+def test_allocation_slider_values_complement_the_skater_and_goalie_percentages():
+    assert my_team.synchronize_allocation_percentages(80, 20, 0, my_team.ALLOCATION_SLIDER_ID) == (100, 0)
+    assert my_team.synchronize_allocation_percentages(80, 20, 50, my_team.ALLOCATION_SLIDER_ID) == (50, 50)
+    assert my_team.synchronize_allocation_percentages(80, 20, 100, my_team.ALLOCATION_SLIDER_ID) == (0, 100)
+    assert my_team.synchronize_allocation_percentages(80, 20, 20, my_team.BUDGET_INPUT_ID) == (80, 20)
+    with pytest.raises(ValueError, match="total 100"):
+        my_team.synchronize_allocation_percentages(70, 20, 20, my_team.BUDGET_INPUT_ID)
+
+
+def test_budget_allocation_amounts_are_derived_from_the_total_budget():
+    assert my_team.get_budget_allocation_amounts(
+        {"skaters": 80, "goalies": 20}, budget=930
+    ) == {"skaters": "$744", "goalies": "$186"}
+    assert my_team.get_budget_allocation_amounts(
+        {"skaters": 0, "goalies": 100}, budget=931
+    ) == {"skaters": "$0", "goalies": "$931"}
 
 
 def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):

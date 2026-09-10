@@ -33,8 +33,13 @@ membership flag is stored in the workspace and survives restarts.
 - The budget panel provides an advisory **Skaters / Goalies** allocation view.
   Its two persisted percentage inputs must total 100 and show planned budget,
   price spent, the required `$1` minimum, remaining allocation, and a per-slot
-  guide. The budget panel is on the left of the projected-TFP chart; both use
-  equal width on larger screens and stack on narrow screens.
+  guide. A 1% increment slider sits beside the inputs: its left endpoint sets
+  Skaters to 100% and Goalies to 0%, its midpoint sets both to 50%, and its
+  right endpoint reverses that split. Moving it synchronizes both percentage
+  inputs. Adjacent cells display the dollar amount allocated to Skaters and
+  Goalies from the total budget. The budget panel is on the left of the
+  projected-TFP chart; both use equal width on larger screens and stack on
+  narrow screens.
 - Empty active player slots show the remaining budget and average for their
   Skaters or Goalies allocation, followed by the target-FP average needed per
   empty active slot. Utility is included in the Skaters allocation. Empty Bench
