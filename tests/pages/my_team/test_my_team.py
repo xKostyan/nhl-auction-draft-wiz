@@ -119,6 +119,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert utility_health["width"] == 150
     assert utility_health["resizable"] is True
     assert utility_health["suppressAutoSize"] is True
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
         "search_focus", "slot_number", "name", "price", "position", "projected_tfp", "projected_afp"

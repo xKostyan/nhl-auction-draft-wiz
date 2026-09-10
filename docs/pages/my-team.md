@@ -62,9 +62,10 @@ membership flag is stored in the workspace and survives restarts.
   the same player data, editable **$$** price, inline charts, Tags, and Notes as their matching
   position page. Health charts compare actual GP bars with a projected GP line;
   their 150px columns can be resized and their charts expand to fill the
-  available cell width. Average Performance uses light green and green bands
-  at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to below 8.3 and 8.3+ for
-  goalies. Utility has the
+  available cell width. Every inline projected line runs from the center of
+  the first bar to the center of the last. Average Performance uses light
+  green and green bands at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to
+  below 8.3 and 8.3+ for goalies. Utility has the
   skater columns plus **Position** after Price. Bench is intentionally
   limited to highlight, index, player name, **$$**, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress

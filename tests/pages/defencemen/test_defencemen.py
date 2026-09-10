@@ -63,7 +63,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
     ).read_text()
     assert "Projected games played" in renderer
-    assert "(index + 0.5) / pointCount * 100" in renderer
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
     assert grid.columnDefs[5] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",

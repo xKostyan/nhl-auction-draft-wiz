@@ -36,7 +36,9 @@ tests for the column definition, row-data shape, and renderer registration.
 It accepts up to five historical actual-GP values and an upcoming projected
 season, rendering oldest to newest on a fixed 0-84 scale. Actual bars use
 red for 0-50 GP, orange for 51-60, yellow for 61-71, and green for 72-84;
-a blue line connects the yearly projected GP values.
+a blue line connects the yearly projected GP values. All inline projected
+lines use the centers of the first and last bars as their endpoints, keeping
+each projected point aligned with its year.
 
 ## Existing goalie game-starts chart
 

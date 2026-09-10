@@ -106,13 +106,13 @@ dagcomponentfuncs.goalieGameStartsChart = function (props) {
     var pointCount = history.length;
     var linePoints = history.map(function (season, index) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / scaleMaximum * 100;
         return x + "," + y;
     });
     var lineDots = history.map(function (season, index) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / scaleMaximum * 100;
         return React.createElement("circle", {
             cx: x,
@@ -206,13 +206,13 @@ dagcomponentfuncs.averagePerformanceChart = function (props) {
     var pointCount = history.length;
     var linePoints = history.map(function (season, index) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / scaleMaximum * 100;
         return x + "," + y;
     });
     var lineDots = history.map(function (season, index) {
         var projected = Math.max(0, Math.min(scaleMaximum, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / scaleMaximum * 100;
         return React.createElement("circle", { cx: x, cy: y, fill: "#1565c0", key: season.year, r: "2" });
     });

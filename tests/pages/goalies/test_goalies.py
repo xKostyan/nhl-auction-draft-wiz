@@ -132,6 +132,14 @@ def test_context_menu_labels_the_shared_selection_action_as_highlight():
     assert 'menuAction("Highlight the player", "select-player")' in renderer
 
 
+def test_projected_inline_chart_lines_start_and_end_at_bar_centers():
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
+
+
 def test_goalie_rows_include_projected_and_actual_game_starts_for_every_season(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
