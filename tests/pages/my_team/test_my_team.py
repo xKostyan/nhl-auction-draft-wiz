@@ -131,6 +131,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
+    assert all(
+        next(column for column in grid.columnDefs if column["field"] == "price")["width"] == 60
+        for grid in grids
+    )
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
     utility = grids[2]

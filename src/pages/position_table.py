@@ -337,7 +337,7 @@ def _projected_points_column_defs() -> list[dict]:
     ]
 
 
-def _price_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
+def _price_column_def(*, disable_empty_slots: bool = False, width: int = 75) -> list[dict]:
     """Return the editable integer keeper or auction price column."""
     return [
         {
@@ -349,7 +349,7 @@ def _price_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
             "editable": (
                 {"function": "!params.data.is_empty_slot"} if disable_empty_slots else True
             ),
-            "width": 75,
+            "width": width,
         }
     ]
 
@@ -778,7 +778,7 @@ def build_my_team_grid(
             "width": 32,
         },
         _player_name_column_def(allow_add_to_my_team=False),
-        *_price_column_def(disable_empty_slots=True),
+        *_price_column_def(disable_empty_slots=True, width=60),
         *([{"field": "position", "headerName": "Position"}] if table in {"utility", "bench"} else []),
         *(_health_column_def("F") if is_skater_table else []),
         *(_game_starts_column_def("G") if is_goalie_table else []),

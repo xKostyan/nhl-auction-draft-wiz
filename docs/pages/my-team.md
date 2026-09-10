@@ -69,7 +69,8 @@ membership flag is stored in the workspace and survives restarts.
   order.
 - My Team rows are 50px high, with 12px spacing between tables. Tables retain
   the same player data, editable **$$** price, inline charts, Tags, and Notes as their matching
-  position page. Health charts compare actual GP bars with a projected GP line;
+  position page. The **$$** column is 60px wide in every My Team table. Health
+  charts compare actual GP bars with a projected GP line;
   their 150px columns can be resized and their charts expand to fill the
   available cell width. Every inline projected line runs from the center of
   the first bar to the center of the last. Average Performance uses light
