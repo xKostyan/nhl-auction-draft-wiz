@@ -153,15 +153,28 @@ def _build_chart(
         if actual_color is not None
         else _ACTUAL_COLOR
     )
+    actual_label_annotations = [
+        {
+            "x": year,
+            "y": yaxis_min,
+            "text": f"{float(value):.2f}",
+            "showarrow": False,
+            "yanchor": "bottom",
+            "yshift": 2,
+        }
+        for year, value in actual_values.items()
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
     figure = go.Figure(
         go.Bar(
             name="Actual",
             x=years,
             y=actual_values,
             marker_color=bar_color,
-            texttemplate="%{y}",
+            texttemplate="%{y:.2f}",
             textposition="inside",
             insidetextanchor="start",
+            hovertemplate="Actual: %{y:.2f}<extra></extra>",
         )
     )
     if projected is not None:
@@ -172,6 +185,7 @@ def _build_chart(
                 y=projected.reindex(years),
                 mode="lines+markers",
                 line={"color": _PROJECTED_COLOR, "width": 3},
+                hovertemplate="Projected: %{y:.2f}<extra></extra>",
             )
         )
     figure.update_layout(
@@ -181,11 +195,13 @@ def _build_chart(
         margin={"l": 45, "r": 12, "t": 42, "b": 38},
         showlegend=False,
         title_font={"size": 16},
+        annotations=actual_label_annotations,
     )
     figure.update_xaxes(title="Year", type="category")
     figure.update_yaxes(
         title=yaxis_title,
         range=[yaxis_min, yaxis_max] if yaxis_max is not None else None,
+        tickformat=".2f",
     )
     return dcc.Graph(
         figure=figure,

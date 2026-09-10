@@ -60,6 +60,10 @@ highlighted from any live-auction or My Team table.
   Percentage**, and **Save Percentage** charts.
 - Goalie axes use fixed scales: AVG Performance 0-12, Game Starts 0-60, Win
   Percentage 0-0.8, and Save Percentage 0.6-1.
+- All displayed graph values, including axis ticks, hover values, and actual
+  bar labels, use two decimal places. Actual labels are positioned at the
+  bottom inside edge of their bars; charts such as Save Percentage whose axis
+  begins above zero retain visible labels at that lower chart edge.
 - Goalie **Game Starts** and **AVG Performance** bars use the same table bands:
   Game Starts is red below 30, yellow through 42, then green; AVG Performance
   is red below 7, orange through 7.5, yellow below 7.9, light green below 8.3,

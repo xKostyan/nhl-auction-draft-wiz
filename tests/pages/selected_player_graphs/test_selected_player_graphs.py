@@ -74,10 +74,13 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert [trace.name for trace in points.data] == ["Actual", "Projected"]
     assert [trace.name for trace in health.data] == ["Actual"]
     assert points.data[0].type == "bar"
-    assert points.data[0].texttemplate == "%{y}"
+    assert points.data[0].texttemplate == "%{y:.2f}"
     assert points.data[0].textposition == "inside"
     assert points.data[0].insidetextanchor == "start"
+    assert points.data[0].hovertemplate == "Actual: %{y:.2f}<extra></extra>"
     assert points.data[1].type == "scatter"
+    assert points.data[1].hovertemplate == "Projected: %{y:.2f}<extra></extra>"
+    assert points.layout.yaxis.tickformat == ".2f"
     assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
     assert next(graph for graph in graphs if graph.figure is points).style == {
@@ -109,6 +112,13 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
     } == expected_yaxis_maxima
     assert all(
+        graph.figure.data[0].texttemplate == "%{y:.2f}"
+        and graph.figure.data[0].textposition == "inside"
+        and graph.figure.data[0].insidetextanchor == "start"
+        and graph.figure.layout.yaxis.tickformat == ".2f"
+        for graph in graphs
+    )
+    assert all(
         [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
         for graph in graphs
         if graph.figure.layout.title.text in {"Hits per Game", "Blocks per Game", "Shots on Goal per Game"}
@@ -132,9 +142,12 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
     ]
     assert all([trace.name for trace in graph.figure.data] == ["Actual", "Projected"] for graph in graphs)
     assert all(
-        graph.figure.data[0].texttemplate == "%{y}"
+        graph.figure.data[0].texttemplate == "%{y:.2f}"
         and graph.figure.data[0].textposition == "inside"
         and graph.figure.data[0].insidetextanchor == "start"
+        and graph.figure.data[0].hovertemplate == "Actual: %{y:.2f}<extra></extra>"
+        and graph.figure.data[1].hovertemplate == "Projected: %{y:.2f}<extra></extra>"
+        and graph.figure.layout.yaxis.tickformat == ".2f"
         for graph in graphs
     )
     assert {
@@ -149,6 +162,13 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         graph.figure for graph in graphs if graph.figure.layout.title.text == "Save Percentage"
     )
     assert save_percentage.layout.yaxis.range[0] == 0.6
+    assert len(save_percentage.layout.annotations) == sum(
+        value is not None and value == value for value in save_percentage.data[0].y
+    )
+    assert all(annotation.y == 0.6 for annotation in save_percentage.layout.annotations)
+    assert all(annotation.yanchor == "bottom" for annotation in save_percentage.layout.annotations)
+    assert all(annotation.text.count(".") == 1 and len(annotation.text.rsplit(".", 1)[1]) == 2
+               for annotation in save_percentage.layout.annotations)
     assert {
         graph.figure.layout.title.text: graph.figure.data[0].marker.color[0] for graph in graphs
     } == {
