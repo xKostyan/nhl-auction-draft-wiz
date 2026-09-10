@@ -96,6 +96,20 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert allocation_slider.value == 20
     assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
     assert goalie_input_label.style == {"display": "none"}
+    skater_input = next(
+        node for node in walk_components(page_layout)
+        if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_ID
+    )
+    assert skater_input.value == 80
+    assert any(
+        getattr(node, "className", None) == "visually-hidden"
+        and getattr(node, "children", None) == "Skaters allocation percentage"
+        for node in walk_components(page_layout)
+    )
+    assert not any(
+        getattr(node, "children", None) == "Skaters %"
+        for node in walk_components(page_layout)
+    )
     assert skater_allocation_amount.children == "$744"
     assert goalie_allocation_amount.children == "$186"
     assert chart.id == my_team.CHART_ID
@@ -306,6 +320,11 @@ def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
     assert ".budget-allocation-controls .rc-slider {" in stylesheet
     assert "max-width: 75%;" in stylesheet
     assert "min-width: 0;" in stylesheet
+    assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet
+    assert ".budget-panel input {\n    font-size: 15px;" in stylesheet
+    assert ".budget-panel .rc-slider-mark-text," in stylesheet
+    assert "font-size: 11px;" in stylesheet
+    assert ".visually-hidden {" in stylesheet
 
 
 def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):

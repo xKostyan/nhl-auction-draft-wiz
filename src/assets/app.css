@@ -56,6 +56,7 @@ body,
 .budget-panel {
     border: 1px solid #ccc;
     box-sizing: border-box;
+    font-size: 15px;
     margin-bottom: 16px;
     padding: 12px;
     width: 100%;
@@ -94,7 +95,22 @@ body,
 }
 
 .budget-panel input {
+    font-size: 15px;
     max-width: 110px;
+}
+
+.budget-panel .rc-slider-mark-text,
+.budget-panel .rc-slider-tooltip-inner {
+    font-size: 11px;
+}
+
+.visually-hidden {
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
 }
 
 .budget-metrics {

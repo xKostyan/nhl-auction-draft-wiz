@@ -477,7 +477,19 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
                 value=get_target_total_fp(),
             )]),
             html.Div([
-                html.Label(["Skaters %", dcc.Input(id=SKATER_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=skater_percentage)]),
+                html.Label(
+                    "Skaters allocation percentage",
+                    htmlFor=SKATER_ALLOCATION_ID,
+                    className="visually-hidden",
+                ),
+                dcc.Input(
+                    id=SKATER_ALLOCATION_ID,
+                    type="number",
+                    min=0,
+                    max=100,
+                    step=1,
+                    value=skater_percentage,
+                ),
                 html.Label(
                     ["Goalies %", dcc.Input(
                         id=GOALIE_ALLOCATION_ID,
