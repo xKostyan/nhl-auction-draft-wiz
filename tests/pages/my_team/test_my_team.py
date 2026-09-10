@@ -297,7 +297,7 @@ def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
     stylesheet = (Path(__file__).parents[3] / "src" / "assets" / "app.css").read_text()
 
     assert ".budget-allocation-controls .rc-slider {" in stylesheet
-    assert "max-width: 75%;" in stylesheet
+    assert "max-width: 60%;" in stylesheet
     assert ".budget-allocation-controls .rc-slider-tooltip {" in stylesheet
     assert "display: none !important;" in stylesheet
     assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet

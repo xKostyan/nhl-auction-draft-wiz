@@ -39,7 +39,7 @@ membership flag is stored in the workspace and survives restarts.
   handle as the only visible split control. Draft Budget panel text is one
   pixel smaller than the page default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
-  from the total budget. The slider uses no more than 75% of the
+  from the total budget. The slider uses no more than 60% of the
   allocation-controls row width. The budget panel is on the left of the
   projected-TFP chart; both use equal width on larger screens and stack on
   narrow screens.
