@@ -304,15 +304,15 @@ def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
     assert "#budget-allocation-slider {" in stylesheet
     assert "margin-left: 36px;" in stylesheet
     assert "width: calc(60% - 36px);" in stylesheet
-    assert ".budget-allocation-controls .rc-slider-tooltip {" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-tooltip {" in stylesheet
     assert "display: none !important;" in stylesheet
-    assert ".budget-allocation-controls .rc-slider-rail {" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-track {" in stylesheet
     assert "background-color: #33adff;" in stylesheet
-    assert ".budget-allocation-controls .rc-slider-handle {" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-thumb {" in stylesheet
     assert "background-color: #555;" in stylesheet
     assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet
     assert ".budget-panel input {\n    font-size: 15px;" in stylesheet
-    assert ".budget-panel .rc-slider-mark-text," in stylesheet
+    assert ".budget-panel .dash-slider-mark," in stylesheet
     assert "font-size: 11px;" in stylesheet
 
 
