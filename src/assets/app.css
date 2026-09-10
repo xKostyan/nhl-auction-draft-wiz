@@ -71,21 +71,12 @@ body,
 }
 
 .budget-allocation-controls {
-    align-items: flex-end;
-    display: flex;
-    gap: 12px;
     margin-bottom: 8px;
 }
 
-.budget-allocation-controls > label {
-    margin-right: 0;
-}
-
 .budget-allocation-controls .rc-slider {
-    flex: 1 1 0;
     margin: 0 12px 12px 0;
     max-width: 75%;
-    min-width: 0;
 }
 
 .budget-allocation-amounts {
@@ -102,15 +93,6 @@ body,
 .budget-panel .rc-slider-mark-text,
 .budget-panel .rc-slider-tooltip-inner {
     font-size: 11px;
-}
-
-.visually-hidden {
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    padding: 0;
-    position: absolute;
-    width: 1px;
 }
 
 .budget-metrics {

@@ -31,14 +31,12 @@ membership flag is stored in the workspace and survives restarts.
   then marks the player drafted and charges that price to the budget. Keepers
   and auction purchases follow this same workflow.
 - The budget panel provides an advisory **Skaters / Goalies** allocation view.
-  Its two persisted percentage inputs must total 100 and show planned budget,
-  price spent, the required `$1` minimum, remaining allocation, and a per-slot
-  guide. A 1% increment slider sits beside the inputs: its left endpoint sets
-  Skaters to 100% and Goalies to 0%, its midpoint sets both to 50%, and its
-  right endpoint reverses that split. Moving it synchronizes both percentage
-  inputs, although the complementary Goalies % input is not displayed. The
-  visible Skaters percentage input has an accessible label but no visible text
-  label. Draft Budget panel text is one pixel smaller than the page default.
+  Its persisted percentage split drives planned budget, price spent, the
+  required `$1` minimum, remaining allocation, and a per-slot guide. A 1%
+  increment slider is the only split input: its left endpoint sets Skaters to
+  100% and Goalies to 0%, its midpoint sets both to 50%, and its right endpoint
+  reverses that split. Draft Budget panel text is one pixel smaller than the
+  page default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 75% of the
   allocation-controls row width. The budget panel is on the left of the

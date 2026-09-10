@@ -67,15 +67,6 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     allocation_slider = next(
         node for node in walk_components(page_layout) if isinstance(node, dcc.Slider)
     )
-    goalie_input_label = next(
-        node
-        for node in walk_components(page_layout)
-        if getattr(node, "style", None) == {"display": "none"}
-        and any(
-            getattr(child, "id", None) == my_team.GOALIE_ALLOCATION_ID
-            for child in node.children
-        )
-    )
     skater_allocation_amount = next(
         node for node in walk_components(page_layout)
         if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_AMOUNT_ID
@@ -95,19 +86,8 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert allocation_slider.step == 1
     assert allocation_slider.value == 20
     assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
-    assert goalie_input_label.style == {"display": "none"}
-    skater_input = next(
-        node for node in walk_components(page_layout)
-        if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_ID
-    )
-    assert skater_input.value == 80
-    assert any(
-        getattr(node, "className", None) == "visually-hidden"
-        and getattr(node, "children", None) == "Skaters allocation percentage"
-        for node in walk_components(page_layout)
-    )
-    assert not any(
-        getattr(node, "children", None) == "Skaters %"
+    assert all(
+        getattr(node, "id", None) not in {"budget-skater-percent", "budget-goalie-percent"}
         for node in walk_components(page_layout)
     )
     assert skater_allocation_amount.children == "$744"
@@ -297,12 +277,11 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
 
 
 def test_allocation_slider_values_complement_the_skater_and_goalie_percentages():
-    assert my_team.synchronize_allocation_percentages(80, 20, 0, my_team.ALLOCATION_SLIDER_ID) == (100, 0)
-    assert my_team.synchronize_allocation_percentages(80, 20, 50, my_team.ALLOCATION_SLIDER_ID) == (50, 50)
-    assert my_team.synchronize_allocation_percentages(80, 20, 100, my_team.ALLOCATION_SLIDER_ID) == (0, 100)
-    assert my_team.synchronize_allocation_percentages(80, 20, 20, my_team.BUDGET_INPUT_ID) == (80, 20)
-    with pytest.raises(ValueError, match="total 100"):
-        my_team.synchronize_allocation_percentages(70, 20, 20, my_team.BUDGET_INPUT_ID)
+    assert my_team.allocation_percentages_from_slider(0) == (100, 0)
+    assert my_team.allocation_percentages_from_slider(50) == (50, 50)
+    assert my_team.allocation_percentages_from_slider(100) == (0, 100)
+    with pytest.raises(ValueError, match="between 0 and 100"):
+        my_team.allocation_percentages_from_slider(101)
 
 
 def test_budget_allocation_amounts_are_derived_from_the_total_budget():
@@ -319,12 +298,10 @@ def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
 
     assert ".budget-allocation-controls .rc-slider {" in stylesheet
     assert "max-width: 75%;" in stylesheet
-    assert "min-width: 0;" in stylesheet
     assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet
     assert ".budget-panel input {\n    font-size: 15px;" in stylesheet
     assert ".budget-panel .rc-slider-mark-text," in stylesheet
     assert "font-size: 11px;" in stylesheet
-    assert ".visually-hidden {" in stylesheet
 
 
 def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
