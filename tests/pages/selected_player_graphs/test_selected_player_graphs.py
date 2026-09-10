@@ -77,6 +77,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert points.data[0].texttemplate == "%{y:.2f}"
     assert points.data[0].textposition == "inside"
     assert points.data[0].insidetextanchor == "start"
+    assert list(points.data[0].insidetextfont.color) == ["white"] * len(points.data[0].y)
     assert points.data[0].hovertemplate == "Actual: %{y:.2f}<extra></extra>"
     assert points.data[1].type == "scatter"
     assert points.data[1].hovertemplate == "Projected: %{y:.2f}<extra></extra>"
@@ -166,6 +167,7 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
     assert actual_labels.name == "Actual labels"
     assert actual_labels.mode == "text"
     assert actual_labels.textposition == "top center"
+    assert list(actual_labels.textfont.color) == ["black"] * len(actual_labels.text)
     assert actual_labels.hoverinfo == "skip"
     assert len(actual_labels.x) == sum(
         value is not None and value == value for value in save_percentage.data[0].y
@@ -300,6 +302,12 @@ def test_goalie_bar_color_bands_match_the_requested_ranges():
         "#81c784",
         "#388e3c",
     ]
+
+
+def test_actual_bar_label_contrast_is_consistent_for_every_chart_color():
+    assert selected_player_graphs._actual_label_colors(
+        ["#1f77b4", "#d32f2f", "#ef6c00", "#f9a825", "#81c784", "#388e3c"], 6
+    ) == ["white", "white", "black", "black", "black", "black"]
 
 
 def test_graphs_use_a_compact_three_column_layout():

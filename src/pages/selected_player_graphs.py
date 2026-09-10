@@ -20,6 +20,7 @@ GRAPH_CONTAINER_ID = "selected-player-graphs-container"
 _ACTUAL_COLOR = "#1f77b4"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
+_DARK_ACTUAL_BAR_COLORS = {_ACTUAL_COLOR, "#d32f2f"}
 
 
 def _history_by_year(player_id: int) -> pd.DataFrame:
@@ -135,6 +136,12 @@ def _save_percentage_color(value: float) -> str:
     return "#388e3c"
 
 
+def _actual_label_colors(bar_color: str | list[str], value_count: int) -> list[str]:
+    """Use the same legible label contrast for actual bars in every chart."""
+    bar_colors = bar_color if isinstance(bar_color, list) else [bar_color] * value_count
+    return ["white" if color in _DARK_ACTUAL_BAR_COLORS else "black" for color in bar_colors]
+
+
 def _build_chart(
     title: str,
     actual: pd.Series,
@@ -153,6 +160,7 @@ def _build_chart(
         if actual_color is not None
         else _ACTUAL_COLOR
     )
+    label_colors = _actual_label_colors(bar_color, len(actual_values))
     actual_label_years = [
         str(year)
         for year, value in actual_values.items()
@@ -161,6 +169,11 @@ def _build_chart(
     actual_label_values = [
         f"{float(value):.2f}"
         for value in actual_values
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
+    actual_label_colors = [
+        color
+        for color, value in zip(label_colors, actual_values)
         if yaxis_min != 0 and not pd.isna(value)
     ]
     figure = go.Figure(
@@ -172,6 +185,7 @@ def _build_chart(
             texttemplate="%{y:.2f}",
             textposition="inside",
             insidetextanchor="start",
+            insidetextfont={"color": label_colors},
             hovertemplate="Actual: %{y:.2f}<extra></extra>",
         )
     )
@@ -195,6 +209,7 @@ def _build_chart(
                 text=actual_label_values,
                 mode="text",
                 textposition="top center",
+                textfont={"color": actual_label_colors},
                 hoverinfo="skip",
                 showlegend=False,
             )

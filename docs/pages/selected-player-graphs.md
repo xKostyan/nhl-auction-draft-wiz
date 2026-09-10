@@ -64,6 +64,8 @@ highlighted from any live-auction or My Team table.
   bar labels, use two decimal places. Actual labels are positioned at the
   bottom inside edge of their bars; charts such as Save Percentage whose axis
   begins above zero retain visible labels at that lower chart edge.
+- Actual-bar labels use consistent contrast across every chart: white on the
+  dark blue or red bars, and black on orange, yellow, and green bars.
 - Goalie **Game Starts** and **AVG Performance** bars use the same table bands:
   Game Starts is red below 30, yellow through 42, then green; AVG Performance
   is red below 7, orange through 7.5, yellow below 7.9, light green below 8.3,
