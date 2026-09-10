@@ -140,7 +140,7 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         "Win Percentage",
         "Save Percentage",
     ]
-    assert all([trace.name for trace in graph.figure.data] == ["Actual", "Projected"] for graph in graphs)
+    assert all([trace.name for trace in graph.figure.data[:2]] == ["Actual", "Projected"] for graph in graphs)
     assert all(
         graph.figure.data[0].texttemplate == "%{y:.2f}"
         and graph.figure.data[0].textposition == "inside"
@@ -162,19 +162,21 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         graph.figure for graph in graphs if graph.figure.layout.title.text == "Save Percentage"
     )
     assert save_percentage.layout.yaxis.range[0] == 0.6
-    assert len(save_percentage.layout.annotations) == sum(
+    actual_labels = save_percentage.data[2]
+    assert actual_labels.name == "Actual labels"
+    assert actual_labels.mode == "text"
+    assert actual_labels.textposition == "top center"
+    assert actual_labels.hoverinfo == "skip"
+    assert len(actual_labels.x) == sum(
         value is not None and value == value for value in save_percentage.data[0].y
     )
-    assert [annotation.x for annotation in save_percentage.layout.annotations] == [
+    assert list(actual_labels.x) == [
         str(year) for year, value in zip(save_percentage.data[0].x, save_percentage.data[0].y)
         if value is not None and value == value
     ]
-    assert all(annotation.xref == "x" and annotation.yref == "y"
-               for annotation in save_percentage.layout.annotations)
-    assert all(annotation.y == 0.6 for annotation in save_percentage.layout.annotations)
-    assert all(annotation.yanchor == "bottom" for annotation in save_percentage.layout.annotations)
-    assert all(annotation.text.count(".") == 1 and len(annotation.text.rsplit(".", 1)[1]) == 2
-               for annotation in save_percentage.layout.annotations)
+    assert list(actual_labels.y) == [0.6] * len(actual_labels.x)
+    assert all(value.count(".") == 1 and len(value.rsplit(".", 1)[1]) == 2
+               for value in actual_labels.text)
     assert {
         graph.figure.layout.title.text: graph.figure.data[0].marker.color[0] for graph in graphs
     } == {

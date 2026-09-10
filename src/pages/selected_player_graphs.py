@@ -153,18 +153,14 @@ def _build_chart(
         if actual_color is not None
         else _ACTUAL_COLOR
     )
-    actual_label_annotations = [
-        {
-            "x": str(year),
-            "xref": "x",
-            "y": yaxis_min,
-            "yref": "y",
-            "text": f"{float(value):.2f}",
-            "showarrow": False,
-            "yanchor": "bottom",
-            "yshift": 2,
-        }
+    actual_label_years = [
+        str(year)
         for year, value in actual_values.items()
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
+    actual_label_values = [
+        f"{float(value):.2f}"
+        for value in actual_values
         if yaxis_min != 0 and not pd.isna(value)
     ]
     figure = go.Figure(
@@ -190,6 +186,19 @@ def _build_chart(
                 hovertemplate="Projected: %{y:.2f}<extra></extra>",
             )
         )
+    if actual_label_years:
+        figure.add_trace(
+            go.Scatter(
+                name="Actual labels",
+                x=actual_label_years,
+                y=[yaxis_min] * len(actual_label_years),
+                text=actual_label_values,
+                mode="text",
+                textposition="top center",
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
     figure.update_layout(
         title=title,
         barmode="group",
@@ -197,7 +206,6 @@ def _build_chart(
         margin={"l": 45, "r": 12, "t": 42, "b": 38},
         showlegend=False,
         title_font={"size": 16},
-        annotations=actual_label_annotations,
     )
     figure.update_xaxes(title="Year", type="category")
     figure.update_yaxes(
