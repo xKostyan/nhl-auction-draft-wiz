@@ -310,6 +310,9 @@ def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
     assert "background-color: #33adff;" in stylesheet
     assert ".budget-allocation-controls .dash-slider-thumb {" in stylesheet
     assert "background-color: #555;" in stylesheet
+    assert "border-radius: 4px;" in stylesheet
+    assert "height: 18px;" in stylesheet
+    assert "width: 8px;" in stylesheet
     assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet
     assert ".budget-panel input {\n    font-size: 15px;" in stylesheet
     assert ".budget-panel .dash-slider-mark," in stylesheet

@@ -95,7 +95,10 @@ body,
 .budget-allocation-controls .dash-slider-thumb {
     background-color: #555;
     border-color: #555;
+    border-radius: 4px;
+    height: 18px;
     opacity: 1;
+    width: 8px;
 }
 
 .budget-allocation-controls .dash-slider-thumb:hover,
