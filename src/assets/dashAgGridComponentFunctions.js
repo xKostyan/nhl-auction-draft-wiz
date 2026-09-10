@@ -10,13 +10,13 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
     var pointCount = chronologicalHistory.length;
     var linePoints = chronologicalHistory.map(function (season, index) {
         var projected = Math.max(0, Math.min(84, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / 84 * 100;
         return x + "," + y;
     });
     var lineDots = chronologicalHistory.map(function (season, index) {
         var projected = Math.max(0, Math.min(84, Number(season.projected) || 0));
-        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var x = pointCount ? (index + 0.5) / pointCount * 100 : 50;
         var y = 100 - projected / 84 * 100;
         return React.createElement("circle", {
             cx: x, cy: y, fill: "#1565c0", key: season.year, r: "2"

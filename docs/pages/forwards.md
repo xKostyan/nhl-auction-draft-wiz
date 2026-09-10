@@ -30,10 +30,11 @@ open in its own browser tab during the draft.
   (2px larger than the default table value size).
 - **Health (actual GP)** is an inline combination chart of up to the five most
   recent actual games-played seasons, plus the upcoming projected season,
-  ordered oldest to newest. A blue line shows projected GP, while every actual
-  GP bar shares a fixed 0-84 scale and has its actual value centered over the
-  chart. Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and
-  green for 72-84; hovering a bar shows its season's projected and actual GP.
+  ordered oldest to newest. A blue line shows projected GP with each point
+  centered over its matching year's actual-GP bar, while every actual GP bar
+  shares a fixed 0-84 scale and has its actual value centered over the chart.
+  Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and green for
+  72-84; hovering a bar shows its season's projected and actual GP.
   The column defaults to 150px wide, can be resized, and expands to fill the
   available cell width. It is vertically centered in a 50px chart area,
   leaving 5px clearance above and below. Rows are 60px high to accommodate

@@ -265,6 +265,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "averagePerformanceChart" in renderer
     assert "Projected games played" in renderer
     assert 'season.year + ": " + projected + " projected, " + gamesPlayed + " actual GP"' in renderer
+    assert "(index + 0.5) / pointCount * 100" in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
