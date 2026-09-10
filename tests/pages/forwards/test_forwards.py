@@ -258,7 +258,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "}, String(gamesPlayed))" in renderer
     assert 'gap: "1px"' in renderer
-    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            width: "100%"' in renderer
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative",\n            width: "100%"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
     assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
@@ -266,6 +266,7 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "Projected games played" in renderer
     assert 'season.year + ": " + projected + " projected, " + gamesPlayed + " actual GP"' in renderer
     assert renderer.count("(index + 0.5) / pointCount * 100") == 6
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative"' in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer

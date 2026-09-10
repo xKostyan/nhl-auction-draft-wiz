@@ -64,6 +64,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     ).read_text()
     assert "Projected games played" in renderer
     assert renderer.count("(index + 0.5) / pointCount * 100") == 6
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative"' in renderer
     assert grid.columnDefs[5] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",

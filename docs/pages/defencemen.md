@@ -34,7 +34,9 @@ open in its own browser tab during the draft.
   centered over its matching year's actual-GP bar, while every actual GP bar
   shares a fixed 0-84 scale and has its actual value centered over the chart.
   Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and green for
-  72-84; hovering a bar shows its season's projected and actual GP.
+  72-84; hovering a bar shows its season's projected and actual GP. The line is
+  contained within the chart so its first and last points align with the first
+  and last bar centers.
   The column defaults to 150px wide, can be resized, and expands to fill the
   available cell width. It is vertically centered in a 50px chart area,
   leaving 5px clearance above and below. Rows are 60px high to accommodate
