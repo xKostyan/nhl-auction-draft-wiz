@@ -38,7 +38,8 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "",
         "#",
         "Player name",
-        "$$",
+        "k $$",
+        "a $$",
         "Health (actual GP)",
         "Average Performance",
         "p TFP 2027",
@@ -55,11 +56,17 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[3]["cellEditor"] == "agNumberCellEditor"
     assert grid.columnDefs[3]["cellEditorParams"] == {"min": 0, "precision": 0}
     assert grid.columnDefs[3]["editable"] is True
-    assert grid.columnDefs[4]["cellRenderer"] == "actualGpSparkline"
-    assert grid.columnDefs[4]["width"] == 150
-    assert grid.columnDefs[4]["resizable"] is True
-    assert grid.columnDefs[4]["suppressAutoSize"] is True
-    assert grid.columnDefs[5] == {
+    assert grid.columnDefs[5]["cellRenderer"] == "actualGpSparkline"
+    assert grid.columnDefs[5]["width"] == 150
+    assert grid.columnDefs[5]["resizable"] is True
+    assert grid.columnDefs[5]["suppressAutoSize"] is True
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+    assert "Projected games played" in renderer
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative"' in renderer
+    assert grid.columnDefs[6] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",
         "cellRenderer": "averagePerformanceChart",
@@ -69,12 +76,15 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "suppressAutoSize": True,
         "width": 150,
     }
-    assert grid.columnDefs[8]["headerName"] == "Tags"
-    assert grid.columnDefs[8]["cellRenderer"] == "playerTagsRenderer"
-    assert grid.columnDefs[9]["headerName"] == "Notes"
-    assert grid.columnDefs[9]["editable"] is True
-    assert grid.columnDefs[9]["wrapText"] is True
-    assert grid.columnDefs[9]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[9]["headerName"] == "Tags"
+    assert grid.columnDefs[9]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == [
+        "PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"
+    ]
+    assert grid.columnDefs[10]["headerName"] == "Notes"
+    assert grid.columnDefs[10]["editable"] is True
+    assert grid.columnDefs[10]["wrapText"] is True
+    assert grid.columnDefs[10]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

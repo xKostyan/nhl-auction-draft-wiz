@@ -16,7 +16,7 @@ open in its own browser tab during the draft.
 - The page header contains only the page title and player search control.
 - The table header and menu entry use the defencemen green `#5cd65c`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, editable **$$** (price), **Health (actual GP)**, **Average Performance**,
+  name**, editable **k $$** (keeper price), editable **a $$** (auction price), **Health (actual GP)**, **Average Performance**,
   **p TFP `<upcoming year>`**, **p AFP `<upcoming year>`**, **Tags**, and
   **Notes** columns, in
   that order. `p TFP` is the projected Total Fantasy Points and `p AFP` is the
@@ -28,27 +28,35 @@ open in its own browser tab during the draft.
   and grow the header row as needed; cell values do not wrap. Cell values,
   controls, and inline graphs are vertically centered. Cell text is 16px
   (2px larger than the default table value size).
-- **Health (actual GP)** is an inline vertical-bar chart of up to the five
-  most recent actual games-played seasons, ordered oldest to newest. Every bar
-  shares a fixed 0-84 GP scale and has its actual GP value centered over the
-  chart. Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and
-  green for 72-84; hovering a bar shows its season and actual GP. The column
-  defaults to 150px wide, can be resized, and expands to fill the available
-  cell width. It is vertically centered in a 50px chart area, leaving 5px
-  clearance above and below. Rows are 60px high to accommodate current and
-  future inline player graphs.
+- **Health (actual GP)** is an inline combination chart of up to the five most
+  recent actual games-played seasons, plus the upcoming projected season,
+  ordered oldest to newest. A blue line shows projected GP with each point
+  centered over its matching year's actual-GP bar, while every actual GP bar
+  shares a fixed 0-84 scale and has its actual value centered over the chart.
+  Bars are red for 0-50 GP, orange for 51-60, yellow for 61-71, and green for
+  72-84; hovering a bar shows its season's projected and actual GP. The line is
+  contained within the chart so its first and last points align with the first
+  and last bar centers.
+  The column defaults to 150px wide, can be resized, and expands to fill the
+  available cell width. It is vertically centered in a 50px chart area,
+  leaving 5px clearance above and below. Rows are 60px high to accommodate
+  current and future inline player graphs.
 - **Average Performance** is a resizable 150px inline combination chart
   covering every imported defenceman season. A blue line shows projected
   average fantasy points and bars show actual average fantasy points, with
   missing values shown as zero. Its fixed scale is 0-6; actual bars are red
   through 3.1, orange through 3.5, yellow below 3.7, light green from 3.7
-  up to 4.1, and green from 4.1.
+  up to 4.1, and green from 4.1. The projected line starts at the center of
+  the first bar and ends at the center of the last bar.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
-  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, and `Line2`, then click **Done** to
-  close it. Tags are left-aligned. Always-visible selected tags use 11px text;
-  the picker buttons use 9px text. `1` tags use a green hue and `2` tags use a
-  yellow hue; selections persist in the workspace.
+  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, `Line2`, `contract`, `rookie`, and
+  `bounceback`, then click **Done** to close it. `contract` marks a contract
+  year, `rookie` marks future potential, and `bounceback` marks an unusually
+  poor prior season with expected improvement. Tags are left-aligned.
+  Always-visible selected tags use 11px text; the picker buttons use 9px text.
+  `1` and `rookie` tags use a green hue, `2` and `contract` tags use a yellow
+  hue, and `bounceback` uses a red hue; selections persist in the workspace.
 - **Notes** is the last, resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
@@ -67,7 +75,8 @@ open in its own browser tab during the draft.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
-- **$$** is an editable non-negative whole-number keeper or auction cost.
+- **k $$** is the editable non-negative whole-number keeper cost. **a $$** is the
+  separate editable non-negative whole-number auction cost used for My Team budgets.
   Leave it blank when no value is known; entered values persist in the
   workspace across app restarts.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,

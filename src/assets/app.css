@@ -56,6 +56,7 @@ body,
 .budget-panel {
     border: 1px solid #ccc;
     box-sizing: border-box;
+    font-size: 15px;
     margin-bottom: 16px;
     padding: 12px;
     width: 100%;
@@ -69,8 +70,59 @@ body,
     margin: 0 12px 8px 0;
 }
 
+.budget-allocation-controls {
+    margin-bottom: 8px;
+}
+
+#budget-allocation-slider {
+    margin-left: 36px;
+    width: calc(60% - 36px);
+}
+
+.budget-allocation-controls .dash-slider {
+    margin: 0 12px 12px 0;
+    max-width: 100%;
+}
+
+.budget-allocation-controls .dash-slider-tooltip {
+    display: none !important;
+}
+
+.budget-allocation-controls .dash-slider-track {
+    background-color: #33adff;
+}
+
+.budget-allocation-controls .dash-slider-thumb {
+    background-color: #555;
+    border-color: #555;
+    border-radius: 4px;
+    height: 18px;
+    opacity: 1;
+    width: 8px;
+}
+
+.budget-allocation-controls .dash-slider-thumb:hover,
+.budget-allocation-controls .dash-slider-thumb:focus,
+.budget-allocation-controls .dash-slider-thumb:active {
+    background-color: #444;
+    border-color: #444;
+    box-shadow: 0 0 0 3px rgba(68, 68, 68, 0.2);
+}
+
+.budget-allocation-amounts {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
 .budget-panel input {
+    font-size: 15px;
     max-width: 110px;
+}
+
+.budget-panel .dash-slider-mark,
+.budget-panel .dash-slider-tooltip {
+    font-size: 11px;
 }
 
 .budget-metrics {

@@ -6,7 +6,7 @@ import math
 
 import dash
 import plotly.graph_objects as go
-from dash import Input, Output, callback, ctx, dcc, html
+from dash import Input, Output, callback, ctx, dcc, html, no_update
 
 from .position_table import (
     build_my_team_snapshot,
@@ -35,8 +35,9 @@ BUDGET_INPUT_ID = "draft-budget"
 TARGET_TOTAL_FP_INPUT_ID = "target-total-fp"
 BUDGET_SUMMARY_ID = "budget-summary"
 BUDGET_STATUS_ID = "budget-status"
-SKATER_ALLOCATION_ID = "budget-skater-percent"
-GOALIE_ALLOCATION_ID = "budget-goalie-percent"
+ALLOCATION_SLIDER_ID = "budget-allocation-slider"
+SKATER_ALLOCATION_AMOUNT_ID = "budget-skater-allocation-amount"
+GOALIE_ALLOCATION_AMOUNT_ID = "budget-goalie-allocation-amount"
 _GROUPS = (("F", "Forwards"), ("D", "Defencemen"), ("utility", "Utility"), ("G", "Goalies"))
 _GROUP_COLORS = {"F": "#ff8533", "D": "#5cd65c", "utility": "#33adff", "G": "#cc33ff"}
 _PLAYER_COLORS = {
@@ -174,8 +175,8 @@ def _budget_int(value: object, label: str) -> int:
     raise ValueError(f"{label} must be a non-negative whole number.")
 
 
-def _player_price(value: object) -> int:
-    """Treat legacy blank roster prices as zero while validating populated prices."""
+def _auction_price(value: object) -> int:
+    """Treat blank auction prices as zero while validating populated prices."""
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return 0
     return _budget_int(value, "Player price")
@@ -212,7 +213,7 @@ def get_budget_summary(
     roster_rows = [
         row for table_rows in snapshot.values() for row in table_rows if not row.get("is_empty_slot")
     ]
-    committed = sum(_player_price(row["price"]) for row in roster_rows)
+    committed = sum(_auction_price(row["auction_price"]) for row in roster_rows)
     empty_slots = sum(
         1 for table_rows in snapshot.values() for row in table_rows if row.get("is_empty_slot")
     )
@@ -260,7 +261,7 @@ def get_budget_allocation(
     for label, positions, key in groups:
         planned = summary["total_budget"] * _budget_int(percentages[key], f"{label} allocation") / 100
         committed = sum(
-            _player_price(row["price"])
+            _auction_price(row["auction_price"])
             for row in roster_rows if row["position"] in positions
         )
         open_slots = sum(open_active_slots[position] for position in positions)
@@ -278,6 +279,28 @@ def get_budget_allocation(
             "average": max(0, remaining) / open_slots if open_slots else 0,
         })
     return rows
+
+
+def get_budget_allocation_amounts(
+    percentages: dict[str, object],
+    *,
+    snapshot: dict[str, list[dict]] | None = None,
+    budget: int | None = None,
+) -> dict[str, str]:
+    """Format the total-budget split shown beside the allocation controls."""
+    allocation_rows = get_budget_allocation(percentages, snapshot=snapshot, budget=budget)
+    return {
+        row["label"].lower(): f"${row['planned']:,.0f}"
+        for row in allocation_rows
+    }
+
+
+def allocation_percentages_from_slider(slider_percentage: object) -> tuple[int, int]:
+    """Derive complementary Skaters and Goalies percentages from the slider."""
+    goalies = _budget_int(slider_percentage, "Goalies allocation")
+    if goalies > 100:
+        raise ValueError("Goalies allocation must be between 0 and 100.")
+    return 100 - goalies, goalies
 
 
 def get_target_fp_summary(
@@ -439,10 +462,32 @@ def _budget_controls(*, snapshot: dict[str, list[dict]]) -> html.Section:
                 inputMode="numeric",
                 value=get_target_total_fp(),
             )]),
-            html.Div([
-                html.Label(["Skaters %", dcc.Input(id=SKATER_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=skater_percentage)]),
-                html.Label(["Goalies %", dcc.Input(id=GOALIE_ALLOCATION_ID, type="number", min=0, max=100, step=1, value=goalie_percentage)]),
-            ]),
+            html.Div(
+                dcc.Slider(
+                    id=ALLOCATION_SLIDER_ID,
+                    min=0,
+                    max=100,
+                    step=1,
+                    value=goalie_percentage,
+                    marks={0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"},
+                    reverse=True,
+                    tooltip={"always_visible": False, "placement": "bottom"},
+                ),
+                className="budget-allocation-controls",
+            ),
+            html.Div(
+                [
+                    html.Div(["Skaters allocated ", html.Strong(
+                        get_budget_allocation_amounts(percentages, snapshot=snapshot)["skaters"],
+                        id=SKATER_ALLOCATION_AMOUNT_ID,
+                    )]),
+                    html.Div(["Goalies allocated ", html.Strong(
+                        get_budget_allocation_amounts(percentages, snapshot=snapshot)["goalies"],
+                        id=GOALIE_ALLOCATION_AMOUNT_ID,
+                    )]),
+                ],
+                className="budget-allocation-amounts",
+            ),
             html.Div(id=BUDGET_STATUS_ID, role="status"),
             html.Div(id=BUDGET_SUMMARY_ID, children=build_budget_summary(percentages, snapshot=snapshot)),
         ],
@@ -534,10 +579,11 @@ dash.register_page(__name__, path=PATH, name=NAME, order=ORDER, layout=layout)
     Output(CHART_ID, "figure"),
     Output(BUDGET_SUMMARY_ID, "children"),
     Output(BUDGET_STATUS_ID, "children"),
+    Output(SKATER_ALLOCATION_AMOUNT_ID, "children"),
+    Output(GOALIE_ALLOCATION_AMOUNT_ID, "children"),
     Input(BUDGET_INPUT_ID, "value"),
     Input(TARGET_TOTAL_FP_INPUT_ID, "value"),
-    Input(SKATER_ALLOCATION_ID, "value"),
-    Input(GOALIE_ALLOCATION_ID, "value"),
+    Input(ALLOCATION_SLIDER_ID, "value"),
     *(Input(grid_id(table), "cellValueChanged") for table in TABLES),
     *(Input(grid_id(table), "cellRendererData") for table in TABLES),
     prevent_initial_call=True,
@@ -547,7 +593,7 @@ def update_my_team_player(*values):
     triggered_id = ctx.triggered_id
     if not isinstance(triggered_id, str):
         raise ValueError("My Team grid updates require a triggered grid id.")
-    budget_values = values[:4]
+    budget_values = values[:3]
     table = next(
         (
             current_table
@@ -556,19 +602,50 @@ def update_my_team_player(*values):
         ),
         None,
     )
-    budget_update = build_budget_update(*budget_values)
+    budget, target_total_fp, slider_percentage = budget_values
+    try:
+        skater_percentage, goalie_percentage = allocation_percentages_from_slider(slider_percentage)
+    except ValueError as error:
+        budget_update = build_budget_update(
+            budget,
+            target_total_fp,
+            _stored_percentage("budget_skater_percent", 80),
+            _stored_percentage("budget_goalie_percent", 20),
+        )
+        return (
+            *_build_my_team_outputs(build_my_team_snapshot()),
+            *budget_update,
+            no_update,
+            no_update,
+        )
+    budget_update = build_budget_update(
+        budget, target_total_fp, skater_percentage, goalie_percentage
+    )
+    if budget_update[1]:
+        return (
+            *_build_my_team_outputs(build_my_team_snapshot()),
+            *budget_update,
+            no_update,
+            no_update,
+        )
+    allocation_amounts = get_budget_allocation_amounts(
+        {"skaters": skater_percentage, "goalies": goalie_percentage},
+        budget=_budget_int(budget, "Draft budget"),
+    )
+    allocation_amounts_output = (allocation_amounts["skaters"], allocation_amounts["goalies"])
     if table is None and triggered_id in {
-        BUDGET_INPUT_ID,
-        TARGET_TOTAL_FP_INPUT_ID,
-        SKATER_ALLOCATION_ID,
-        GOALIE_ALLOCATION_ID,
+        BUDGET_INPUT_ID, TARGET_TOTAL_FP_INPUT_ID, ALLOCATION_SLIDER_ID,
     }:
-        return (*_build_my_team_outputs(build_my_team_snapshot()), *budget_update)
+        return (*_build_my_team_outputs(build_my_team_snapshot()), *budget_update, *allocation_amounts_output)
     if table is None:
         raise ValueError(f"Unsupported My Team grid id: {triggered_id!r}.")
 
     table_index = TABLES.index(table)
-    cell_changes = values[4 + table_index]
-    context_action = values[4 + len(TABLES) + table_index]
+    cell_changes = values[3 + table_index]
+    context_action = values[3 + len(TABLES) + table_index]
     triggered_property = ctx.triggered[0]["prop_id"].rsplit(".", 1)[-1]
-    return (*build_my_team_update(table, cell_changes, context_action, triggered_property), *budget_update)
+    return (
+        *build_my_team_update(table, cell_changes, context_action, triggered_property),
+        *budget_update,
+        *allocation_amounts_output,
+    )

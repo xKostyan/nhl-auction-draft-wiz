@@ -7,8 +7,8 @@ cells. It avoids creating a separate Dash or Plotly component for every row.
 
 1. Shape the value in the storage helper as JSON-compatible row data. Keep the
    rendering data separate from visible display fields; for example,
-   `actual_gp_history` is a list of `{"year": ..., "games_played": ...}`
-   dictionaries.
+   `actual_gp_history` is a list of `{"year": ..., "games_played": ...,
+   "projected": ...}` dictionaries.
 2. Define the renderer in
    `src/assets/dashAgGridComponentFunctions.js`. Dash creates the app from
    `src/dashboard.py`, so its asset folder is `src/assets/`; a repository-root
@@ -33,9 +33,12 @@ tests for the column definition, row-data shape, and renderer registration.
 ## Existing health chart
 
 `actualGpSparkline` implements the skater **Health (actual GP)** column.
-It accepts up to five historical actual-GP values and renders oldest to newest
-on a fixed 0-84 scale. Its color bands are red for 0-50 GP, orange for 51-60,
-yellow for 61-71, and green for 72-84.
+It accepts up to five historical actual-GP values and an upcoming projected
+season, rendering oldest to newest on a fixed 0-84 scale. Actual bars use
+red for 0-50 GP, orange for 51-60, yellow for 61-71, and green for 72-84;
+a blue line connects the yearly projected GP values. All inline projected
+lines use the centers of the first and last bars as their endpoints, keeping
+each projected point aligned with its year.
 
 ## Existing goalie game-starts chart
 

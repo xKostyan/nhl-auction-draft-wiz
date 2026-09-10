@@ -33,10 +33,11 @@ highlighted from any live-auction or My Team table.
   Points** in the second row; **Shots on Goal per Game**, **Shooting
   Percentage**, and **Goals** in the third; and **Hits per Game** and **Blocks
   per Game** in the fourth.
-- Skater **Health** bars use the player-table games-played bands: red through
-  50, orange through 60, yellow through 71, then green. **AVG Performance**
-  uses its player-table skater bands: red through 3.1, orange through 3.5,
-  yellow below 3.7, light green below 4.1, then green.
+- Skater **Health** compares actual GP bars with a yearly projected GP line on
+  the shared 0-84 scale. Its actual bars use the player-table games-played
+  bands: red through 50, orange through 60, yellow through 71, then green.
+  **AVG Performance** uses its player-table skater bands: red through 3.1,
+  orange through 3.5, yellow below 3.7, light green below 4.1, then green.
 - **Time on Ice** compares actual (bars) and projected (line) minutes per
   game on a 0-25 forward scale or 0-27 defencemen scale. Its actual forward
   bars are red below 15 minutes, orange below 16, yellow below 18, and green
@@ -60,6 +61,15 @@ highlighted from any live-auction or My Team table.
   Percentage**, and **Save Percentage** charts.
 - Goalie axes use fixed scales: AVG Performance 0-12, Game Starts 0-60, Win
   Percentage 0-0.8, and Save Percentage 0.6-1.
+- Displayed graph values use two decimal places by default. Health, Points,
+  Special Teams Points, and Goals use whole numbers for skaters; goalie Game
+  Starts also uses whole numbers. Save Percentage uses three decimal places.
+  This formatting applies to axis ticks, hover values, and actual-bar labels.
+  Actual labels are positioned at the bottom inside edge of their bars; charts
+  such as Save Percentage whose axis begins above zero retain visible labels at
+  that lower chart edge.
+- Actual-bar labels use consistent contrast across every chart: white on the
+  dark blue or red bars, and black on orange, yellow, and green bars.
 - Goalie **Game Starts** and **AVG Performance** bars use the same table bands:
   Game Starts is red below 30, yellow through 42, then green; AVG Performance
   is red below 7, orange through 7.5, yellow below 7.9, light green below 8.3,
@@ -68,6 +78,8 @@ highlighted from any live-auction or My Team table.
   0.8, orange below 0.84, yellow below 0.88, light green below 0.9, then green.
 - Charts use a compact 260px height and a three-column grid so portrait
   displays show three charts per row.
+- Every actual-value bar displays its numeric value inside the bar, vertically
+  aligned at its bottom edge.
 - Legends are hidden because bars consistently represent actual values and
   lines consistently represent projected values.
 

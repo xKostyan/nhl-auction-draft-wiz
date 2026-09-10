@@ -11,10 +11,12 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     MyTeamCapacityError,
+    PLAYER_TAGS as STORED_PLAYER_TAGS,
     PlayerPriceRequiredError,
     set_player_drafted,
     set_player_notes,
     set_player_on_my_team,
+    set_player_auction_price,
     set_player_price,
     set_player_tags,
     set_selected_player,
@@ -24,9 +26,9 @@ POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
 VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
 PLAYER_TAGS = {
-    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
-    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
-    "G": ["Starter", "Backup", "1A", "1B"],
+    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+    "G": ["Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"],
 }
 TAG_COLORS = {
     "PP1": "green",
@@ -39,6 +41,9 @@ TAG_COLORS = {
     "1A": "green",
     "1B": "yellow",
     "Backup": "red",
+    "contract": "yellow",
+    "rookie": "green",
+    "bounceback": "red",
 }
 MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 2}
 MY_TEAM_TABLES = {
@@ -94,6 +99,7 @@ def get_position_grid_rows(
                 "is_empty_slot": True,
                 "drafted": False,
                 "price": None,
+                "auction_price": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -271,6 +277,7 @@ def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
                 "drafted": False,
                 "on_my_team": False,
                 "price": None,
+                "auction_price": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -333,19 +340,21 @@ def _projected_points_column_defs() -> list[dict]:
     ]
 
 
-def _price_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
-    """Return the editable integer keeper or auction price column."""
+def _price_column_def(
+    field: str, header_name: str, *, disable_empty_slots: bool = False, width: int = 75
+) -> list[dict]:
+    """Return an editable integer keeper or auction price column."""
     return [
         {
-            "field": "price",
-            "headerName": "$$",
+            "field": field,
+            "headerName": header_name,
             "type": "numericColumn",
             "cellEditor": "agNumberCellEditor",
             "cellEditorParams": {"min": 0, "precision": 0},
             "editable": (
                 {"function": "!params.data.is_empty_slot"} if disable_empty_slots else True
             ),
-            "width": 75,
+            "width": width,
         }
     ]
 
@@ -486,7 +495,7 @@ def _parse_player_tags(position: str, value: object) -> list[str]:
     """Validate a JSON-compatible tag list emitted by the grid renderer."""
     if not isinstance(value, list) or any(not isinstance(tag, str) for tag in value):
         raise ValueError("Player tag updates require a list of tag names.")
-    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS[position] for tag in value):
+    if len(value) != len(set(value)) or any(tag not in STORED_PLAYER_TAGS for tag in value):
         raise ValueError("Player tag updates require unique recognized tag names.")
     return value
 
@@ -565,7 +574,7 @@ def handle_player_cell_change(
     my_team_only: bool = False,
     slot_count: int | None = None,
 ) -> list[dict]:
-    """Persist drafted, price, tag, and note edits and return fresh grid rows.
+    """Persist drafted, keeper-price, auction-price, tag, and note edits and return fresh grid rows.
 
     Dash AG Grid provides ``cellValueChanged`` as a list of event dictionaries,
     even when exactly one cell was changed. Process every event because a
@@ -583,7 +592,7 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
         column_id = cell_change.get("colId")
-        if column_id not in {"drafted", "price", "notes", "tags", "context_action"}:
+        if column_id not in {"drafted", "price", "auction_price", "notes", "tags", "context_action"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -598,6 +607,8 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
             set_player_drafted(player_id, _parse_drafted_value(value))
         elif column_id == "price":
             set_player_price(player_id, _parse_player_price(value))
+        elif column_id == "auction_price":
+            set_player_auction_price(player_id, _parse_player_price(value))
         elif column_id == "tags":
             set_player_tags(player_id, _parse_player_tags(position, value))
         elif column_id == "context_action":
@@ -701,7 +712,10 @@ def build_position_grid(
                 "width": 32,
             }]),
             _player_name_column_def(allow_add_to_my_team=not my_team_only),
-            *_price_column_def(disable_empty_slots=slot_count is not None),
+            *_price_column_def("price", "k $$", disable_empty_slots=slot_count is not None),
+            *_price_column_def(
+                "auction_price", "a $$", disable_empty_slots=slot_count is not None
+            ),
             *_health_column_def(position),
             *_game_starts_column_def(position),
             *_average_performance_column_def(position),
@@ -774,7 +788,8 @@ def build_my_team_grid(
             "width": 32,
         },
         _player_name_column_def(allow_add_to_my_team=False),
-        *_price_column_def(disable_empty_slots=True),
+        *_price_column_def("price", "k $$", disable_empty_slots=True, width=60),
+        *_price_column_def("auction_price", "a $$", disable_empty_slots=True, width=60),
         *([{"field": "position", "headerName": "Position"}] if table in {"utility", "bench"} else []),
         *(_health_column_def("F") if is_skater_table else []),
         *(_game_starts_column_def("G") if is_goalie_table else []),

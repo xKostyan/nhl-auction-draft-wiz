@@ -16,7 +16,7 @@ open in its own browser tab during the draft.
 - The page header contains only the page title and player search control.
 - The table header and menu entry use the goalie purple `#cc33ff`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, editable **$$** (price), **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
+  name**, editable **k $$** (keeper price), editable **a $$** (auction price), **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
   **p AFP `<upcoming year>`**, **Tags**, and **Notes** columns, in that order.
   `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
@@ -35,13 +35,17 @@ open in its own browser tab during the draft.
   fantasy points and bars show actual average fantasy points, with missing
   values shown as zero. Its fixed scale is 0-12; actual bars are red below
   7.0, orange through 7.5, yellow below 7.9, light green from 7.9 up to
-  8.3, and green from 8.3.
+  8.3, and green from 8.3. The projected line starts at the center of the
+  first bar and ends at the center of the last bar.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
-  `Starter`, `Backup`, `1A`, and `1B`, then click **Done** to close it. Tags
-  are left-aligned. Always-visible selected tags use 11px text; the picker
-  buttons use 9px text. `Starter` and `1A` use a green hue, `1B` uses a yellow
-  hue, and `Backup` uses a red hue; selections persist in the workspace.
+  `Starter`, `Backup`, `1A`, `1B`, `contract`, `rookie`, and `bounceback`,
+  then click **Done** to close it. `contract` marks a contract year, `rookie`
+  marks future potential, and `bounceback` marks an unusually poor prior
+  season with expected improvement. Tags are left-aligned. Always-visible
+  selected tags use 11px text; the picker buttons use 9px text. `Starter`,
+  `1A`, and `rookie` use a green hue; `1B` and `contract` use a yellow hue;
+  `Backup` and `bounceback` use a red hue; selections persist in the workspace.
 - **Notes** is the last, resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
@@ -54,7 +58,8 @@ open in its own browser tab during the draft.
   the chart and above the chart marks; hovering a year shows both values. This
   column can be resized from its default width, and the chart expands to use
   its full available width. Gaps between annual actual-value bars are 50%
-  smaller than the original chart spacing.
+  smaller than the original chart spacing. The projected line starts at the
+  center of the first bar and ends at the center of the last bar.
 - The table fills the remaining browser viewport below the persistent app
   header and menu, while retaining its own vertical scrollbar.
 - A searchable typeahead above the table suggests only goalies as you type.
@@ -68,7 +73,8 @@ open in its own browser tab during the draft.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
-- **$$** is an editable non-negative whole-number keeper or auction cost.
+- **k $$** is the editable non-negative whole-number keeper cost. **a $$** is the
+  separate editable non-negative whole-number auction cost used for My Team budgets.
   Leave it blank when no value is known; entered values persist in the
   workspace across app restarts.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,

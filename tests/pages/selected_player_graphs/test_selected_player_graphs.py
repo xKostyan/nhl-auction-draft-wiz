@@ -72,9 +72,16 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")
     assert [trace.name for trace in points.data] == ["Actual", "Projected"]
-    assert [trace.name for trace in health.data] == ["Actual"]
+    assert [trace.name for trace in health.data] == ["Actual", "Projected"]
     assert points.data[0].type == "bar"
+    assert points.data[0].texttemplate == "%{y:.0f}"
+    assert points.data[0].textposition == "inside"
+    assert points.data[0].insidetextanchor == "start"
+    assert list(points.data[0].insidetextfont.color) == ["white"] * len(points.data[0].y)
+    assert points.data[0].hovertemplate == "Actual: %{y:.0f}<extra></extra>"
     assert points.data[1].type == "scatter"
+    assert points.data[1].hovertemplate == "Projected: %{y:.0f}<extra></extra>"
+    assert points.layout.yaxis.tickformat == ".0f"
     assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
     assert next(graph for graph in graphs if graph.figure is points).style == {
@@ -82,6 +89,9 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "width": "100%",
     }
     assert health.data[0].marker.color[0] == "#f9a825"
+    assert health.data[1].mode == "lines+markers"
+    assert health.data[1].line.color == "#ff7f0e"
+    assert health.data[0].texttemplate == "%{y:.0f}"
     average_performance = next(
         graph.figure for graph in graphs if graph.figure.layout.title.text == "AVG Performance"
     )
@@ -105,6 +115,13 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert {
         graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
     } == expected_yaxis_maxima
+    integer_charts = {"Health", "Points", "Special Teams Points", "Goals"}
+    for graph in graphs:
+        value_format = ".0f" if graph.figure.layout.title.text in integer_charts else ".2f"
+        assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
+        assert graph.figure.data[0].textposition == "inside"
+        assert graph.figure.data[0].insidetextanchor == "start"
+        assert graph.figure.layout.yaxis.tickformat == value_format
     assert all(
         [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
         for graph in graphs
@@ -127,7 +144,21 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         "Win Percentage",
         "Save Percentage",
     ]
-    assert all([trace.name for trace in graph.figure.data] == ["Actual", "Projected"] for graph in graphs)
+    assert all([trace.name for trace in graph.figure.data[:2]] == ["Actual", "Projected"] for graph in graphs)
+    goalie_formats = {
+        "AVG Performance": ".2f",
+        "Game Starts": ".0f",
+        "Win Percentage": ".2f",
+        "Save Percentage": ".3f",
+    }
+    for graph in graphs:
+        value_format = goalie_formats[graph.figure.layout.title.text]
+        assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
+        assert graph.figure.data[0].textposition == "inside"
+        assert graph.figure.data[0].insidetextanchor == "start"
+        assert graph.figure.data[0].hovertemplate == f"Actual: %{{y:{value_format}}}<extra></extra>"
+        assert graph.figure.data[1].hovertemplate == f"Projected: %{{y:{value_format}}}<extra></extra>"
+        assert graph.figure.layout.yaxis.tickformat == value_format
     assert {
         graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
     } == {
@@ -140,6 +171,26 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         graph.figure for graph in graphs if graph.figure.layout.title.text == "Save Percentage"
     )
     assert save_percentage.layout.yaxis.range[0] == 0.6
+    assert save_percentage.data[0].texttemplate == "%{y:.3f}"
+    assert save_percentage.data[0].hovertemplate == "Actual: %{y:.3f}<extra></extra>"
+    assert save_percentage.data[1].hovertemplate == "Projected: %{y:.3f}<extra></extra>"
+    assert save_percentage.layout.yaxis.tickformat == ".3f"
+    actual_labels = save_percentage.data[2]
+    assert actual_labels.name == "Actual labels"
+    assert actual_labels.mode == "text"
+    assert actual_labels.textposition == "top center"
+    assert list(actual_labels.textfont.color) == ["black"] * len(actual_labels.text)
+    assert actual_labels.hoverinfo == "skip"
+    assert len(actual_labels.x) == sum(
+        value is not None and value == value for value in save_percentage.data[0].y
+    )
+    assert list(actual_labels.x) == [
+        str(year) for year, value in zip(save_percentage.data[0].x, save_percentage.data[0].y)
+        if value is not None and value == value
+    ]
+    assert list(actual_labels.y) == [0.6] * len(actual_labels.x)
+    assert all(value.count(".") == 1 and len(value.rsplit(".", 1)[1]) == 3
+               for value in actual_labels.text)
     assert {
         graph.figure.layout.title.text: graph.figure.data[0].marker.color[0] for graph in graphs
     } == {
@@ -192,6 +243,19 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Hits per Game": 3,
         "Blocks per Game": 3,
         "Shots on Goal per Game": 4,
+    }
+    assert {
+        graph.figure.layout.title.text: graph.figure.layout.yaxis.tickformat
+        for graph in graphs
+    } == {
+        "Health": ".0f",
+        "AVG Performance": ".2f",
+        "Time on Ice": ".2f",
+        "Shots on Goal per Game": ".2f",
+        "Points": ".0f",
+        "Special Teams Points": ".0f",
+        "Hits per Game": ".2f",
+        "Blocks per Game": ".2f",
     }
 
 
@@ -263,6 +327,12 @@ def test_goalie_bar_color_bands_match_the_requested_ranges():
         "#81c784",
         "#388e3c",
     ]
+
+
+def test_actual_bar_label_contrast_is_consistent_for_every_chart_color():
+    assert selected_player_graphs._actual_label_colors(
+        ["#1f77b4", "#d32f2f", "#ef6c00", "#f9a825", "#81c784", "#388e3c"], 6
+    ) == ["white", "white", "black", "black", "black", "black"]
 
 
 def test_graphs_use_a_compact_three_column_layout():

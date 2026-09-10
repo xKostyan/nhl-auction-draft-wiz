@@ -23,6 +23,21 @@ MY_TEAM_BENCH_SKATER_SLOTS = 3
 MY_TEAM_BENCH_GOALIE_SLOTS = 2
 MY_TEAM_BENCH_TOTAL_SLOTS = 4
 DEFAULT_DRAFT_BUDGET = 930
+PLAYER_TAGS = (
+    "PP1",
+    "PP2",
+    "PK1",
+    "PK2",
+    "Line1",
+    "Line2",
+    "Starter",
+    "Backup",
+    "1A",
+    "1B",
+    "contract",
+    "rookie",
+    "bounceback",
+)
 
 
 class MyTeamCapacityError(ValueError):
@@ -78,6 +93,7 @@ def ensure_schema() -> None:
                 selected INTEGER NOT NULL DEFAULT 0,
                 on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
                 price INTEGER CHECK(price IS NULL OR price >= 0),
+                auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
                 current_season INTEGER NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
@@ -95,6 +111,11 @@ def ensure_schema() -> None:
             conn.execute(
                 "ALTER TABLE players ADD COLUMN price INTEGER CHECK(price IS NULL OR price >= 0)"
             )
+        if "auction_price" not in player_columns:
+            conn.execute(
+                "ALTER TABLE players ADD COLUMN auction_price INTEGER "
+                "CHECK(auction_price IS NULL OR auction_price >= 0)"
+            )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_status (
@@ -110,7 +131,7 @@ def ensure_schema() -> None:
             """
             CREATE TABLE IF NOT EXISTS player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
                 PRIMARY KEY (player_id, tag),
                 FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
             )
@@ -119,13 +140,13 @@ def ensure_schema() -> None:
         existing_tag_table = conn.execute(
             "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'player_tags'"
         ).fetchone()
-        if existing_tag_table and "'Starter'" not in existing_tag_table["sql"]:
+        if existing_tag_table and "'bounceback'" not in existing_tag_table["sql"]:
             conn.execute("ALTER TABLE player_tags RENAME TO player_tags_legacy")
             conn.execute(
                 """
                 CREATE TABLE player_tags (
                     player_id INTEGER NOT NULL,
-                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
                     PRIMARY KEY (player_id, tag),
                     FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
                 )
@@ -483,7 +504,8 @@ def get_players_for_grid() -> pd.DataFrame:
     try:
         rows = conn.execute(
             """
-            SELECT p.id, p.name, p.position, p.price, COALESCE(ps.status, 'available') AS status, p.current_season
+            SELECT p.id, p.name, p.position, p.price, p.auction_price,
+                   COALESCE(ps.status, 'available') AS status, p.current_season
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
             ORDER BY p.name ASC
@@ -491,7 +513,7 @@ def get_players_for_grid() -> pd.DataFrame:
         ).fetchall()
         data = [dict(row) for row in rows]
         return pd.DataFrame(
-            data, columns=["id", "name", "position", "price", "status", "current_season"]
+            data, columns=["id", "name", "position", "price", "auction_price", "status", "current_season"]
         )
     finally:
         conn.close()
@@ -504,7 +526,8 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
     but position pages deliberately do not render it as a visible column. The
     projected total and per-game fantasy points are selected from the player's
     detected current season, rather than a hard-coded year. Skater rows also
-    include the five most recent seasons with an actual games-played value.
+    include the five most recent actual games-played seasons and their
+    corresponding projected values, plus a projected upcoming season.
     Goalie rows include projected and actual game starts for every stored
     goalie season, defaulting missing values to zero. All position rows
     include projected and actual average fantasy points for every stored
@@ -525,6 +548,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                 p.position,
                 p.on_my_team,
                 p.price,
+                p.auction_price,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
                 COALESCE(ps.notes, '') AS notes,
                 MAX(
@@ -550,7 +574,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
             WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
-            GROUP BY p.id, p.name, p.position, p.on_my_team, p.price, ps.status
+            GROUP BY p.id, p.name, p.position, p.on_my_team, p.price, p.auction_price, ps.status
             ORDER BY p.name ASC
             """,
             (normalized_position, int(my_team_only)),
@@ -564,14 +588,50 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             player_ids=player_ids,
             descending_years=True,
         )
+        current_season = int(get_workspace_value("current_season"))
         actual_gp_by_player: dict[int, list[dict[str, int | float]]] = {}
         for row in gp_rows:
             player_id = int(row["player_id"])
             actual_gp_by_player.setdefault(player_id, [])
             if len(actual_gp_by_player[player_id]) < 5:
                 actual_gp_by_player[player_id].append(
-                    {"year": int(row["year"]), "games_played": float(row["stat_value"])}
+                    {
+                        "year": int(row["year"]),
+                        "games_played": float(row["stat_value"]),
+                        "projected": 0.0,
+                    }
                 )
+        projected_gp_rows = _get_position_stat_rows(
+            conn,
+            normalized_position,
+            "GP",
+            stats_type="projected",
+            player_ids=player_ids,
+            descending_years=True,
+        )
+        health_history_by_player = {
+            player_id: {season["year"]: season for season in history}
+            for player_id, history in actual_gp_by_player.items()
+        }
+        for row in projected_gp_rows:
+            player_id = int(row["player_id"])
+            player_history = health_history_by_player.get(player_id)
+            if player_history is None:
+                continue
+            year = int(row["year"])
+            if year in player_history:
+                player_history[year]["projected"] = float(row["stat_value"])
+            elif year == current_season:
+                player_history[year] = {
+                    "year": year,
+                    "games_played": 0.0,
+                    "projected": float(row["stat_value"]),
+                }
+
+        for player_id, history_by_year in health_history_by_player.items():
+            actual_gp_by_player[player_id] = sorted(
+                history_by_year.values(), key=lambda season: int(season["year"]), reverse=True
+            )
 
         data = []
         for row in rows:
@@ -586,6 +646,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                     else add_error,
                     "drafted": bool(row["drafted"]),
                     "price": row["price"],
+                    "auction_price": row["auction_price"],
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
@@ -690,6 +751,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             "my_team_add_error",
             "drafted",
             "price",
+            "auction_price",
             "projected_tfp",
             "projected_afp",
             "actual_gp_history",
@@ -768,7 +830,7 @@ def set_player_drafted(player_id: int, drafted: bool) -> None:
 
 
 def set_player_price(player_id: int, price: int | None) -> None:
-    """Persist a player's optional non-negative integer keeper or auction price."""
+    """Persist a player's optional non-negative integer keeper price."""
     if (
         price is not None
         and (
@@ -790,6 +852,29 @@ def set_player_price(player_id: int, price: int | None) -> None:
         conn.close()
 
 
+def set_player_auction_price(player_id: int, price: int | None) -> None:
+    """Persist a player's optional non-negative integer auction price."""
+    if (
+        price is not None
+        and (
+            isinstance(price, bool)
+            or not isinstance(price, int)
+            or price < 0
+        )
+    ):
+        raise ValueError("Player auction price must be a non-negative integer or blank.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update auction price: player {player_id} does not exist.")
+        conn.execute("UPDATE players SET auction_price = ? WHERE id = ?", (price, player_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
     """Persist whether a player belongs to the user's drafted team.
 
@@ -803,15 +888,15 @@ def set_player_on_my_team(player_id: int, on_my_team: bool) -> None:
     conn = db_connection()
     try:
         player = conn.execute(
-            "SELECT id, position, on_my_team, price FROM players WHERE id = ?", (player_id,)
+            "SELECT id, position, on_my_team, auction_price FROM players WHERE id = ?", (player_id,)
         ).fetchone()
         if player is None:
             raise ValueError(f"Cannot update My Team: player {player_id} does not exist.")
 
         if on_my_team and not player["on_my_team"]:
-            if player["price"] is None:
+            if player["auction_price"] is None:
                 raise PlayerPriceRequiredError(
-                    "Set a player price before adding them to My Team."
+                    "Set an auction price before adding them to My Team."
                 )
             add_error = _my_team_add_error(conn, str(player["position"]))
             if add_error:
@@ -858,7 +943,7 @@ def _my_team_add_error(conn: sqlite3.Connection, position: str) -> str | None:
 
 def set_player_tags(player_id: int, tags: list[str]) -> None:
     """Replace a player's persistent set of recognized draft-planning tags."""
-    allowed_tags = {"PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "Starter", "Backup", "1A", "1B"}
+    allowed_tags = set(PLAYER_TAGS)
     if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
         raise ValueError("Player tags must be a list of tag names.")
     if len(tags) != len(set(tags)) or any(tag not in allowed_tags for tag in tags):

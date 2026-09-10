@@ -74,7 +74,16 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         },
         {
             "field": "price",
-            "headerName": "$$",
+            "headerName": "k $$",
+            "type": "numericColumn",
+            "cellEditor": "agNumberCellEditor",
+            "cellEditorParams": {"min": 0, "precision": 0},
+            "editable": True,
+            "width": 75,
+        },
+        {
+            "field": "auction_price",
+            "headerName": "a $$",
             "type": "numericColumn",
             "cellEditor": "agNumberCellEditor",
             "cellEditorParams": {"min": 0, "precision": 0},
@@ -115,11 +124,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
             "cellRendererParams": {
-                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
                 "tagColors": {
                     "PP1": "green", "PK1": "green", "Line1": "green",
                     "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
                     "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
+                    "contract": "yellow", "rookie": "green", "bounceback": "red",
                 },
             },
             "sortable": False,
@@ -203,7 +213,7 @@ def test_rows_include_current_season_projected_fantasy_points(tmp_path):
     assert get_workspace_value("current_season") == "2027"
 
 
-def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
+def test_skater_rows_include_actual_and_projected_gp_history(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -214,10 +224,11 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
         if row["name"] == "Mikko Rantanen"
     )
     assert history == [
-        {"year": 2026, "games_played": 64.0},
-        {"year": 2025, "games_played": 82.0},
-        {"year": 2024, "games_played": 80.0},
-        {"year": 2023, "games_played": 82.0},
+        {"year": 2027, "games_played": 0.0, "projected": 71.0},
+        {"year": 2026, "games_played": 64.0, "projected": 80.0},
+        {"year": 2025, "games_played": 82.0, "projected": 80.0},
+        {"year": 2024, "games_played": 80.0, "projected": 77.0},
+        {"year": 2023, "games_played": 82.0, "projected": 76.0},
     ]
 
 
@@ -256,11 +267,15 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert 'padding: "1px 4px"' in renderer
     assert "}, String(gamesPlayed))" in renderer
     assert 'gap: "1px"' in renderer
-    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            width: "100%"' in renderer
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative",\n            width: "100%"' in renderer
     assert "draftedSwitchRenderer" in renderer
     assert "searchFocusCircleRenderer" in renderer
     assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
     assert "averagePerformanceChart" in renderer
+    assert "Projected games played" in renderer
+    assert 'season.year + ": " + projected + " projected, " + gamesPlayed + " actual GP"' in renderer
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
+    assert 'justifyContent: "center",\n            padding: "1px 4px",\n            position: "relative"' in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
@@ -355,6 +370,22 @@ def test_tag_changes_persist_for_a_forward(tmp_path):
     assert next(row for row in rows if row["id"] == player_id)["tags"] == ["Line2", "PP1"]
 
 
+def test_player_evaluation_tags_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F",
+        [{"colId": "tags", "value": ["contract", "rookie", "bounceback"], "data": {"id": player_id}}],
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == [
+        "bounceback", "contract", "rookie"
+    ]
+
+
 def test_note_changes_persist_for_a_forward(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -397,7 +428,9 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     ])
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-tags"}})
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-notes"}})
-    handle_drafted_cell_change("F", [{"colId": "price", "value": 1, "data": {"id": player_id}}])
+    handle_drafted_cell_change(
+        "F", [{"colId": "auction_price", "value": 1, "data": {"id": player_id}}]
+    )
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
 
     player = next(row for row in get_position_rows("F") if row["id"] == player_id)

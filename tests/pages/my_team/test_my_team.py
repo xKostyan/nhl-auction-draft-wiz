@@ -29,14 +29,15 @@ from src.storage import (
     get_workspace_value,
     get_selected_player,
     import_yearly_dataset,
+    set_player_auction_price,
     set_player_price,
     set_target_total_fp,
 )
 
 
-def add_to_my_team(position, player_id, price=1):
+def add_to_my_team(position, player_id, auction_price=1):
     """Add a priced player through the same context action used by the grid."""
-    set_player_price(player_id, price)
+    set_player_auction_price(player_id, auction_price)
     handle_player_context_action(
         position, {"rowId": player_id, "value": {"action": "add-to-my-team"}}
     )
@@ -64,11 +65,35 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         node for node in walk_components(page_layout) if isinstance(node, dcc.Input)
         and node.id == my_team.TARGET_TOTAL_FP_INPUT_ID
     )
+    allocation_slider = next(
+        node for node in walk_components(page_layout) if isinstance(node, dcc.Slider)
+    )
+    skater_allocation_amount = next(
+        node for node in walk_components(page_layout)
+        if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_AMOUNT_ID
+    )
+    goalie_allocation_amount = next(
+        node for node in walk_components(page_layout)
+        if getattr(node, "id", None) == my_team.GOALIE_ALLOCATION_AMOUNT_ID
+    )
 
     assert budget_input.value == 930
     assert target_input.value is None
     assert target_input.type == "text"
     assert target_input.inputMode == "numeric"
+    assert allocation_slider.id == my_team.ALLOCATION_SLIDER_ID
+    assert allocation_slider.min == 0
+    assert allocation_slider.max == 100
+    assert allocation_slider.step == 1
+    assert allocation_slider.value == 20
+    assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
+    assert allocation_slider.reverse is True
+    assert all(
+        getattr(node, "id", None) not in {"budget-skater-percent", "budget-goalie-percent"}
+        for node in walk_components(page_layout)
+    )
+    assert skater_allocation_amount.children == "$744"
+    assert goalie_allocation_amount.children == "$186"
     assert chart.id == my_team.CHART_ID
     assert len(chart.figure.data) == 2
     assert chart.figure.layout.annotations[0].text.startswith("Projected TFP")
@@ -108,22 +133,35 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert all("is_empty_slot" in grid.dashGridOptions["getRowStyle"]["function"] for grid in grids)
     assert all(grid.columnDefs[1]["field"] == "slot_number" for grid in grids)
     assert all(grid.columnDefs[1]["headerName"] == "" for grid in grids)
+    assert all(
+        next(column for column in grid.columnDefs if column["field"] == "price")["width"] == 60
+        for grid in grids
+    )
+    assert all(
+        next(column for column in grid.columnDefs if column["field"] == "auction_price")["width"] == 60
+        for grid in grids
+    )
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
     utility = grids[2]
-    assert [column["field"] for column in utility.columnDefs][:5] == [
-        "search_focus", "slot_number", "name", "price", "position"
+    assert [column["field"] for column in utility.columnDefs][:6] == [
+        "search_focus", "slot_number", "name", "price", "auction_price", "position"
     ]
     utility_health = next(column for column in utility.columnDefs if column["field"] == "actual_gp_history")
+    assert utility_health["cellRenderer"] == "actualGpSparkline"
     assert utility_health["width"] == 150
     assert utility_health["resizable"] is True
     assert utility_health["suppressAutoSize"] is True
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+    assert renderer.count("(index + 0.5) / pointCount * 100") == 6
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
-        "search_focus", "slot_number", "name", "price", "position", "projected_tfp", "projected_afp"
+        "search_focus", "slot_number", "name", "price", "auction_price", "position", "projected_tfp", "projected_afp"
     ]
     goalie = grids[3]
-    assert [column["field"] for column in goalie.columnDefs][5:9] == [
+    assert [column["field"] for column in goalie.columnDefs][6:10] == [
         "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
     ]
 
@@ -196,7 +234,7 @@ def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path)
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    add_to_my_team("F", player_id, price=30)
+    add_to_my_team("F", player_id, auction_price=30)
     snapshot = position_table.build_my_team_snapshot()
 
     summary = my_team.get_budget_summary(snapshot=snapshot, budget=930)
@@ -217,9 +255,9 @@ def test_budget_summary_treats_a_legacy_blank_roster_price_as_zero(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    add_to_my_team("F", player_id, price=30)
+    add_to_my_team("F", player_id, auction_price=30)
     snapshot = position_table.build_my_team_snapshot()
-    next(row for row in snapshot["F"] if row.get("id") == player_id)["price"] = float("nan")
+    next(row for row in snapshot["F"] if row.get("id") == player_id)["auction_price"] = float("nan")
 
     summary = my_team.get_budget_summary(snapshot=snapshot)
 
@@ -231,7 +269,7 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
-    add_to_my_team("G", player_id, price=40)
+    add_to_my_team("G", player_id, auction_price=40)
     snapshot = position_table.build_my_team_snapshot()
 
     rows = my_team.get_budget_allocation(
@@ -248,6 +286,44 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
         )
 
 
+def test_allocation_slider_values_complement_the_skater_and_goalie_percentages():
+    assert my_team.allocation_percentages_from_slider(0) == (100, 0)
+    assert my_team.allocation_percentages_from_slider(50) == (50, 50)
+    assert my_team.allocation_percentages_from_slider(100) == (0, 100)
+    with pytest.raises(ValueError, match="between 0 and 100"):
+        my_team.allocation_percentages_from_slider(101)
+
+
+def test_budget_allocation_amounts_are_derived_from_the_total_budget():
+    assert my_team.get_budget_allocation_amounts(
+        {"skaters": 80, "goalies": 20}, budget=930
+    ) == {"skaters": "$744", "goalies": "$186"}
+    assert my_team.get_budget_allocation_amounts(
+        {"skaters": 0, "goalies": 100}, budget=931
+    ) == {"skaters": "$0", "goalies": "$931"}
+
+
+def test_allocation_slider_is_limited_to_three_quarters_of_its_control_row():
+    stylesheet = (Path(__file__).parents[3] / "src" / "assets" / "app.css").read_text()
+
+    assert "#budget-allocation-slider {" in stylesheet
+    assert "margin-left: 36px;" in stylesheet
+    assert "width: calc(60% - 36px);" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-tooltip {" in stylesheet
+    assert "display: none !important;" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-track {" in stylesheet
+    assert "background-color: #33adff;" in stylesheet
+    assert ".budget-allocation-controls .dash-slider-thumb {" in stylesheet
+    assert "background-color: #555;" in stylesheet
+    assert "border-radius: 4px;" in stylesheet
+    assert "height: 18px;" in stylesheet
+    assert "width: 8px;" in stylesheet
+    assert ".budget-panel {\n    border: 1px solid #ccc;\n    box-sizing: border-box;\n    font-size: 15px;" in stylesheet
+    assert ".budget-panel input {\n    font-size: 15px;" in stylesheet
+    assert ".budget-panel .dash-slider-mark," in stylesheet
+    assert "font-size: 11px;" in stylesheet
+
+
 def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
@@ -260,6 +336,16 @@ def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
     assert get_workspace_value("budget_skater_percent") == "80"
     assert get_workspace_value("budget_goalie_percent") == "20"
     assert status == ""
+
+
+def test_invalid_budget_update_returns_a_validation_message(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    _, status = my_team.build_budget_update("not a budget", 2650, 80, 20)
+
+    assert status == "Draft budget must be a non-negative whole number."
 
 
 def test_target_fp_summary_uses_active_slots_and_bench_goalie_projection(tmp_path):
@@ -337,13 +423,13 @@ def test_price_changes_persist_from_the_my_team_table(tmp_path):
 
     handle_my_team_grid_update(
         "F",
-        [{"colId": "price", "value": 28, "data": {"id": player_id}}],
+        [{"colId": "auction_price", "value": 28, "data": {"id": player_id}}],
         None,
         "cellValueChanged",
     )
 
     player = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
-    assert player["price"] == 28
+    assert player["auction_price"] == 28
 
 
 def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):

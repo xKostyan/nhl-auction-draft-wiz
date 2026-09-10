@@ -20,6 +20,7 @@ GRAPH_CONTAINER_ID = "selected-player-graphs-container"
 _ACTUAL_COLOR = "#1f77b4"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
+_DARK_ACTUAL_BAR_COLORS = {_ACTUAL_COLOR, "#d32f2f"}
 
 
 def _history_by_year(player_id: int) -> pd.DataFrame:
@@ -135,6 +136,12 @@ def _save_percentage_color(value: float) -> str:
     return "#388e3c"
 
 
+def _actual_label_colors(bar_color: str | list[str], value_count: int) -> list[str]:
+    """Use the same legible label contrast for actual bars in every chart."""
+    bar_colors = bar_color if isinstance(bar_color, list) else [bar_color] * value_count
+    return ["white" if color in _DARK_ACTUAL_BAR_COLORS else "black" for color in bar_colors]
+
+
 def _build_chart(
     title: str,
     actual: pd.Series,
@@ -144,6 +151,7 @@ def _build_chart(
     yaxis_min: float = 0,
     yaxis_max: float | None = None,
     actual_color: Callable[[float], str] | None = None,
+    value_format: str = ".2f",
 ) -> dcc.Graph:
     """Build one annual actual bar chart with an optional projected line."""
     years = sorted(set(actual.index).union(projected.index if projected is not None else []))
@@ -153,12 +161,33 @@ def _build_chart(
         if actual_color is not None
         else _ACTUAL_COLOR
     )
+    label_colors = _actual_label_colors(bar_color, len(actual_values))
+    actual_label_years = [
+        str(year)
+        for year, value in actual_values.items()
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
+    actual_label_values = [
+        f"{float(value):{value_format}}"
+        for value in actual_values
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
+    actual_label_colors = [
+        color
+        for color, value in zip(label_colors, actual_values)
+        if yaxis_min != 0 and not pd.isna(value)
+    ]
     figure = go.Figure(
         go.Bar(
             name="Actual",
             x=years,
             y=actual_values,
             marker_color=bar_color,
+            texttemplate=f"%{{y:{value_format}}}",
+            textposition="inside",
+            insidetextanchor="start",
+            insidetextfont={"color": label_colors},
+            hovertemplate=f"Actual: %{{y:{value_format}}}<extra></extra>",
         )
     )
     if projected is not None:
@@ -169,6 +198,21 @@ def _build_chart(
                 y=projected.reindex(years),
                 mode="lines+markers",
                 line={"color": _PROJECTED_COLOR, "width": 3},
+                hovertemplate=f"Projected: %{{y:{value_format}}}<extra></extra>",
+            )
+        )
+    if actual_label_years:
+        figure.add_trace(
+            go.Scatter(
+                name="Actual labels",
+                x=actual_label_years,
+                y=[yaxis_min] * len(actual_label_years),
+                text=actual_label_values,
+                mode="text",
+                textposition="top center",
+                textfont={"color": actual_label_colors},
+                hoverinfo="skip",
+                showlegend=False,
             )
         )
     figure.update_layout(
@@ -183,6 +227,7 @@ def _build_chart(
     figure.update_yaxes(
         title=yaxis_title,
         range=[yaxis_min, yaxis_max] if yaxis_max is not None else None,
+        tickformat=value_format,
     )
     return dcc.Graph(
         figure=figure,
@@ -205,14 +250,16 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
     charts = []
 
     if player["position"] in {"F", "D"}:
-        actual, _ = _metric_values(table, "GP")
+        actual, projected = _metric_values(table, "GP")
         charts.append(
             _build_chart(
                 "Health",
                 actual,
+                projected,
                 yaxis_title="Games played",
                 yaxis_max=84,
                 actual_color=_skater_health_color,
+                value_format=".0f",
             )
         )
         actual, projected = _metric_values(table, "FP_AVG")
@@ -263,6 +310,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 yaxis_title="Games started",
                 yaxis_max=60,
                 actual_color=_goalie_game_starts_color,
+                value_format=".0f",
             )
         )
         actual, projected = _metric_values(table, "_12")
@@ -286,6 +334,7 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
                 yaxis_min=0.6,
                 yaxis_max=1,
                 actual_color=_save_percentage_color,
+                value_format=".3f",
             )
         )
 
@@ -306,6 +355,7 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
             points_projected,
             yaxis_title="Points",
             yaxis_max=120 if position == "F" else 100,
+            value_format=".0f",
         ),
         "Special Teams Points": _build_chart(
             "Special Teams Points",
@@ -313,6 +363,7 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
             special_teams_projected,
             yaxis_title="Points",
             yaxis_max=60 if position == "F" else 50,
+            value_format=".0f",
         ),
         "Hits per Game": _build_chart(
             "Hits per Game",
@@ -360,7 +411,14 @@ def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
             yaxis_title="Percent",
             yaxis_max=20,
         ),
-        "Goals": _build_chart("Goals", goals_actual, goals_projected, yaxis_title="Goals", yaxis_max=60),
+        "Goals": _build_chart(
+            "Goals",
+            goals_actual,
+            goals_projected,
+            yaxis_title="Goals",
+            yaxis_max=60,
+            value_format=".0f",
+        ),
         "Assists per Game": _build_chart(
             "Assists per Game",
             assists_actual,
