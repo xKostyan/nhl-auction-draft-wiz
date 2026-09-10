@@ -38,10 +38,13 @@ open in its own browser tab during the draft.
   8.3, and green from 8.3.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
-  `Starter`, `Backup`, `1A`, and `1B`, then click **Done** to close it. Tags
-  are left-aligned. Always-visible selected tags use 11px text; the picker
-  buttons use 9px text. `Starter` and `1A` use a green hue, `1B` uses a yellow
-  hue, and `Backup` uses a red hue; selections persist in the workspace.
+  `Starter`, `Backup`, `1A`, `1B`, `contract`, `rookie`, and `bounceback`,
+  then click **Done** to close it. `contract` marks a contract year, `rookie`
+  marks future potential, and `bounceback` marks an unusually poor prior
+  season with expected improvement. Tags are left-aligned. Always-visible
+  selected tags use 11px text; the picker buttons use 9px text. `Starter`,
+  `1A`, and `rookie` use a green hue; `1B` and `contract` use a yellow hue;
+  `Backup` and `bounceback` use a red hue; selections persist in the workspace.
 - **Notes** is the last, resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.

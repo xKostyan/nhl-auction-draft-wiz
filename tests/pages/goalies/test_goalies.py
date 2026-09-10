@@ -74,7 +74,9 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[6] == {"field": "projected_gs", "headerName": "p GS", "type": "numericColumn"}
     assert grid.columnDefs[9]["headerName"] == "Tags"
     assert grid.columnDefs[9]["cellRenderer"] == "playerTagsRenderer"
-    assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == ["Starter", "Backup", "1A", "1B"]
+    assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == [
+        "Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"
+    ]
     assert grid.columnDefs[10]["headerName"] == "Notes"
     assert grid.columnDefs[10]["editable"] is True
     assert grid.columnDefs[10]["wrapText"] is True

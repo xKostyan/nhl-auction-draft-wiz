@@ -115,11 +115,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
             "cellRendererParams": {
-                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
                 "tagColors": {
                     "PP1": "green", "PK1": "green", "Line1": "green",
                     "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
                     "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
+                    "contract": "yellow", "rookie": "green", "bounceback": "red",
                 },
             },
             "sortable": False,
@@ -353,6 +354,22 @@ def test_tag_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["tags"] == ["Line2", "PP1"]
+
+
+def test_player_evaluation_tags_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F",
+        [{"colId": "tags", "value": ["contract", "rookie", "bounceback"], "data": {"id": player_id}}],
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["tags"] == [
+        "bounceback", "contract", "rookie"
+    ]
 
 
 def test_note_changes_persist_for_a_forward(tmp_path):

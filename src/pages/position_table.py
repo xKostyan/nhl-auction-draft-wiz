@@ -11,6 +11,7 @@ from ..storage import (
     get_players_for_position_grid,
     get_workspace_value,
     MyTeamCapacityError,
+    PLAYER_TAGS as STORED_PLAYER_TAGS,
     PlayerPriceRequiredError,
     set_player_drafted,
     set_player_notes,
@@ -24,9 +25,9 @@ POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
 VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
 PLAYER_TAGS = {
-    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
-    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2"],
-    "G": ["Starter", "Backup", "1A", "1B"],
+    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+    "G": ["Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"],
 }
 TAG_COLORS = {
     "PP1": "green",
@@ -39,6 +40,9 @@ TAG_COLORS = {
     "1A": "green",
     "1B": "yellow",
     "Backup": "red",
+    "contract": "yellow",
+    "rookie": "green",
+    "bounceback": "red",
 }
 MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 2}
 MY_TEAM_TABLES = {
@@ -486,7 +490,7 @@ def _parse_player_tags(position: str, value: object) -> list[str]:
     """Validate a JSON-compatible tag list emitted by the grid renderer."""
     if not isinstance(value, list) or any(not isinstance(tag, str) for tag in value):
         raise ValueError("Player tag updates require a list of tag names.")
-    if len(value) != len(set(value)) or any(tag not in PLAYER_TAGS[position] for tag in value):
+    if len(value) != len(set(value)) or any(tag not in STORED_PLAYER_TAGS for tag in value):
         raise ValueError("Player tag updates require unique recognized tag names.")
     return value
 
