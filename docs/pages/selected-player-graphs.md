@@ -61,10 +61,13 @@ highlighted from any live-auction or My Team table.
   Percentage**, and **Save Percentage** charts.
 - Goalie axes use fixed scales: AVG Performance 0-12, Game Starts 0-60, Win
   Percentage 0-0.8, and Save Percentage 0.6-1.
-- All displayed graph values, including axis ticks, hover values, and actual
-  bar labels, use two decimal places. Actual labels are positioned at the
-  bottom inside edge of their bars; charts such as Save Percentage whose axis
-  begins above zero retain visible labels at that lower chart edge.
+- Displayed graph values use two decimal places by default. Health, Points,
+  Special Teams Points, and Goals use whole numbers for skaters; goalie Game
+  Starts also uses whole numbers. Save Percentage uses three decimal places.
+  This formatting applies to axis ticks, hover values, and actual-bar labels.
+  Actual labels are positioned at the bottom inside edge of their bars; charts
+  such as Save Percentage whose axis begins above zero retain visible labels at
+  that lower chart edge.
 - Actual-bar labels use consistent contrast across every chart: white on the
   dark blue or red bars, and black on orange, yellow, and green bars.
 - Goalie **Game Starts** and **AVG Performance** bars use the same table bands:
