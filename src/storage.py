@@ -519,7 +519,8 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
     but position pages deliberately do not render it as a visible column. The
     projected total and per-game fantasy points are selected from the player's
     detected current season, rather than a hard-coded year. Skater rows also
-    include the five most recent seasons with an actual games-played value.
+    include the five most recent actual games-played seasons and their
+    corresponding projected values, plus a projected upcoming season.
     Goalie rows include projected and actual game starts for every stored
     goalie season, defaulting missing values to zero. All position rows
     include projected and actual average fantasy points for every stored
@@ -579,14 +580,50 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             player_ids=player_ids,
             descending_years=True,
         )
+        current_season = int(get_workspace_value("current_season"))
         actual_gp_by_player: dict[int, list[dict[str, int | float]]] = {}
         for row in gp_rows:
             player_id = int(row["player_id"])
             actual_gp_by_player.setdefault(player_id, [])
             if len(actual_gp_by_player[player_id]) < 5:
                 actual_gp_by_player[player_id].append(
-                    {"year": int(row["year"]), "games_played": float(row["stat_value"])}
+                    {
+                        "year": int(row["year"]),
+                        "games_played": float(row["stat_value"]),
+                        "projected": 0.0,
+                    }
                 )
+        projected_gp_rows = _get_position_stat_rows(
+            conn,
+            normalized_position,
+            "GP",
+            stats_type="projected",
+            player_ids=player_ids,
+            descending_years=True,
+        )
+        health_history_by_player = {
+            player_id: {season["year"]: season for season in history}
+            for player_id, history in actual_gp_by_player.items()
+        }
+        for row in projected_gp_rows:
+            player_id = int(row["player_id"])
+            player_history = health_history_by_player.get(player_id)
+            if player_history is None:
+                continue
+            year = int(row["year"])
+            if year in player_history:
+                player_history[year]["projected"] = float(row["stat_value"])
+            elif year == current_season:
+                player_history[year] = {
+                    "year": year,
+                    "games_played": 0.0,
+                    "projected": float(row["stat_value"]),
+                }
+
+        for player_id, history_by_year in health_history_by_player.items():
+            actual_gp_by_player[player_id] = sorted(
+                history_by_year.values(), key=lambda season: int(season["year"]), reverse=True
+            )
 
         data = []
         for row in rows:

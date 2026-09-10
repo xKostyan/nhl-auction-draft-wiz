@@ -72,7 +72,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")
     assert [trace.name for trace in points.data] == ["Actual", "Projected"]
-    assert [trace.name for trace in health.data] == ["Actual"]
+    assert [trace.name for trace in health.data] == ["Actual", "Projected"]
     assert points.data[0].type == "bar"
     assert points.data[0].texttemplate == "%{y:.2f}"
     assert points.data[0].textposition == "inside"
@@ -89,6 +89,8 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "width": "100%",
     }
     assert health.data[0].marker.color[0] == "#f9a825"
+    assert health.data[1].mode == "lines+markers"
+    assert health.data[1].line.color == "#ff7f0e"
     average_performance = next(
         graph.figure for graph in graphs if graph.figure.layout.title.text == "AVG Performance"
     )

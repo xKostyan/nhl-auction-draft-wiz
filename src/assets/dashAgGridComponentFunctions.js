@@ -6,8 +6,25 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
         return null;
     }
     var history = Array.isArray(props.value) ? props.value : [];
-    var bars = history.slice().reverse().map(function (season) {
+    var chronologicalHistory = history.slice().reverse();
+    var pointCount = chronologicalHistory.length;
+    var linePoints = chronologicalHistory.map(function (season, index) {
+        var projected = Math.max(0, Math.min(84, Number(season.projected) || 0));
+        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var y = 100 - projected / 84 * 100;
+        return x + "," + y;
+    });
+    var lineDots = chronologicalHistory.map(function (season, index) {
+        var projected = Math.max(0, Math.min(84, Number(season.projected) || 0));
+        var x = pointCount > 1 ? index / (pointCount - 1) * 100 : 50;
+        var y = 100 - projected / 84 * 100;
+        return React.createElement("circle", {
+            cx: x, cy: y, fill: "#1565c0", key: season.year, r: "2"
+        });
+    });
+    var bars = chronologicalHistory.map(function (season) {
         var gamesPlayed = Math.max(0, Math.min(84, Number(season.games_played) || 0));
+        var projected = Math.max(0, Math.min(84, Number(season.projected) || 0));
         var percentage = gamesPlayed / 84 * 100;
         var color = gamesPlayed <= 50 ? "#d32f2f" :
             gamesPlayed <= 60 ? "#ef6c00" :
@@ -15,7 +32,7 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
 
         return React.createElement("div", {
             key: season.year,
-            title: season.year + ": " + gamesPlayed + " actual GP",
+            title: season.year + ": " + projected + " projected, " + gamesPlayed + " actual GP",
             style: {
                 flex: "1 1 0",
                 height: "100%",
@@ -60,7 +77,24 @@ dagcomponentfuncs.actualGpSparkline = function (props) {
             padding: "1px 4px",
             width: "100%"
         }
-    }, bars);
+    }, [
+        React.createElement("svg", {
+            "aria-label": "Projected games played",
+            height: "100%",
+            key: "projected-line",
+            preserveAspectRatio: "none",
+            style: { left: "4px", pointerEvents: "none", position: "absolute", top: "1px", width: "calc(100% - 8px)" },
+            viewBox: "0 0 100 100",
+            width: "100%"
+        }, [
+            React.createElement("polyline", {
+                fill: "none", key: "line", points: linePoints.join(" "),
+                stroke: "#1565c0", strokeWidth: "2"
+            }),
+            lineDots
+        ]),
+        bars
+    ]);
 };
 
 dagcomponentfuncs.goalieGameStartsChart = function (props) {

@@ -456,7 +456,7 @@ def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_pat
     my_team_forwards = get_players_for_position_grid("F", my_team_only=True)
 
     assert my_team_forwards["id"].tolist() == [player_id]
-    assert query_player_ids == [[player_id], [player_id]]
+    assert query_player_ids == [[player_id], [player_id], [player_id]]
 
 
 def test_position_grid_rejects_unknown_position(tmp_path):

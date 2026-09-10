@@ -249,11 +249,12 @@ def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.
     charts = []
 
     if player["position"] in {"F", "D"}:
-        actual, _ = _metric_values(table, "GP")
+        actual, projected = _metric_values(table, "GP")
         charts.append(
             _build_chart(
                 "Health",
                 actual,
+                projected,
                 yaxis_title="Games played",
                 yaxis_max=84,
                 actual_color=_skater_health_color,

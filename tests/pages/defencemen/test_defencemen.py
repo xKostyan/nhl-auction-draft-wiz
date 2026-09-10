@@ -59,6 +59,10 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[4]["width"] == 150
     assert grid.columnDefs[4]["resizable"] is True
     assert grid.columnDefs[4]["suppressAutoSize"] is True
+    renderer = (
+        Path(__file__).parents[3] / "src" / "assets" / "dashAgGridComponentFunctions.js"
+    ).read_text()
+    assert "Projected games played" in renderer
     assert grid.columnDefs[5] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",

@@ -33,10 +33,11 @@ highlighted from any live-auction or My Team table.
   Points** in the second row; **Shots on Goal per Game**, **Shooting
   Percentage**, and **Goals** in the third; and **Hits per Game** and **Blocks
   per Game** in the fourth.
-- Skater **Health** bars use the player-table games-played bands: red through
-  50, orange through 60, yellow through 71, then green. **AVG Performance**
-  uses its player-table skater bands: red through 3.1, orange through 3.5,
-  yellow below 3.7, light green below 4.1, then green.
+- Skater **Health** compares actual GP bars with a yearly projected GP line on
+  the shared 0-84 scale. Its actual bars use the player-table games-played
+  bands: red through 50, orange through 60, yellow through 71, then green.
+  **AVG Performance** uses its player-table skater bands: red through 3.1,
+  orange through 3.5, yellow below 3.7, light green below 4.1, then green.
 - **Time on Ice** compares actual (bars) and projected (line) minutes per
   game on a 0-25 forward scale or 0-27 defencemen scale. Its actual forward
   bars are red below 15 minutes, orange below 16, yellow below 18, and green

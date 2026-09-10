@@ -115,6 +115,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         "search_focus", "slot_number", "name", "price", "position"
     ]
     utility_health = next(column for column in utility.columnDefs if column["field"] == "actual_gp_history")
+    assert utility_health["cellRenderer"] == "actualGpSparkline"
     assert utility_health["width"] == 150
     assert utility_health["resizable"] is True
     assert utility_health["suppressAutoSize"] is True

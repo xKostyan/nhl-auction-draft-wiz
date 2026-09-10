@@ -204,7 +204,7 @@ def test_rows_include_current_season_projected_fantasy_points(tmp_path):
     assert get_workspace_value("current_season") == "2027"
 
 
-def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
+def test_skater_rows_include_actual_and_projected_gp_history(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()
     import_yearly_dataset()
@@ -215,10 +215,11 @@ def test_skater_rows_include_the_five_most_recent_actual_gp_seasons(tmp_path):
         if row["name"] == "Mikko Rantanen"
     )
     assert history == [
-        {"year": 2026, "games_played": 64.0},
-        {"year": 2025, "games_played": 82.0},
-        {"year": 2024, "games_played": 80.0},
-        {"year": 2023, "games_played": 82.0},
+        {"year": 2027, "games_played": 0.0, "projected": 71.0},
+        {"year": 2026, "games_played": 64.0, "projected": 80.0},
+        {"year": 2025, "games_played": 82.0, "projected": 80.0},
+        {"year": 2024, "games_played": 80.0, "projected": 77.0},
+        {"year": 2023, "games_played": 82.0, "projected": 76.0},
     ]
 
 
@@ -262,6 +263,8 @@ def test_grid_renderers_include_health_bars_drafted_switch_and_search_focus_circ
     assert "searchFocusCircleRenderer" in renderer
     assert 'onMyTeam ? "#90caf9" : "#d3d3d3"' in renderer
     assert "averagePerformanceChart" in renderer
+    assert "Projected games played" in renderer
+    assert 'season.year + ": " + projected + " projected, " + gamesPlayed + " actual GP"' in renderer
     assert "scaleMaximum === 6" in renderer
     assert "var scaleMaximum = props.scaleMaximum" in renderer
     assert "playerTagsRenderer" in renderer
