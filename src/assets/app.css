@@ -74,9 +74,14 @@ body,
     margin-bottom: 8px;
 }
 
+#budget-allocation-slider {
+    margin-left: 36px;
+    width: calc(60% - 36px);
+}
+
 .budget-allocation-controls .rc-slider {
     margin: 0 12px 12px 0;
-    max-width: 60%;
+    max-width: 100%;
 }
 
 .budget-allocation-controls .rc-slider-tooltip {

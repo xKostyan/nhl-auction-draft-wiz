@@ -40,7 +40,8 @@ membership flag is stored in the workspace and survives restarts.
   pixel smaller than the page default.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 60% of the
-  allocation-controls row width. The budget panel is on the left of the
+  allocation-controls row width and is inset so its endpoint labels remain
+  visible. The budget panel is on the left of the
   projected-TFP chart; both use equal width on larger screens and stack on
   narrow screens.
 - Empty active player slots show the remaining budget and average for their
