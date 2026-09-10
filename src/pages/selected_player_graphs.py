@@ -155,8 +155,10 @@ def _build_chart(
     )
     actual_label_annotations = [
         {
-            "x": year,
+            "x": str(year),
+            "xref": "x",
             "y": yaxis_min,
+            "yref": "y",
             "text": f"{float(value):.2f}",
             "showarrow": False,
             "yanchor": "bottom",

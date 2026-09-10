@@ -165,6 +165,12 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
     assert len(save_percentage.layout.annotations) == sum(
         value is not None and value == value for value in save_percentage.data[0].y
     )
+    assert [annotation.x for annotation in save_percentage.layout.annotations] == [
+        str(year) for year, value in zip(save_percentage.data[0].x, save_percentage.data[0].y)
+        if value is not None and value == value
+    ]
+    assert all(annotation.xref == "x" and annotation.yref == "y"
+               for annotation in save_percentage.layout.annotations)
     assert all(annotation.y == 0.6 for annotation in save_percentage.layout.annotations)
     assert all(annotation.yanchor == "bottom" for annotation in save_percentage.layout.annotations)
     assert all(annotation.text.count(".") == 1 and len(annotation.text.rsplit(".", 1)[1]) == 2
