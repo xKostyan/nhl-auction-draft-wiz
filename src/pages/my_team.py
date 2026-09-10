@@ -175,8 +175,8 @@ def _budget_int(value: object, label: str) -> int:
     raise ValueError(f"{label} must be a non-negative whole number.")
 
 
-def _player_price(value: object) -> int:
-    """Treat legacy blank roster prices as zero while validating populated prices."""
+def _auction_price(value: object) -> int:
+    """Treat blank auction prices as zero while validating populated prices."""
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return 0
     return _budget_int(value, "Player price")
@@ -213,7 +213,7 @@ def get_budget_summary(
     roster_rows = [
         row for table_rows in snapshot.values() for row in table_rows if not row.get("is_empty_slot")
     ]
-    committed = sum(_player_price(row["price"]) for row in roster_rows)
+    committed = sum(_auction_price(row["auction_price"]) for row in roster_rows)
     empty_slots = sum(
         1 for table_rows in snapshot.values() for row in table_rows if row.get("is_empty_slot")
     )
@@ -261,7 +261,7 @@ def get_budget_allocation(
     for label, positions, key in groups:
         planned = summary["total_budget"] * _budget_int(percentages[key], f"{label} allocation") / 100
         committed = sum(
-            _player_price(row["price"])
+            _auction_price(row["auction_price"])
             for row in roster_rows if row["position"] in positions
         )
         open_slots = sum(open_active_slots[position] for position in positions)

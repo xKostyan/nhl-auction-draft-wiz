@@ -29,14 +29,15 @@ from src.storage import (
     get_workspace_value,
     get_selected_player,
     import_yearly_dataset,
+    set_player_auction_price,
     set_player_price,
     set_target_total_fp,
 )
 
 
-def add_to_my_team(position, player_id, price=1):
+def add_to_my_team(position, player_id, auction_price=1):
     """Add a priced player through the same context action used by the grid."""
-    set_player_price(player_id, price)
+    set_player_auction_price(player_id, auction_price)
     handle_player_context_action(
         position, {"rowId": player_id, "value": {"action": "add-to-my-team"}}
     )
@@ -136,11 +137,15 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
         next(column for column in grid.columnDefs if column["field"] == "price")["width"] == 60
         for grid in grids
     )
+    assert all(
+        next(column for column in grid.columnDefs if column["field"] == "auction_price")["width"] == 60
+        for grid in grids
+    )
     name_columns = [next(column for column in grid.columnDefs if column["field"] == "name") for grid in grids]
     assert all(column["cellRendererParams"] == {"allowAddToMyTeam": False} for column in name_columns)
     utility = grids[2]
-    assert [column["field"] for column in utility.columnDefs][:5] == [
-        "search_focus", "slot_number", "name", "price", "position"
+    assert [column["field"] for column in utility.columnDefs][:6] == [
+        "search_focus", "slot_number", "name", "price", "auction_price", "position"
     ]
     utility_health = next(column for column in utility.columnDefs if column["field"] == "actual_gp_history")
     assert utility_health["cellRenderer"] == "actualGpSparkline"
@@ -153,10 +158,10 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert renderer.count("(index + 0.5) / pointCount * 100") == 6
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
-        "search_focus", "slot_number", "name", "price", "position", "projected_tfp", "projected_afp"
+        "search_focus", "slot_number", "name", "price", "auction_price", "position", "projected_tfp", "projected_afp"
     ]
     goalie = grids[3]
-    assert [column["field"] for column in goalie.columnDefs][5:9] == [
+    assert [column["field"] for column in goalie.columnDefs][6:10] == [
         "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
     ]
 
@@ -229,7 +234,7 @@ def test_budget_summary_reserves_one_dollar_for_each_empty_roster_slot(tmp_path)
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    add_to_my_team("F", player_id, price=30)
+    add_to_my_team("F", player_id, auction_price=30)
     snapshot = position_table.build_my_team_snapshot()
 
     summary = my_team.get_budget_summary(snapshot=snapshot, budget=930)
@@ -250,9 +255,9 @@ def test_budget_summary_treats_a_legacy_blank_roster_price_as_zero(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
-    add_to_my_team("F", player_id, price=30)
+    add_to_my_team("F", player_id, auction_price=30)
     snapshot = position_table.build_my_team_snapshot()
-    next(row for row in snapshot["F"] if row.get("id") == player_id)["price"] = float("nan")
+    next(row for row in snapshot["F"] if row.get("id") == player_id)["auction_price"] = float("nan")
 
     summary = my_team.get_budget_summary(snapshot=snapshot)
 
@@ -264,7 +269,7 @@ def test_budget_allocation_is_advisory_and_validates_percentages(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "G")
-    add_to_my_team("G", player_id, price=40)
+    add_to_my_team("G", player_id, auction_price=40)
     snapshot = position_table.build_my_team_snapshot()
 
     rows = my_team.get_budget_allocation(
@@ -418,13 +423,13 @@ def test_price_changes_persist_from_the_my_team_table(tmp_path):
 
     handle_my_team_grid_update(
         "F",
-        [{"colId": "price", "value": 28, "data": {"id": player_id}}],
+        [{"colId": "auction_price", "value": 28, "data": {"id": player_id}}],
         None,
         "cellValueChanged",
     )
 
     player = next(row for row in get_position_rows("F", my_team_only=True) if row["id"] == player_id)
-    assert player["price"] == 28
+    assert player["auction_price"] == 28
 
 
 def test_my_team_context_menu_selects_a_player_for_the_graphs_page(tmp_path):

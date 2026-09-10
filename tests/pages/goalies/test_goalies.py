@@ -38,7 +38,8 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "",
         "#",
         "Player name",
-        "$$",
+        "k $$",
+        "a $$",
         "Game Starts",
         "Average Performance",
         "p GS",
@@ -57,11 +58,11 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[3]["cellEditor"] == "agNumberCellEditor"
     assert grid.columnDefs[3]["cellEditorParams"] == {"min": 0, "precision": 0}
     assert grid.columnDefs[3]["editable"] is True
-    assert grid.columnDefs[4]["cellRenderer"] == "goalieGameStartsChart"
-    assert grid.columnDefs[4]["width"] == 150
-    assert grid.columnDefs[4]["resizable"] is True
-    assert grid.columnDefs[4]["suppressAutoSize"] is True
-    assert grid.columnDefs[5] == {
+    assert grid.columnDefs[5]["cellRenderer"] == "goalieGameStartsChart"
+    assert grid.columnDefs[5]["width"] == 150
+    assert grid.columnDefs[5]["resizable"] is True
+    assert grid.columnDefs[5]["suppressAutoSize"] is True
+    assert grid.columnDefs[6] == {
         "field": "average_performance_history",
         "headerName": "Average Performance",
         "cellRenderer": "averagePerformanceChart",
@@ -71,16 +72,16 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "suppressAutoSize": True,
         "width": 150,
     }
-    assert grid.columnDefs[6] == {"field": "projected_gs", "headerName": "p GS", "type": "numericColumn"}
-    assert grid.columnDefs[9]["headerName"] == "Tags"
-    assert grid.columnDefs[9]["cellRenderer"] == "playerTagsRenderer"
-    assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == [
+    assert grid.columnDefs[7] == {"field": "projected_gs", "headerName": "p GS", "type": "numericColumn"}
+    assert grid.columnDefs[10]["headerName"] == "Tags"
+    assert grid.columnDefs[10]["cellRenderer"] == "playerTagsRenderer"
+    assert grid.columnDefs[10]["cellRendererParams"]["availableTags"] == [
         "Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"
     ]
-    assert grid.columnDefs[10]["headerName"] == "Notes"
-    assert grid.columnDefs[10]["editable"] is True
-    assert grid.columnDefs[10]["wrapText"] is True
-    assert grid.columnDefs[10]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[11]["headerName"] == "Notes"
+    assert grid.columnDefs[11]["editable"] is True
+    assert grid.columnDefs[11]["wrapText"] is True
+    assert grid.columnDefs[11]["cellStyle"]["fontSize"] == "14px"
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

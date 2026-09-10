@@ -23,6 +23,7 @@ from src.storage import (
     set_draft_budget,
     set_target_total_fp,
     set_player_notes,
+    set_player_auction_price,
     set_player_on_my_team,
     set_player_price,
     set_player_tags,
@@ -42,8 +43,9 @@ def test_import_uses_bundled_sample_data_by_default(tmp_path):
 
     rows = get_players_for_grid()
     assert not rows.empty
-    assert set(["id", "name", "position", "price", "status", "current_season"]).issubset(rows.columns)
+    assert set(["id", "name", "position", "price", "auction_price", "status", "current_season"]).issubset(rows.columns)
     assert rows["price"].isna().all()
+    assert rows["auction_price"].isna().all()
     assert rows["status"].isin(["available"]).all()
 
     summary = get_workspace_summary()
@@ -208,6 +210,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "my_team_add_error",
         "drafted",
         "price",
+        "auction_price",
         "projected_tfp",
         "projected_afp",
         "actual_gp_history",
@@ -231,6 +234,9 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_price(player_id, 42)
     priced_forwards = get_players_for_position_grid("F")
     assert priced_forwards.loc[priced_forwards["id"] == player_id, "price"].item() == 42
+    set_player_auction_price(player_id, 37)
+    priced_forwards = get_players_for_position_grid("F")
+    assert priced_forwards.loc[priced_forwards["id"] == player_id, "auction_price"].item() == 37
 
     set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback"])
     tagged_forwards = get_players_for_position_grid("F")
@@ -272,6 +278,8 @@ def test_player_price_requires_a_non_negative_integer_or_blank(tmp_path):
         set_player_price(player_id, -1)
     with pytest.raises(ValueError, match="non-negative integer"):
         set_player_price(player_id, 3.5)
+    with pytest.raises(ValueError, match="non-negative integer"):
+        set_player_auction_price(player_id, -1)
 
 
 def test_player_price_is_retained_after_reconfiguring_storage(tmp_path):
@@ -368,8 +376,9 @@ def test_adding_an_unpriced_player_to_my_team_is_rejected(tmp_path):
     clear_workspace()
     import_yearly_dataset()
     player_id = int(get_players_for_grid().iloc[0]["id"])
+    set_player_price(player_id, 12)
 
-    with pytest.raises(PlayerPriceRequiredError, match="Set a player price"):
+    with pytest.raises(PlayerPriceRequiredError, match="Set an auction price"):
         set_player_on_my_team(player_id, True)
 
 
@@ -401,7 +410,7 @@ def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
     finally:
         conn.close()
 
-    assert "price" in columns
+    assert {"price", "auction_price"}.issubset(columns)
 
 
 def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
@@ -441,7 +450,7 @@ def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_pat
     import_yearly_dataset()
     forwards = get_players_for_position_grid("F")
     player_id = int(forwards.iloc[0]["id"])
-    set_player_price(player_id, 1)
+    set_player_auction_price(player_id, 1)
     set_player_on_my_team(player_id, True)
 
     original_get_position_stat_rows = storage._get_position_stat_rows

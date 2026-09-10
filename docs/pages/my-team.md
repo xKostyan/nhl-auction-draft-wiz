@@ -16,7 +16,7 @@ membership flag is stored in the workspace and survives restarts.
 ## UI and behavior
 
 - A **Draft budget** panel persists a non-negative whole-number annual budget,
-  defaulting to `$930`. It reports committed My Team price, remaining budget,
+  defaulting to `$930`. It reports committed My Team auction cost, remaining budget,
   the `$1` minimum reserved for every unfilled roster slot, flexible budget,
   and the maximum legal next bid after preserving the minimum for every other
   open slot. Only My Team players consume the budget; players drafted by other
@@ -27,9 +27,10 @@ membership flag is stored in the workspace and survives restarts.
   90%-starts calculation (including bench goalies), then divided across empty
   active F, D, Utility, and Goalie slots. The aggregate status line is omitted
   to keep the budget panel compact.
-- A player must have a Price before **Add to My Team** succeeds. Adding them
-  then marks the player drafted and charges that price to the budget. Keepers
-  and auction purchases follow this same workflow.
+- A player must have an **a $$** auction value before **Add to My Team**
+  succeeds. Adding them then marks the player drafted and charges only that
+  auction value to the budget; **k $$** keeper values remain visible but do
+  not affect budget calculations.
 - The budget panel provides an advisory **Skaters / Goalies** allocation view.
   Its persisted percentage split drives planned budget, price spent, the
   required `$1` minimum, remaining allocation, and a per-slot guide. A 1%
@@ -72,16 +73,17 @@ membership flag is stored in the workspace and survives restarts.
   are ordered by projected TFP from highest to lowest; Bench keeps spillover
   order.
 - My Team rows are 50px high, with 12px spacing between tables. Tables retain
-  the same player data, editable **$$** price, inline charts, Tags, and Notes as their matching
-  position page. The **$$** column is 60px wide in every My Team table. Health
+  the same player data, editable **k $$** keeper price, editable **a $$** auction
+  price, inline charts, Tags, and Notes as their matching position page. Both price
+  columns are 60px wide in every My Team table. Health
   charts compare actual GP bars with a projected GP line;
   their 150px columns can be resized and their charts expand to fill the
   available cell width. Every inline projected line runs from the center of
   the first bar to the center of the last. Average Performance uses light
   green and green bands at 3.7 to below 4.1 and 4.1+ for skaters, and 7.9 to
   below 8.3 and 8.3+ for goalies. Utility has the
-  skater columns plus **Position** after Price. Bench is intentionally
-  limited to highlight, index, player name, **$$**, **Position**, projected TFP, and
+  skater columns plus **Position** after the price columns. Bench is intentionally
+  limited to highlight, index, player name, **k $$**, **a $$**, **Position**, projected TFP, and
   projected AFP so skaters and goalies share it. The fixed-size tables suppress
   their unused internal vertical scrollbars through both their AG Grid settings
   and My Team-scoped styling.

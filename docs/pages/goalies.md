@@ -16,7 +16,7 @@ open in its own browser tab during the draft.
 - The page header contains only the page title and player search control.
 - The table header and menu entry use the goalie purple `#cc33ff`.
 - An AG Grid table with an unlabeled **highlight** circle, **#**, **Player
-  name**, editable **$$** (price), **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
+  name**, editable **k $$** (keeper price), editable **a $$** (auction price), **Game Starts**, **Average Performance**, **p GS**, **p TFP `<upcoming year>`**,
   **p AFP `<upcoming year>`**, **Tags**, and **Notes** columns, in that order.
   `p TFP` is the projected Total
   Fantasy Points and `p AFP` is the projected Average Fantasy Points per game,
@@ -73,7 +73,8 @@ open in its own browser tab during the draft.
 - **#** is a clickable availability switch. On means the player is available
   for the draft; off means the player is `drafted`. Its 26px column cannot be
   resized.
-- **$$** is an editable non-negative whole-number keeper or auction cost.
+- **k $$** is the editable non-negative whole-number keeper cost. **a $$** is the
+  separate editable non-negative whole-number auction cost used for My Team budgets.
   Leave it blank when no value is known; entered values persist in the
   workspace across app restarts.
 - Each checkbox edit is persisted from AG Grid's JSON status-change events,

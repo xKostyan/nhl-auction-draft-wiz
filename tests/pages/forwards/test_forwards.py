@@ -74,7 +74,16 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
         },
         {
             "field": "price",
-            "headerName": "$$",
+            "headerName": "k $$",
+            "type": "numericColumn",
+            "cellEditor": "agNumberCellEditor",
+            "cellEditorParams": {"min": 0, "precision": 0},
+            "editable": True,
+            "width": 75,
+        },
+        {
+            "field": "auction_price",
+            "headerName": "a $$",
             "type": "numericColumn",
             "cellEditor": "agNumberCellEditor",
             "cellEditorParams": {"min": 0, "precision": 0},
@@ -419,7 +428,9 @@ def test_player_context_actions_persist_for_a_forward(tmp_path):
     ])
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-tags"}})
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "clear-notes"}})
-    handle_drafted_cell_change("F", [{"colId": "price", "value": 1, "data": {"id": player_id}}])
+    handle_drafted_cell_change(
+        "F", [{"colId": "auction_price", "value": 1, "data": {"id": player_id}}]
+    )
     handle_player_context_action("F", {"rowId": player_id, "value": {"action": "add-to-my-team"}})
 
     player = next(row for row in get_position_rows("F") if row["id"] == player_id)

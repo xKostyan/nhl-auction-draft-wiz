@@ -43,7 +43,12 @@ def test_layout_exposes_upload_import_and_clear_controls(tmp_path, collect_compo
     assert grid.className == "table-values-large"
     assert next(column for column in grid.columnDefs if column["field"] == "price") == {
         "field": "price",
-        "headerName": "$$",
+        "headerName": "k $$",
+        "type": "numericColumn",
+    }
+    assert next(column for column in grid.columnDefs if column["field"] == "auction_price") == {
+        "field": "auction_price",
+        "headerName": "a $$",
         "type": "numericColumn",
     }
     unmatched_grid = next(
