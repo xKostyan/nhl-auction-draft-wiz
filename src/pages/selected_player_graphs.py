@@ -159,6 +159,9 @@ def _build_chart(
             x=years,
             y=actual_values,
             marker_color=bar_color,
+            texttemplate="%{y}",
+            textposition="inside",
+            insidetextanchor="start",
         )
     )
     if projected is not None:

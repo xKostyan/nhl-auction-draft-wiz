@@ -74,6 +74,9 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert [trace.name for trace in points.data] == ["Actual", "Projected"]
     assert [trace.name for trace in health.data] == ["Actual"]
     assert points.data[0].type == "bar"
+    assert points.data[0].texttemplate == "%{y}"
+    assert points.data[0].textposition == "inside"
+    assert points.data[0].insidetextanchor == "start"
     assert points.data[1].type == "scatter"
     assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
@@ -128,6 +131,12 @@ def test_goalie_graphs_are_limited_to_goalie_metrics(tmp_path):
         "Save Percentage",
     ]
     assert all([trace.name for trace in graph.figure.data] == ["Actual", "Projected"] for graph in graphs)
+    assert all(
+        graph.figure.data[0].texttemplate == "%{y}"
+        and graph.figure.data[0].textposition == "inside"
+        and graph.figure.data[0].insidetextanchor == "start"
+        for graph in graphs
+    )
     assert {
         graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
     } == {

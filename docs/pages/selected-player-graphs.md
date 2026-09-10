@@ -68,6 +68,8 @@ highlighted from any live-auction or My Team table.
   0.8, orange below 0.84, yellow below 0.88, light green below 0.9, then green.
 - Charts use a compact 260px height and a three-column grid so portrait
   displays show three charts per row.
+- Every actual-value bar displays its numeric value inside the bar, vertically
+  aligned at its bottom edge.
 - Legends are hidden because bars consistently represent actual values and
   lines consistently represent projected values.
 
