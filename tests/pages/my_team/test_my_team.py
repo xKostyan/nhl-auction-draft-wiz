@@ -333,6 +333,16 @@ def test_budget_update_persists_budget_target_and_allocation_controls(tmp_path):
     assert status == ""
 
 
+def test_invalid_budget_update_returns_a_validation_message(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    _, status = my_team.build_budget_update("not a budget", 2650, 80, 20)
+
+    assert status == "Draft budget must be a non-negative whole number."
+
+
 def test_target_fp_summary_uses_active_slots_and_bench_goalie_projection(tmp_path):
     configure_storage(tmp_path / "draft_workspace.sqlite3")
     clear_workspace()

@@ -437,7 +437,7 @@ def build_budget_update(
         set_workspace_value("budget_skater_percent", str(_budget_int(skater_percentage, "Skaters allocation")))
         set_workspace_value("budget_goalie_percent", str(_budget_int(goalie_percentage, "Goalies allocation")))
         return build_budget_summary(percentages).children, ""
-    except ValueError:
+    except ValueError as error:
         return build_budget_summary().children, str(error)
 
 

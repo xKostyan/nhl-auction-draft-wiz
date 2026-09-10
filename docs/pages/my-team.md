@@ -40,6 +40,8 @@ membership flag is stored in the workspace and survives restarts.
   split control. Its inactive rail uses the Utility table blue `#33adff`, and
   its drag handle is a compact dark-gray vertical pill. Draft Budget panel text
   is one pixel smaller than the page default.
+- Invalid budget settings preserve the existing budget summary and display a
+  validation message instead of failing the page update.
   Adjacent cells display the dollar amount allocated to Skaters and Goalies
   from the total budget. The slider uses no more than 60% of the
   allocation-controls row width and is inset so its endpoint labels remain
