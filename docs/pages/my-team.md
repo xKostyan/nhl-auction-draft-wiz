@@ -36,8 +36,9 @@ membership flag is stored in the workspace and survives restarts.
   guide. A 1% increment slider sits beside the inputs: its left endpoint sets
   Skaters to 100% and Goalies to 0%, its midpoint sets both to 50%, and its
   right endpoint reverses that split. Moving it synchronizes both percentage
-  inputs. Adjacent cells display the dollar amount allocated to Skaters and
-  Goalies from the total budget. The slider uses no more than 75% of the
+  inputs, although the complementary Goalies % input is not displayed.
+  Adjacent cells display the dollar amount allocated to Skaters and Goalies
+  from the total budget. The slider uses no more than 75% of the
   allocation-controls row width. The budget panel is on the left of the
   projected-TFP chart; both use equal width on larger screens and stack on
   narrow screens.

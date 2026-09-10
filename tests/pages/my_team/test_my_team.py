@@ -67,6 +67,15 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     allocation_slider = next(
         node for node in walk_components(page_layout) if isinstance(node, dcc.Slider)
     )
+    goalie_input_label = next(
+        node
+        for node in walk_components(page_layout)
+        if getattr(node, "style", None) == {"display": "none"}
+        and any(
+            getattr(child, "id", None) == my_team.GOALIE_ALLOCATION_ID
+            for child in node.children
+        )
+    )
     skater_allocation_amount = next(
         node for node in walk_components(page_layout)
         if getattr(node, "id", None) == my_team.SKATER_ALLOCATION_AMOUNT_ID
@@ -86,6 +95,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert allocation_slider.step == 1
     assert allocation_slider.value == 20
     assert allocation_slider.marks == {0: "Skaters 100%", 50: "50 / 50", 100: "Goalies 100%"}
+    assert goalie_input_label.style == {"display": "none"}
     assert skater_allocation_amount.children == "$744"
     assert goalie_allocation_amount.children == "$186"
     assert chart.id == my_team.CHART_ID
