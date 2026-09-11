@@ -284,6 +284,12 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
         var tagColor = tagColors[tag] || "yellow";
         var colors = tagColor === "green"
             ? { active: "#a5d6a7", border: "#66bb6a" }
+            : tagColor === "light-green"
+                ? { active: "#c8e6c9", border: "#81c784" }
+            : tagColor === "light-blue"
+                ? { active: "#bbdefb", border: "#64b5f6" }
+            : tagColor === "gray"
+                ? { active: "#e0e0e0", border: "#9e9e9e" }
             : tagColor === "red"
                 ? { active: "#ef9a9a", border: "#e57373" }
                 : { active: "#fff59d", border: "#fbc02d" };

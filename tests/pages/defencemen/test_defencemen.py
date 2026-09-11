@@ -79,7 +79,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[9]["headerName"] == "Tags"
     assert grid.columnDefs[9]["cellRenderer"] == "playerTagsRenderer"
     assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == [
-        "PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"
+        "PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"
     ]
     assert grid.columnDefs[10]["headerName"] == "Notes"
     assert grid.columnDefs[10]["editable"] is True

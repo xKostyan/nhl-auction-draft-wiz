@@ -37,6 +37,7 @@ PLAYER_TAGS = (
     "contract",
     "rookie",
     "bounceback",
+    "red flag",
 )
 
 
@@ -131,7 +132,7 @@ def ensure_schema() -> None:
             """
             CREATE TABLE IF NOT EXISTS player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback', 'red flag')),
                 PRIMARY KEY (player_id, tag),
                 FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
             )
@@ -140,13 +141,13 @@ def ensure_schema() -> None:
         existing_tag_table = conn.execute(
             "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'player_tags'"
         ).fetchone()
-        if existing_tag_table and "'bounceback'" not in existing_tag_table["sql"]:
+        if existing_tag_table and "'red flag'" not in existing_tag_table["sql"]:
             conn.execute("ALTER TABLE player_tags RENAME TO player_tags_legacy")
             conn.execute(
                 """
                 CREATE TABLE player_tags (
                     player_id INTEGER NOT NULL,
-                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
+                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback', 'red flag')),
                     PRIMARY KEY (player_id, tag),
                     FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
                 )

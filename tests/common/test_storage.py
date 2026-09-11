@@ -238,10 +238,10 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     priced_forwards = get_players_for_position_grid("F")
     assert priced_forwards.loc[priced_forwards["id"] == player_id, "auction_price"].item() == 37
 
-    set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback"])
+    set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback", "red flag"])
     tagged_forwards = get_players_for_position_grid("F")
     assert tagged_forwards.loc[tagged_forwards["id"] == player_id, "tags"].item() == [
-        "Line2", "PP1", "bounceback", "contract", "rookie"
+        "Line2", "PP1", "bounceback", "contract", "red flag", "rookie"
     ]
 
     set_player_notes(player_id, "Top-line role; monitor injury.")
@@ -421,7 +421,7 @@ def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
             """
             CREATE TABLE player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
                 PRIMARY KEY (player_id, tag)
             )
             """
@@ -442,6 +442,7 @@ def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
     assert "'contract'" in definition
     assert "'rookie'" in definition
     assert "'bounceback'" in definition
+    assert "'red flag'" in definition
 
 
 def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_path, monkeypatch):

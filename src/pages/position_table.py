@@ -26,9 +26,9 @@ POSITION_NAMES = {"F": "Forwards", "D": "Defencemen", "G": "Goalies"}
 SKATER_POSITIONS = {"F", "D"}
 VERTICALLY_CENTERED_CELL_STYLE = {"alignItems": "center", "display": "flex"}
 PLAYER_TAGS = {
-    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
-    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
-    "G": ["Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"],
+    "F": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"],
+    "D": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"],
+    "G": ["Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback", "red flag"],
 }
 TAG_COLORS = {
     "PP1": "green",
@@ -41,9 +41,10 @@ TAG_COLORS = {
     "1A": "green",
     "1B": "yellow",
     "Backup": "red",
-    "contract": "yellow",
-    "rookie": "green",
-    "bounceback": "red",
+    "contract": "light-green",
+    "rookie": "gray",
+    "bounceback": "light-blue",
+    "red flag": "red",
 }
 MY_TEAM_SLOT_COUNTS = {"F": 9, "D": 5, "G": 2}
 MY_TEAM_TABLES = {

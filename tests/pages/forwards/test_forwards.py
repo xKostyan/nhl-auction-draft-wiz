@@ -124,12 +124,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
             "cellRendererParams": {
-                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"],
                 "tagColors": {
                     "PP1": "green", "PK1": "green", "Line1": "green",
                     "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
                     "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
-                    "contract": "yellow", "rookie": "green", "bounceback": "red",
+                    "contract": "light-green", "rookie": "gray", "bounceback": "light-blue", "red flag": "red",
                 },
             },
             "sortable": False,

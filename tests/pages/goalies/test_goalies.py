@@ -76,7 +76,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[10]["headerName"] == "Tags"
     assert grid.columnDefs[10]["cellRenderer"] == "playerTagsRenderer"
     assert grid.columnDefs[10]["cellRendererParams"]["availableTags"] == [
-        "Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback"
+        "Starter", "Backup", "1A", "1B", "contract", "rookie", "bounceback", "red flag"
     ]
     assert grid.columnDefs[11]["headerName"] == "Notes"
     assert grid.columnDefs[11]["editable"] is True
@@ -216,6 +216,9 @@ def test_drafted_switch_sets_the_inverse_persisted_drafted_value():
     assert "Close tag editor" in renderer
     assert 'justifyContent: "flex-start"' in renderer
     assert 'tagColor === "red"' in renderer
+    assert 'tagColor === "light-green"' in renderer
+    assert 'tagColor === "light-blue"' in renderer
+    assert 'tagColor === "gray"' in renderer
     assert '}, "11px")' in renderer
     assert "var scaleMaximum = 70" in renderer
     assert 'stroke: "#1565c0"' in renderer
