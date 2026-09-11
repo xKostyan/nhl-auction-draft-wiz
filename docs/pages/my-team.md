@@ -74,7 +74,9 @@ membership flag is stored in the workspace and survives restarts.
   order.
 - My Team rows are 50px high, with 12px spacing between tables. Tables retain
   the same player data, editable **k $$** keeper price, editable **a $$** auction
-  price, inline charts, Tags, and Notes as their matching position page. Both price
+  price, inline charts, Tags, Notes, and the rightmost sortable **Watch** rating as
+  their matching position page. Watch displays five circles for the stored 1-to-5
+  rating; click a circle to change and persist it. Both price
   columns are 60px wide in every My Team table. Health
   charts compare actual GP bars with a projected GP line;
   their 150px columns can be resized and their charts expand to fill the

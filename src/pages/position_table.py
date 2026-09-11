@@ -19,6 +19,7 @@ from ..storage import (
     set_player_auction_price,
     set_player_price,
     set_player_tags,
+    set_player_watch_rating,
     set_selected_player,
 )
 
@@ -101,6 +102,7 @@ def get_position_grid_rows(
                 "drafted": False,
                 "price": None,
                 "auction_price": None,
+                "watch_rating": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -279,6 +281,7 @@ def _fill_my_team_slots(table: str, player_rows: list[dict]) -> list[dict]:
                 "on_my_team": False,
                 "price": None,
                 "auction_price": None,
+                "watch_rating": None,
                 "projected_tfp": None,
                 "projected_afp": None,
                 "actual_gp_history": [],
@@ -460,6 +463,23 @@ def _notes_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
     ]
 
 
+def _watch_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
+    """Return the sortable, editable persistent 1-to-5 watch-rating column."""
+    return [
+        {
+            "field": "watch_rating",
+            "headerName": "Watch",
+            "type": "numericColumn",
+            "cellRenderer": "playerWatchRenderer",
+            "editable": (
+                {"function": "!params.data.is_empty_slot"} if disable_empty_slots else True
+            ),
+            "resizable": True,
+            "width": 90,
+        }
+    ]
+
+
 def _player_name_column_def(*, allow_add_to_my_team: bool) -> dict:
     """Return the player-name column with its shared custom context menu."""
     return {
@@ -516,6 +536,19 @@ def _parse_player_price(value: object) -> int | None:
         if normalized.isdecimal():
             return int(normalized)
     raise ValueError("Player price updates require a non-negative integer or blank value.")
+
+
+def _parse_watch_rating(value: object) -> int:
+    """Validate a JSON-compatible 1-to-5 watch rating emitted by the grid."""
+    if isinstance(value, bool):
+        raise ValueError("Player watch ratings must be whole numbers from 1 through 5.")
+    if isinstance(value, int) and 1 <= value <= 5:
+        return value
+    if isinstance(value, float) and value.is_integer() and 1 <= value <= 5:
+        return int(value)
+    if isinstance(value, str) and value.strip() in {"1", "2", "3", "4", "5"}:
+        return int(value.strip())
+    raise ValueError("Player watch ratings must be whole numbers from 1 through 5.")
 
 
 def _parse_context_action(value: object) -> str:
@@ -593,7 +626,7 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
         if not isinstance(cell_change, dict):
             raise ValueError("Drafted status updates require an AG Grid event dictionary.")
         column_id = cell_change.get("colId")
-        if column_id not in {"drafted", "price", "auction_price", "notes", "tags", "context_action"}:
+        if column_id not in {"drafted", "price", "auction_price", "watch_rating", "notes", "tags", "context_action"}:
             continue
 
         row_data = cell_change.get("data") or {}
@@ -610,6 +643,8 @@ def persist_player_cell_changes(position: str, cell_changes: list[dict] | None) 
             set_player_price(player_id, _parse_player_price(value))
         elif column_id == "auction_price":
             set_player_auction_price(player_id, _parse_player_price(value))
+        elif column_id == "watch_rating":
+            set_player_watch_rating(player_id, _parse_watch_rating(value))
         elif column_id == "tags":
             set_player_tags(player_id, _parse_player_tags(position, value))
         elif column_id == "context_action":
@@ -724,6 +759,7 @@ def build_position_grid(
             *_projected_points_column_defs(),
             *_tags_column_def(position),
             *_notes_column_def(disable_empty_slots=slot_count is not None),
+            *_watch_column_def(disable_empty_slots=slot_count is not None),
         ],
         columnSize="autoSize",
         columnSizeOptions={"skipHeader": True},
@@ -799,6 +835,7 @@ def build_my_team_grid(
         *_projected_points_column_defs(),
         *(_tags_column_def(tag_position) if is_skater_table or is_goalie_table else []),
         *(_notes_column_def(disable_empty_slots=True) if is_skater_table or is_goalie_table else []),
+        *_watch_column_def(disable_empty_slots=True),
     ]
     return dag.AgGrid(
         id=f"my-team-{table.lower()}-player-grid",

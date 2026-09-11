@@ -58,9 +58,11 @@ open in its own browser tab during the draft.
   `1` tags use a green hue, `2` tags use a yellow hue, `contract` uses light
   green, `rookie` uses gray, `bounceback` uses light blue, and `red flag` uses
   red; selections persist in the workspace.
-- **Notes** is the last, resizable 220px column. Click a cell to open a
+- **Notes** is a resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
+- **Watch** is the rightmost sortable 1-to-5 watch-rating column. Five circles
+  show the current rating; click a circle to set and persist that rating.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

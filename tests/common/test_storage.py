@@ -27,6 +27,7 @@ from src.storage import (
     set_player_on_my_team,
     set_player_price,
     set_player_tags,
+    set_player_watch_rating,
     set_selected_player,
     PlayerPriceRequiredError,
 )
@@ -43,9 +44,10 @@ def test_import_uses_bundled_sample_data_by_default(tmp_path):
 
     rows = get_players_for_grid()
     assert not rows.empty
-    assert set(["id", "name", "position", "price", "auction_price", "status", "current_season"]).issubset(rows.columns)
+    assert set(["id", "name", "position", "price", "auction_price", "status", "current_season", "watch_rating"]).issubset(rows.columns)
     assert rows["price"].isna().all()
     assert rows["auction_price"].isna().all()
+    assert rows["watch_rating"].eq(1).all()
     assert rows["status"].isin(["available"]).all()
 
     summary = get_workspace_summary()
@@ -211,6 +213,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "drafted",
         "price",
         "auction_price",
+        "watch_rating",
         "projected_tfp",
         "projected_afp",
         "actual_gp_history",
@@ -237,6 +240,9 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_auction_price(player_id, 37)
     priced_forwards = get_players_for_position_grid("F")
     assert priced_forwards.loc[priced_forwards["id"] == player_id, "auction_price"].item() == 37
+    set_player_watch_rating(player_id, 4)
+    watched_forwards = get_players_for_position_grid("F")
+    assert watched_forwards.loc[watched_forwards["id"] == player_id, "watch_rating"].item() == 4
 
     set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback", "red flag"])
     tagged_forwards = get_players_for_position_grid("F")
@@ -410,7 +416,7 @@ def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
     finally:
         conn.close()
 
-    assert {"price", "auction_price"}.issubset(columns)
+    assert {"price", "auction_price", "watch_rating"}.issubset(columns)
 
 
 def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):

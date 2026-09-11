@@ -47,9 +47,11 @@ open in its own browser tab during the draft.
   `1A` use a green hue; `1B` uses a yellow hue; `Backup` and `red flag` use
   red; `contract` uses light green, `rookie` uses gray, and `bounceback` uses
   light blue; selections persist in the workspace.
-- **Notes** is the last, resizable 220px column. Click a cell to open a
+- **Notes** is a resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
+- **Watch** is the rightmost sortable 1-to-5 watch-rating column. Five circles
+  show the current rating; click a circle to set and persist that rating.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
   shows projected game starts and bars show actual game starts; either missing

@@ -156,6 +156,15 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "width": 220,
             "wrapText": True,
         },
+        {
+            "field": "watch_rating",
+            "headerName": "Watch",
+            "type": "numericColumn",
+            "cellRenderer": "playerWatchRenderer",
+            "editable": True,
+            "resizable": True,
+            "width": 90,
+        },
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
@@ -397,6 +406,19 @@ def test_note_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."
+
+
+def test_watch_rating_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "watch_rating", "value": 5, "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["watch_rating"] == 5
 
 
 def test_price_changes_persist_for_a_forward_and_allow_clearing(tmp_path):

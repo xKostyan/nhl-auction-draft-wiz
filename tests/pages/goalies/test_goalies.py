@@ -47,6 +47,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "p AFP 2027",
         "Tags",
         "Notes",
+        "Watch",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
@@ -82,6 +83,15 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[11]["editable"] is True
     assert grid.columnDefs[11]["wrapText"] is True
     assert grid.columnDefs[11]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[-1] == {
+        "field": "watch_rating",
+        "headerName": "Watch",
+        "type": "numericColumn",
+        "cellRenderer": "playerWatchRenderer",
+        "editable": True,
+        "resizable": True,
+        "width": 90,
+    }
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

@@ -386,6 +386,42 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             }, "+"));
 };
 
+dagcomponentfuncs.playerWatchRenderer = function (props) {
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
+    var watchRating = Math.min(5, Math.max(1, Number(props.value) || 1));
+
+    if (isEmptySlot) {
+        return null;
+    }
+
+    return React.createElement("div", {
+        "aria-label": "Watch rating: " + watchRating + " of 5",
+        role: "group",
+        style: { display: "flex", gap: "3px" }
+    }, [1, 2, 3, 4, 5].map(function (rating) {
+        var selected = rating <= watchRating;
+        return React.createElement("button", {
+            "aria-label": "Set watch rating to " + rating,
+            "aria-pressed": rating === watchRating,
+            key: rating,
+            onClick: function (event) {
+                event.stopPropagation();
+                props.setValue(rating);
+            },
+            style: {
+                backgroundColor: selected ? "#f9a825" : "#f5f5f5",
+                border: "1px solid " + (selected ? "#f57f17" : "#9e9e9e"),
+                borderRadius: "50%",
+                cursor: "pointer",
+                height: "12px",
+                padding: "0",
+                width: "12px"
+            },
+            title: rating + " of 5"
+        });
+    }));
+};
+
 dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {
     var menuState = React.useState(false);
     var menuOpen = menuState[0];
