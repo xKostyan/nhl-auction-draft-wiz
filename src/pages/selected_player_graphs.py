@@ -7,9 +7,16 @@ from collections.abc import Callable
 import dash
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, callback, ctx, dcc, html
 
-from ..storage import get_player_stat_history, get_selected_player
+from ..storage import (
+    get_player_stat_history,
+    get_selected_player,
+    set_player_notes,
+    set_player_tags,
+    set_player_watch_rating,
+)
+from .position_table import PLAYER_TAGS
 
 PATH = "/selected-player-graphs"
 NAME = "Selected player graphs"
@@ -17,6 +24,11 @@ ORDER = 6
 REFRESH_INTERVAL_ID = "selected-player-graphs-refresh"
 PLAYER_NAME_ID = "selected-player-graphs-player-name"
 GRAPH_CONTAINER_ID = "selected-player-graphs-container"
+PLAYER_SETTINGS_ID = "selected-player-graphs-settings"
+SETTINGS_STATUS_ID = "selected-player-graphs-settings-status"
+WATCH_INPUT_ID = "selected-player-watch-rating"
+TAGS_INPUT_ID = "selected-player-tags"
+NOTES_INPUT_ID = "selected-player-notes"
 _ACTUAL_COLOR = "#1f77b4"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
@@ -237,7 +249,7 @@ def _build_chart(
     )
 
 
-def build_player_graphs(player: dict[str, int | str] | None = None) -> list[dcc.Graph]:
+def build_player_graphs(player: dict[str, object] | None = None) -> list[dcc.Graph]:
     """Build the position-appropriate annual charts for the highlighted player."""
     player = get_selected_player() if player is None else player
     if player is None:
@@ -445,6 +457,69 @@ def get_selected_player_name() -> str:
     return str(player["name"]) if player is not None else "No player highlighted."
 
 
+def build_player_settings(player: dict[str, object] | None = None) -> html.Div:
+    """Build persistent Watch, Tags, and Notes editors for the highlighted player."""
+    player = get_selected_player() if player is None else player
+    if player is None:
+        return html.Div("Select a player to edit their Watch, Tags, and Notes.")
+
+    position = str(player["position"])
+    return html.Div(
+        [
+            html.Label(
+                [
+                    "Watch",
+                    dcc.RadioItems(
+                        id=WATCH_INPUT_ID,
+                        options=[{"label": str(rating), "value": rating} for rating in range(6)],
+                        value=int(player["watch_rating"]),
+                        inline=True,
+                    ),
+                ]
+            ),
+            html.Label(
+                [
+                    "Tags",
+                    dcc.Checklist(
+                        id=TAGS_INPUT_ID,
+                        options=[{"label": tag, "value": tag} for tag in PLAYER_TAGS[position]],
+                        value=list(player["tags"]),
+                        inline=True,
+                    ),
+                ]
+            ),
+            html.Label(
+                [
+                    "Notes",
+                    dcc.Textarea(
+                        id=NOTES_INPUT_ID,
+                        value=str(player["notes"]),
+                        style={"height": "72px", "width": "100%"},
+                    ),
+                ]
+            ),
+        ],
+        className="selected-player-settings",
+    )
+
+
+def update_selected_player_setting(setting: str, value: object) -> None:
+    """Persist one setting for the currently highlighted player."""
+    player = get_selected_player()
+    if player is None:
+        raise ValueError("Select a player before updating player settings.")
+
+    player_id = int(player["id"])
+    if setting == "watch":
+        set_player_watch_rating(player_id, value)
+    elif setting == "tags":
+        set_player_tags(player_id, value)
+    elif setting == "notes":
+        set_player_notes(player_id, value)
+    else:
+        raise ValueError(f"Unsupported selected-player setting: {setting!r}.")
+
+
 def layout(**_kwargs):
     """Build the persistent graph surface, refreshed from the shared workspace selection."""
     return html.Div(
@@ -452,7 +527,14 @@ def layout(**_kwargs):
         children=[
             html.H2("Selected player graphs"),
             dcc.Interval(id=REFRESH_INTERVAL_ID, interval=1_000, n_intervals=0),
-            html.H3(get_selected_player_name(), id=PLAYER_NAME_ID),
+            html.Div(
+                [
+                    html.H3(get_selected_player_name(), id=PLAYER_NAME_ID),
+                    html.Div(build_player_settings(), id=PLAYER_SETTINGS_ID),
+                    html.Div(id=SETTINGS_STATUS_ID, role="status"),
+                ],
+                className="selected-player-header",
+            ),
             html.Div(
                 build_player_graphs(),
                 id=GRAPH_CONTAINER_ID,
@@ -481,3 +563,33 @@ def refresh_selected_player_name(_n_intervals: int) -> str:
 def refresh_selected_player_graphs(_n_intervals: int) -> list[dcc.Graph]:
     """Refresh graphs after another page changes the shared player selection."""
     return build_player_graphs()
+
+
+@callback(
+    Output(PLAYER_SETTINGS_ID, "children"),
+    Input(REFRESH_INTERVAL_ID, "n_intervals"),
+)
+def refresh_selected_player_settings(_n_intervals: int) -> html.Div:
+    """Refresh editor values when another tab highlights a different player."""
+    return build_player_settings()
+
+
+@callback(
+    Output(SETTINGS_STATUS_ID, "children"),
+    Input(WATCH_INPUT_ID, "value"),
+    Input(TAGS_INPUT_ID, "value"),
+    Input(NOTES_INPUT_ID, "value"),
+    prevent_initial_call=True,
+)
+def persist_selected_player_settings(
+    watch_rating: object, tags: object, notes: object
+) -> str:
+    """Persist the selected player's setting changed in this dedicated tab."""
+    setting_by_input_id = {
+        WATCH_INPUT_ID: ("watch", watch_rating),
+        TAGS_INPUT_ID: ("tags", tags),
+        NOTES_INPUT_ID: ("notes", notes),
+    }
+    setting, value = setting_by_input_id[ctx.triggered_id]
+    update_selected_player_setting(setting, value)
+    return ""

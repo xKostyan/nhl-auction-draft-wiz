@@ -143,6 +143,9 @@ def test_selected_player_is_persisted_and_reset_by_import(tmp_path):
         "id": int(player["id"]),
         "name": player["name"],
         "position": player["position"],
+        "watch_rating": 0,
+        "notes": "",
+        "tags": [],
     }
 
     import_yearly_dataset()

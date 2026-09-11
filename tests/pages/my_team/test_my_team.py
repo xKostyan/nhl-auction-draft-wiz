@@ -158,14 +158,13 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert renderer.count("(index + 0.5) / pointCount * 100") == 6
     bench = grids[-1]
     assert [column["field"] for column in bench.columnDefs] == [
-        "search_focus", "slot_number", "name", "price", "auction_price", "position", "projected_tfp", "projected_afp", "watch_rating"
+        "search_focus", "slot_number", "name", "price", "auction_price", "position", "projected_tfp", "projected_afp"
     ]
     goalie = grids[3]
     assert [column["field"] for column in goalie.columnDefs][6:10] == [
         "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
     ]
-    assert all(grid.columnDefs[-1]["field"] == "watch_rating" for grid in grids)
-    assert all(grid.columnDefs[-1]["cellRenderer"] == "playerWatchRenderer" for grid in grids)
+    assert all("watch_rating" not in [column["field"] for column in grid.columnDefs] for grid in grids)
 
 
 def test_layout_builds_one_my_team_snapshot(monkeypatch):

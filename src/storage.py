@@ -299,19 +299,28 @@ def set_selected_player(player_id: int) -> None:
         conn.close()
 
 
-def get_selected_player() -> dict[str, int | str] | None:
+def get_selected_player() -> dict[str, object] | None:
     """Return the currently highlighted player, if the workspace has one."""
     conn = db_connection()
     try:
         row = conn.execute(
             """
-            SELECT p.id, p.name, p.position
+            SELECT p.id, p.name, p.position, p.watch_rating, COALESCE(ps.notes, '') AS notes
             FROM players p
             JOIN workspace_meta wm
                 ON wm.key = 'selected_player_id' AND wm.value = CAST(p.id AS TEXT)
+            LEFT JOIN player_status ps ON ps.player_id = p.id
             """
         ).fetchone()
-        return dict(row) if row is not None else None
+        if row is None:
+            return None
+        player = dict(row)
+        tag_rows = conn.execute(
+            "SELECT tag FROM player_tags WHERE player_id = ? ORDER BY tag ASC",
+            (player["id"],),
+        ).fetchall()
+        player["tags"] = [str(tag_row["tag"]) for tag_row in tag_rows]
+        return player
     finally:
         conn.close()
 

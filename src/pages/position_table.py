@@ -835,7 +835,6 @@ def build_my_team_grid(
         *_projected_points_column_defs(),
         *(_tags_column_def(tag_position) if is_skater_table or is_goalie_table else []),
         *(_notes_column_def(disable_empty_slots=True) if is_skater_table or is_goalie_table else []),
-        *_watch_column_def(disable_empty_slots=True),
     ]
     return dag.AgGrid(
         id=f"my-team-{table.lower()}-player-grid",

@@ -14,7 +14,10 @@ highlighted from any live-auction or My Team table.
 ## UI and behavior
 
 - The page displays the selected player's name, or **No player highlighted.**
-  until one is selected.
+  until one is selected. Next to the name, persistent player controls provide
+  a 0-to-5 **Watch** rating, the position-appropriate **Tags** checklist, and
+  a multi-line **Notes** input. These controls edit the shared workspace record,
+  so their values are immediately available on the position tables.
 - Click the highlight circle or select **Highlight the player** from a
   player-name context menu on the Forwards, Defencemen, Goalies, or My Team
   pages to replace the shared workspace selection.
