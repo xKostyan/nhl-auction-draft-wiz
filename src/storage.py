@@ -66,6 +66,45 @@ def db_connection() -> sqlite3.Connection:
     return conn
 
 
+def _create_players_table(conn: sqlite3.Connection, table_name: str = "players") -> None:
+    """Create the players table with the current durable player-state fields."""
+    conn.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
+            selected INTEGER NOT NULL DEFAULT 0,
+            on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+            price INTEGER CHECK(price IS NULL OR price >= 0),
+            auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
+            watch_rating INTEGER NOT NULL DEFAULT 0 CHECK(watch_rating BETWEEN 0 AND 5),
+            current_season INTEGER NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+
+def _reset_watch_ratings_to_unwatched(conn: sqlite3.Connection) -> None:
+    """Rebuild the prior 1-to-5 rating schema with the new 0-to-5 range."""
+    _create_players_table(conn, "players_replacement")
+    conn.execute(
+        """
+        INSERT INTO players_replacement (
+            id, name, position, selected, on_my_team, price, auction_price,
+            watch_rating, current_season, created_at
+        )
+        SELECT
+            id, name, position, selected, on_my_team, price, auction_price,
+            0, current_season, created_at
+        FROM players
+        """
+    )
+    conn.execute("DROP TABLE players")
+    conn.execute("ALTER TABLE players_replacement RENAME TO players")
+
+
 def ensure_schema() -> None:
     """Create the schema for persistent player/workspace state.
 
@@ -85,22 +124,7 @@ def ensure_schema() -> None:
             )
             """
         )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS players (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
-                selected INTEGER NOT NULL DEFAULT 0,
-                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
-                price INTEGER CHECK(price IS NULL OR price >= 0),
-                auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
-                watch_rating INTEGER NOT NULL DEFAULT 1 CHECK(watch_rating BETWEEN 1 AND 5),
-                current_season INTEGER NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
+        _create_players_table(conn)
         player_columns = {
             row["name"] for row in conn.execute("PRAGMA table_info(players)").fetchall()
         }
@@ -120,9 +144,14 @@ def ensure_schema() -> None:
             )
         if "watch_rating" not in player_columns:
             conn.execute(
-                "ALTER TABLE players ADD COLUMN watch_rating INTEGER NOT NULL DEFAULT 1 "
-                "CHECK(watch_rating BETWEEN 1 AND 5)"
+                "ALTER TABLE players ADD COLUMN watch_rating INTEGER NOT NULL DEFAULT 0 "
+                "CHECK(watch_rating BETWEEN 0 AND 5)"
             )
+        player_table = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'players'"
+        ).fetchone()
+        if player_table and "watch_rating BETWEEN 0 AND 5" not in player_table["sql"]:
+            _reset_watch_ratings_to_unwatched(conn)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_status (
@@ -886,9 +915,9 @@ def set_player_auction_price(player_id: int, price: int | None) -> None:
 
 
 def set_player_watch_rating(player_id: int, rating: int) -> None:
-    """Persist a player's 1-to-5 draft-watch rating."""
-    if isinstance(rating, bool) or not isinstance(rating, int) or not 1 <= rating <= 5:
-        raise ValueError("Player watch rating must be an integer between 1 and 5.")
+    """Persist a player's 0-to-5 draft-watch rating."""
+    if isinstance(rating, bool) or not isinstance(rating, int) or not 0 <= rating <= 5:
+        raise ValueError("Player watch rating must be an integer between 0 and 5.")
 
     conn = db_connection()
     try:

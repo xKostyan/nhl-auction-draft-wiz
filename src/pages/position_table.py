@@ -464,7 +464,7 @@ def _notes_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
 
 
 def _watch_column_def(*, disable_empty_slots: bool = False) -> list[dict]:
-    """Return the sortable, editable persistent 1-to-5 watch-rating column."""
+    """Return the sortable, editable persistent 0-to-5 watch-rating column."""
     return [
         {
             "field": "watch_rating",
@@ -539,16 +539,16 @@ def _parse_player_price(value: object) -> int | None:
 
 
 def _parse_watch_rating(value: object) -> int:
-    """Validate a JSON-compatible 1-to-5 watch rating emitted by the grid."""
+    """Validate a JSON-compatible 0-to-5 watch rating emitted by the grid."""
     if isinstance(value, bool):
-        raise ValueError("Player watch ratings must be whole numbers from 1 through 5.")
-    if isinstance(value, int) and 1 <= value <= 5:
+        raise ValueError("Player watch ratings must be whole numbers from 0 through 5.")
+    if isinstance(value, int) and 0 <= value <= 5:
         return value
-    if isinstance(value, float) and value.is_integer() and 1 <= value <= 5:
+    if isinstance(value, float) and value.is_integer() and 0 <= value <= 5:
         return int(value)
-    if isinstance(value, str) and value.strip() in {"1", "2", "3", "4", "5"}:
+    if isinstance(value, str) and value.strip() in {"0", "1", "2", "3", "4", "5"}:
         return int(value.strip())
-    raise ValueError("Player watch ratings must be whole numbers from 1 through 5.")
+    raise ValueError("Player watch ratings must be whole numbers from 0 through 5.")
 
 
 def _parse_context_action(value: object) -> str:

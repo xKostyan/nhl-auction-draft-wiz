@@ -47,7 +47,7 @@ def test_import_uses_bundled_sample_data_by_default(tmp_path):
     assert set(["id", "name", "position", "price", "auction_price", "status", "current_season", "watch_rating"]).issubset(rows.columns)
     assert rows["price"].isna().all()
     assert rows["auction_price"].isna().all()
-    assert rows["watch_rating"].eq(1).all()
+    assert rows["watch_rating"].eq(0).all()
     assert rows["status"].isin(["available"]).all()
 
     summary = get_workspace_summary()
@@ -417,6 +417,53 @@ def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
         conn.close()
 
     assert {"price", "auction_price", "watch_rating"}.issubset(columns)
+
+
+def test_watch_rating_schema_migration_resets_existing_ratings_to_unwatched(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    conn = sqlite3.connect(database_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE players (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
+                selected INTEGER NOT NULL DEFAULT 0,
+                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+                price INTEGER CHECK(price IS NULL OR price >= 0),
+                auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
+                watch_rating INTEGER NOT NULL DEFAULT 1 CHECK(watch_rating BETWEEN 1 AND 5),
+                current_season INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO players (
+                id, name, position, selected, on_my_team, price, auction_price,
+                watch_rating, current_season
+            )
+            VALUES (1, 'Test Forward', 'F', 0, 0, NULL, NULL, 5, 2027)
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    configure_storage(database_path)
+    conn = sqlite3.connect(database_path)
+    try:
+        definition = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'players'"
+        ).fetchone()[0]
+        watch_rating = conn.execute("SELECT watch_rating FROM players WHERE id = 1").fetchone()[0]
+    finally:
+        conn.close()
+
+    assert "watch_rating BETWEEN 0 AND 5" in definition
+    assert watch_rating == 0
 
 
 def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):

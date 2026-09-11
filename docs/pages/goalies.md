@@ -50,8 +50,9 @@ open in its own browser tab during the draft.
 - **Notes** is a resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
-- **Watch** is the rightmost sortable 1-to-5 watch-rating column. Five circles
-  show the current rating; click a circle to set and persist that rating.
+- **Watch** is the rightmost sortable 0-to-5 watch-rating column. Five circles
+  show the current rating; no circles are filled for an unwatched player. Click
+  a circle to set and persist that rating.
 - **Game Starts** is a 150px inline combination chart covering every goalie
   season in the imported workspace, including the upcoming season. A blue line
   shows projected game starts and bars show actual game starts; either missing

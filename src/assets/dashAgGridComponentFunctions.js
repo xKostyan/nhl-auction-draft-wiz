@@ -388,7 +388,7 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
 
 dagcomponentfuncs.playerWatchRenderer = function (props) {
     var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
-    var watchRating = Math.min(5, Math.max(1, Number(props.value) || 1));
+    var watchRating = Math.min(5, Math.max(0, Number(props.value) || 0));
 
     if (isEmptySlot) {
         return null;
