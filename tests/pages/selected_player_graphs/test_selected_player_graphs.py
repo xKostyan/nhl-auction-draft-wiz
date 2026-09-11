@@ -8,6 +8,7 @@ from src.pages import selected_player_graphs
 from src.storage import (
     clear_workspace,
     configure_storage,
+    get_selected_player,
     get_players_for_grid,
     import_yearly_dataset,
     set_selected_player,
@@ -45,6 +46,41 @@ def test_refresh_shows_the_shared_selected_player_name(tmp_path):
     set_selected_player(int(player["id"]))
 
     assert selected_player_graphs.refresh_selected_player_name(1) == player["name"]
+
+
+def test_selected_player_settings_persist_watch_tags_and_notes(tmp_path, walk_components):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+    player = next(row for row in get_players_for_grid().to_dict("records") if row["position"] == "F")
+    set_selected_player(int(player["id"]))
+
+    layout = selected_player_graphs.layout()
+    watch = next(
+        node for node in walk_components(layout)
+        if getattr(node, "id", None) == selected_player_graphs.WATCH_INPUT_ID
+    )
+    tags = next(
+        node for node in walk_components(layout)
+        if getattr(node, "id", None) == selected_player_graphs.TAGS_INPUT_ID
+    )
+    notes = next(
+        node for node in walk_components(layout)
+        if getattr(node, "id", None) == selected_player_graphs.NOTES_INPUT_ID
+    )
+
+    assert watch.options == [{"label": str(rating), "value": rating} for rating in range(6)]
+    assert watch.value == 0
+    assert tags.value == []
+    assert notes.value == ""
+    selected_player_graphs.update_selected_player_setting("watch", 4)
+    selected_player_graphs.update_selected_player_setting("tags", ["PP1", "red flag"])
+    selected_player_graphs.update_selected_player_setting("notes", "Monitor preseason usage.")
+
+    selected_player = get_selected_player()
+    assert selected_player["watch_rating"] == 4
+    assert selected_player["tags"] == ["PP1", "red flag"]
+    assert selected_player["notes"] == "Monitor preseason usage."
 
 
 def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):

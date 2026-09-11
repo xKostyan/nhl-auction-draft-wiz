@@ -27,6 +27,7 @@ from src.storage import (
     set_player_on_my_team,
     set_player_price,
     set_player_tags,
+    set_player_watch_rating,
     set_selected_player,
     PlayerPriceRequiredError,
 )
@@ -43,9 +44,10 @@ def test_import_uses_bundled_sample_data_by_default(tmp_path):
 
     rows = get_players_for_grid()
     assert not rows.empty
-    assert set(["id", "name", "position", "price", "auction_price", "status", "current_season"]).issubset(rows.columns)
+    assert set(["id", "name", "position", "price", "auction_price", "status", "current_season", "watch_rating"]).issubset(rows.columns)
     assert rows["price"].isna().all()
     assert rows["auction_price"].isna().all()
+    assert rows["watch_rating"].eq(0).all()
     assert rows["status"].isin(["available"]).all()
 
     summary = get_workspace_summary()
@@ -141,6 +143,9 @@ def test_selected_player_is_persisted_and_reset_by_import(tmp_path):
         "id": int(player["id"]),
         "name": player["name"],
         "position": player["position"],
+        "watch_rating": 0,
+        "notes": "",
+        "tags": [],
     }
 
     import_yearly_dataset()
@@ -211,6 +216,7 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
         "drafted",
         "price",
         "auction_price",
+        "watch_rating",
         "projected_tfp",
         "projected_afp",
         "actual_gp_history",
@@ -237,11 +243,14 @@ def test_position_grid_rows_are_filtered_and_drafted_status_is_persistent(tmp_pa
     set_player_auction_price(player_id, 37)
     priced_forwards = get_players_for_position_grid("F")
     assert priced_forwards.loc[priced_forwards["id"] == player_id, "auction_price"].item() == 37
+    set_player_watch_rating(player_id, 4)
+    watched_forwards = get_players_for_position_grid("F")
+    assert watched_forwards.loc[watched_forwards["id"] == player_id, "watch_rating"].item() == 4
 
-    set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback"])
+    set_player_tags(player_id, ["PP1", "Line2", "contract", "rookie", "bounceback", "red flag"])
     tagged_forwards = get_players_for_position_grid("F")
     assert tagged_forwards.loc[tagged_forwards["id"] == player_id, "tags"].item() == [
-        "Line2", "PP1", "bounceback", "contract", "rookie"
+        "Line2", "PP1", "bounceback", "contract", "red flag", "rookie"
     ]
 
     set_player_notes(player_id, "Top-line role; monitor injury.")
@@ -410,7 +419,54 @@ def test_existing_workspace_schema_is_migrated_with_the_price_column(tmp_path):
     finally:
         conn.close()
 
-    assert {"price", "auction_price"}.issubset(columns)
+    assert {"price", "auction_price", "watch_rating"}.issubset(columns)
+
+
+def test_watch_rating_schema_migration_resets_existing_ratings_to_unwatched(tmp_path):
+    database_path = tmp_path / "draft_workspace.sqlite3"
+    conn = sqlite3.connect(database_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE players (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
+                selected INTEGER NOT NULL DEFAULT 0,
+                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+                price INTEGER CHECK(price IS NULL OR price >= 0),
+                auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
+                watch_rating INTEGER NOT NULL DEFAULT 1 CHECK(watch_rating BETWEEN 1 AND 5),
+                current_season INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO players (
+                id, name, position, selected, on_my_team, price, auction_price,
+                watch_rating, current_season
+            )
+            VALUES (1, 'Test Forward', 'F', 0, 0, NULL, NULL, 5, 2027)
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    configure_storage(database_path)
+    conn = sqlite3.connect(database_path)
+    try:
+        definition = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'players'"
+        ).fetchone()[0]
+        watch_rating = conn.execute("SELECT watch_rating FROM players WHERE id = 1").fetchone()[0]
+    finally:
+        conn.close()
+
+    assert "watch_rating BETWEEN 0 AND 5" in definition
+    assert watch_rating == 0
 
 
 def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
@@ -421,7 +477,7 @@ def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
             """
             CREATE TABLE player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
                 PRIMARY KEY (player_id, tag)
             )
             """
@@ -442,6 +498,7 @@ def test_existing_tag_schema_is_migrated_for_player_evaluation_tags(tmp_path):
     assert "'contract'" in definition
     assert "'rookie'" in definition
     assert "'bounceback'" in definition
+    assert "'red flag'" in definition
 
 
 def test_my_team_position_grid_history_queries_are_limited_to_roster_ids(tmp_path, monkeypatch):

@@ -202,6 +202,36 @@ body,
     width: 100%;
 }
 
+.selected-player-header {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.selected-player-header h3 {
+    margin: 0;
+    min-width: 220px;
+}
+
+.selected-player-settings {
+    display: grid;
+    flex: 1 1 480px;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.selected-player-settings label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.selected-player-settings textarea {
+    resize: vertical;
+}
+
 .selected-player-graphs {
     display: grid;
     gap: 12px;

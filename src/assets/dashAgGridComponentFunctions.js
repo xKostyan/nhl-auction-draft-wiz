@@ -284,6 +284,12 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
         var tagColor = tagColors[tag] || "yellow";
         var colors = tagColor === "green"
             ? { active: "#a5d6a7", border: "#66bb6a" }
+            : tagColor === "light-green"
+                ? { active: "#c8e6c9", border: "#81c784" }
+            : tagColor === "light-blue"
+                ? { active: "#bbdefb", border: "#64b5f6" }
+            : tagColor === "gray"
+                ? { active: "#e0e0e0", border: "#9e9e9e" }
             : tagColor === "red"
                 ? { active: "#ef9a9a", border: "#e57373" }
                 : { active: "#fff59d", border: "#fbc02d" };
@@ -378,6 +384,42 @@ dagcomponentfuncs.playerTagsRenderer = function (props) {
             : React.createElement("span", {
                 style: { color: "#bbb", cursor: "pointer", fontSize: "12px" }
             }, "+"));
+};
+
+dagcomponentfuncs.playerWatchRenderer = function (props) {
+    var isEmptySlot = Boolean(props.data && props.data.is_empty_slot);
+    var watchRating = Math.min(5, Math.max(0, Number(props.value) || 0));
+
+    if (isEmptySlot) {
+        return null;
+    }
+
+    return React.createElement("div", {
+        "aria-label": "Watch rating: " + watchRating + " of 5",
+        role: "group",
+        style: { display: "flex", gap: "3px" }
+    }, [1, 2, 3, 4, 5].map(function (rating) {
+        var selected = rating <= watchRating;
+        return React.createElement("button", {
+            "aria-label": "Set watch rating to " + rating,
+            "aria-pressed": rating === watchRating,
+            key: rating,
+            onClick: function (event) {
+                event.stopPropagation();
+                props.setValue(rating);
+            },
+            style: {
+                backgroundColor: selected ? "#f9a825" : "#f5f5f5",
+                border: "1px solid " + (selected ? "#f57f17" : "#9e9e9e"),
+                borderRadius: "50%",
+                cursor: "pointer",
+                height: "12px",
+                padding: "0",
+                width: "12px"
+            },
+            title: rating + " of 5"
+        });
+    }));
 };
 
 dagcomponentfuncs.playerNameContextMenuRenderer = function (props) {

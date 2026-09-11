@@ -37,6 +37,7 @@ PLAYER_TAGS = (
     "contract",
     "rookie",
     "bounceback",
+    "red flag",
 )
 
 
@@ -65,6 +66,45 @@ def db_connection() -> sqlite3.Connection:
     return conn
 
 
+def _create_players_table(conn: sqlite3.Connection, table_name: str = "players") -> None:
+    """Create the players table with the current durable player-state fields."""
+    conn.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
+            selected INTEGER NOT NULL DEFAULT 0,
+            on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
+            price INTEGER CHECK(price IS NULL OR price >= 0),
+            auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
+            watch_rating INTEGER NOT NULL DEFAULT 0 CHECK(watch_rating BETWEEN 0 AND 5),
+            current_season INTEGER NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+
+def _reset_watch_ratings_to_unwatched(conn: sqlite3.Connection) -> None:
+    """Rebuild the prior 1-to-5 rating schema with the new 0-to-5 range."""
+    _create_players_table(conn, "players_replacement")
+    conn.execute(
+        """
+        INSERT INTO players_replacement (
+            id, name, position, selected, on_my_team, price, auction_price,
+            watch_rating, current_season, created_at
+        )
+        SELECT
+            id, name, position, selected, on_my_team, price, auction_price,
+            0, current_season, created_at
+        FROM players
+        """
+    )
+    conn.execute("DROP TABLE players")
+    conn.execute("ALTER TABLE players_replacement RENAME TO players")
+
+
 def ensure_schema() -> None:
     """Create the schema for persistent player/workspace state.
 
@@ -84,21 +124,7 @@ def ensure_schema() -> None:
             )
             """
         )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS players (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                position TEXT NOT NULL CHECK(position IN ('F', 'D', 'G')),
-                selected INTEGER NOT NULL DEFAULT 0,
-                on_my_team INTEGER NOT NULL DEFAULT 0 CHECK(on_my_team IN (0, 1)),
-                price INTEGER CHECK(price IS NULL OR price >= 0),
-                auction_price INTEGER CHECK(auction_price IS NULL OR auction_price >= 0),
-                current_season INTEGER NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
+        _create_players_table(conn)
         player_columns = {
             row["name"] for row in conn.execute("PRAGMA table_info(players)").fetchall()
         }
@@ -116,6 +142,16 @@ def ensure_schema() -> None:
                 "ALTER TABLE players ADD COLUMN auction_price INTEGER "
                 "CHECK(auction_price IS NULL OR auction_price >= 0)"
             )
+        if "watch_rating" not in player_columns:
+            conn.execute(
+                "ALTER TABLE players ADD COLUMN watch_rating INTEGER NOT NULL DEFAULT 0 "
+                "CHECK(watch_rating BETWEEN 0 AND 5)"
+            )
+        player_table = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'players'"
+        ).fetchone()
+        if player_table and "watch_rating BETWEEN 0 AND 5" not in player_table["sql"]:
+            _reset_watch_ratings_to_unwatched(conn)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS player_status (
@@ -131,7 +167,7 @@ def ensure_schema() -> None:
             """
             CREATE TABLE IF NOT EXISTS player_tags (
                 player_id INTEGER NOT NULL,
-                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
+                tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback', 'red flag')),
                 PRIMARY KEY (player_id, tag),
                 FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
             )
@@ -140,13 +176,13 @@ def ensure_schema() -> None:
         existing_tag_table = conn.execute(
             "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'player_tags'"
         ).fetchone()
-        if existing_tag_table and "'bounceback'" not in existing_tag_table["sql"]:
+        if existing_tag_table and "'red flag'" not in existing_tag_table["sql"]:
             conn.execute("ALTER TABLE player_tags RENAME TO player_tags_legacy")
             conn.execute(
                 """
                 CREATE TABLE player_tags (
                     player_id INTEGER NOT NULL,
-                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback')),
+                    tag TEXT NOT NULL CHECK(tag IN ('PP1', 'PP2', 'PK1', 'PK2', 'Line1', 'Line2', 'Starter', 'Backup', '1A', '1B', 'contract', 'rookie', 'bounceback', 'red flag')),
                     PRIMARY KEY (player_id, tag),
                     FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE
                 )
@@ -263,19 +299,28 @@ def set_selected_player(player_id: int) -> None:
         conn.close()
 
 
-def get_selected_player() -> dict[str, int | str] | None:
+def get_selected_player() -> dict[str, object] | None:
     """Return the currently highlighted player, if the workspace has one."""
     conn = db_connection()
     try:
         row = conn.execute(
             """
-            SELECT p.id, p.name, p.position
+            SELECT p.id, p.name, p.position, p.watch_rating, COALESCE(ps.notes, '') AS notes
             FROM players p
             JOIN workspace_meta wm
                 ON wm.key = 'selected_player_id' AND wm.value = CAST(p.id AS TEXT)
+            LEFT JOIN player_status ps ON ps.player_id = p.id
             """
         ).fetchone()
-        return dict(row) if row is not None else None
+        if row is None:
+            return None
+        player = dict(row)
+        tag_rows = conn.execute(
+            "SELECT tag FROM player_tags WHERE player_id = ? ORDER BY tag ASC",
+            (player["id"],),
+        ).fetchall()
+        player["tags"] = [str(tag_row["tag"]) for tag_row in tag_rows]
+        return player
     finally:
         conn.close()
 
@@ -504,7 +549,7 @@ def get_players_for_grid() -> pd.DataFrame:
     try:
         rows = conn.execute(
             """
-            SELECT p.id, p.name, p.position, p.price, p.auction_price,
+            SELECT p.id, p.name, p.position, p.price, p.auction_price, p.watch_rating,
                    COALESCE(ps.status, 'available') AS status, p.current_season
             FROM players p
             LEFT JOIN player_status ps ON ps.player_id = p.id
@@ -513,7 +558,7 @@ def get_players_for_grid() -> pd.DataFrame:
         ).fetchall()
         data = [dict(row) for row in rows]
         return pd.DataFrame(
-            data, columns=["id", "name", "position", "price", "auction_price", "status", "current_season"]
+            data, columns=["id", "name", "position", "price", "auction_price", "status", "current_season", "watch_rating"]
         )
     finally:
         conn.close()
@@ -549,6 +594,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                 p.on_my_team,
                 p.price,
                 p.auction_price,
+                p.watch_rating,
                 CASE WHEN ps.status = 'drafted' THEN 1 ELSE 0 END AS drafted,
                 COALESCE(ps.notes, '') AS notes,
                 MAX(
@@ -574,7 +620,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             LEFT JOIN player_stats stats
                 ON stats.player_id = p.id AND stats.year = p.current_season
             WHERE p.position = ? AND (? = 0 OR p.on_my_team = 1)
-            GROUP BY p.id, p.name, p.position, p.on_my_team, p.price, p.auction_price, ps.status
+            GROUP BY p.id, p.name, p.position, p.on_my_team, p.price, p.auction_price, p.watch_rating, ps.status
             ORDER BY p.name ASC
             """,
             (normalized_position, int(my_team_only)),
@@ -647,6 +693,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
                     "drafted": bool(row["drafted"]),
                     "price": row["price"],
                     "auction_price": row["auction_price"],
+                    "watch_rating": int(row["watch_rating"]),
                     "notes": row["notes"],
                     "projected_tfp": row["projected_tfp"],
                     "projected_afp": row["projected_afp"],
@@ -752,6 +799,7 @@ def get_players_for_position_grid(position: str, *, my_team_only: bool = False) 
             "drafted",
             "price",
             "auction_price",
+            "watch_rating",
             "projected_tfp",
             "projected_afp",
             "actual_gp_history",
@@ -870,6 +918,22 @@ def set_player_auction_price(player_id: int, price: int | None) -> None:
         if player is None:
             raise ValueError(f"Cannot update auction price: player {player_id} does not exist.")
         conn.execute("UPDATE players SET auction_price = ? WHERE id = ?", (price, player_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_player_watch_rating(player_id: int, rating: int) -> None:
+    """Persist a player's 0-to-5 draft-watch rating."""
+    if isinstance(rating, bool) or not isinstance(rating, int) or not 0 <= rating <= 5:
+        raise ValueError("Player watch rating must be an integer between 0 and 5.")
+
+    conn = db_connection()
+    try:
+        player = conn.execute("SELECT id FROM players WHERE id = ?", (player_id,)).fetchone()
+        if player is None:
+            raise ValueError(f"Cannot update watch rating: player {player_id} does not exist.")
+        conn.execute("UPDATE players SET watch_rating = ? WHERE id = ?", (rating, player_id))
         conn.commit()
     finally:
         conn.close()

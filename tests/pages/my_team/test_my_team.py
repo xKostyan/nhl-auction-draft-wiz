@@ -164,6 +164,7 @@ def test_layout_has_fixed_numbered_roster_slots_without_drafted_column(tmp_path,
     assert [column["field"] for column in goalie.columnDefs][6:10] == [
         "average_performance_history", "projected_gs", "projected_tfp", "projected_afp"
     ]
+    assert all("watch_rating" not in [column["field"] for column in grid.columnDefs] for grid in grids)
 
 
 def test_layout_builds_one_my_team_snapshot(monkeypatch):

@@ -50,16 +50,20 @@ open in its own browser tab during the draft.
   the first bar and ends at the center of the last bar.
 - **Tags** is a resizable 160px compact display of selected tags, or a subtle
   `+` when no tags are set. Click the cell to open a temporary picker for
-  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, `Line2`, `contract`, `rookie`, and
-  `bounceback`, then click **Done** to close it. `contract` marks a contract
+  `PP1`, `PP2`, `PK1`, `PK2`, `Line1`, `Line2`, `contract`, `rookie`,
+  `bounceback`, and `red flag`, then click **Done** to close it. `contract` marks a contract
   year, `rookie` marks future potential, and `bounceback` marks an unusually
   poor prior season with expected improvement. Tags are left-aligned.
   Always-visible selected tags use 11px text; the picker buttons use 9px text.
-  `1` and `rookie` tags use a green hue, `2` and `contract` tags use a yellow
-  hue, and `bounceback` uses a red hue; selections persist in the workspace.
-- **Notes** is the last, resizable 220px column. Click a cell to open a
+  `1` tags use a green hue, `2` tags use a yellow hue, `contract` uses light
+  green, `rookie` uses gray, `bounceback` uses light blue, and `red flag` uses
+  red; selections persist in the workspace.
+- **Notes** is a resizable 220px column. Click a cell to open a
   multi-line text editor; saved notes wrap within the cell and persist in the
   workspace. Visible note text is 14px.
+- **Watch** is the rightmost sortable 0-to-5 watch-rating column. Five circles
+  show the current rating; no circles are filled for an unwatched player. Click
+  a circle to set and persist that rating.
 - See [Sparkline implementation](../sparklines.md) for the reusable Dash AG
   Grid renderer pattern.
 - The table fills the remaining browser viewport below the persistent app

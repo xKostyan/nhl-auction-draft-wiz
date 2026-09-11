@@ -46,6 +46,7 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
         "p AFP 2027",
         "Tags",
         "Notes",
+        "Watch",
     ]
     assert grid.columnSize == "autoSize"
     assert grid.columnSizeOptions == {"skipHeader": True}
@@ -79,12 +80,21 @@ def test_layout_shows_a_position_specific_draft_grid(tmp_path, walk_components):
     assert grid.columnDefs[9]["headerName"] == "Tags"
     assert grid.columnDefs[9]["cellRenderer"] == "playerTagsRenderer"
     assert grid.columnDefs[9]["cellRendererParams"]["availableTags"] == [
-        "PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"
+        "PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"
     ]
     assert grid.columnDefs[10]["headerName"] == "Notes"
     assert grid.columnDefs[10]["editable"] is True
     assert grid.columnDefs[10]["wrapText"] is True
     assert grid.columnDefs[10]["cellStyle"]["fontSize"] == "14px"
+    assert grid.columnDefs[-1] == {
+        "field": "watch_rating",
+        "headerName": "Watch",
+        "type": "numericColumn",
+        "cellRenderer": "playerWatchRenderer",
+        "editable": True,
+        "resizable": True,
+        "width": 90,
+    }
     assert grid.columnDefs[0]["cellRenderer"] == "searchFocusCircleRenderer"
     assert grid.columnDefs[0]["width"] == 20
     assert grid.columnDefs[1]["cellRenderer"] == "draftedSwitchRenderer"

@@ -124,12 +124,12 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "headerName": "Tags",
             "cellRenderer": "playerTagsRenderer",
             "cellRendererParams": {
-                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback"],
+                "availableTags": ["PP1", "PP2", "PK1", "PK2", "Line1", "Line2", "contract", "rookie", "bounceback", "red flag"],
                 "tagColors": {
                     "PP1": "green", "PK1": "green", "Line1": "green",
                     "PP2": "yellow", "PK2": "yellow", "Line2": "yellow",
                     "Starter": "green", "1A": "green", "1B": "yellow", "Backup": "red",
-                    "contract": "yellow", "rookie": "green", "bounceback": "red",
+                    "contract": "light-green", "rookie": "gray", "bounceback": "light-blue", "red flag": "red",
                 },
             },
             "sortable": False,
@@ -155,6 +155,15 @@ def test_layout_shows_current_season_projected_points_and_switch_status_columns(
             "suppressAutoSize": True,
             "width": 220,
             "wrapText": True,
+        },
+        {
+            "field": "watch_rating",
+            "headerName": "Watch",
+            "type": "numericColumn",
+            "cellRenderer": "playerWatchRenderer",
+            "editable": True,
+            "resizable": True,
+            "width": 90,
         },
     ]
     assert grid.columnSize == "autoSize"
@@ -397,6 +406,19 @@ def test_note_changes_persist_for_a_forward(tmp_path):
     )
 
     assert next(row for row in rows if row["id"] == player_id)["notes"] == "Top power-play unit."
+
+
+def test_watch_rating_changes_persist_for_a_forward(tmp_path):
+    configure_storage(tmp_path / "draft_workspace.sqlite3")
+    clear_workspace()
+    import_yearly_dataset()
+
+    player_id = next(int(row.id) for row in load_players().itertuples(index=False) if row.position == "F")
+    rows = handle_drafted_cell_change(
+        "F", [{"colId": "watch_rating", "value": 5, "data": {"id": player_id}}]
+    )
+
+    assert next(row for row in rows if row["id"] == player_id)["watch_rating"] == 5
 
 
 def test_price_changes_persist_for_a_forward_and_allow_clearing(tmp_path):
