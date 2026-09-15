@@ -30,6 +30,7 @@ WATCH_INPUT_ID = "selected-player-watch-rating"
 TAGS_INPUT_ID = "selected-player-tags"
 NOTES_INPUT_ID = "selected-player-notes"
 _ACTUAL_COLOR = "#1f77b4"
+_REGULAR_POINTS_COLOR = "#6baed6"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
 _DARK_ACTUAL_BAR_COLORS = {_ACTUAL_COLOR, "#d32f2f"}
@@ -249,6 +250,70 @@ def _build_chart(
     )
 
 
+def _build_stacked_points_chart(
+    actual: pd.Series,
+    special_teams: pd.Series,
+    projected: pd.Series,
+    *,
+    yaxis_max: float,
+) -> dcc.Graph:
+    """Build total-points bars split into special-teams and regular points."""
+    years = sorted(set(actual.index).union(special_teams.index).union(projected.index))
+    actual_values = actual.reindex(years)
+    special_teams_values = special_teams.reindex(years).fillna(0)
+    regular_values = actual_values.sub(special_teams_values)
+    total_labels = ["" if pd.isna(value) else f"{float(value):.0f}" for value in actual_values]
+    figure = go.Figure()
+    figure.add_trace(
+        go.Bar(
+            name="Special teams points",
+            x=years,
+            y=special_teams_values,
+            marker_color=_ACTUAL_COLOR,
+            hovertemplate="Special teams points: %{y:.0f}<extra></extra>",
+        )
+    )
+    figure.add_trace(
+        go.Bar(
+            name="Regular points",
+            x=years,
+            y=regular_values,
+            marker_color=_REGULAR_POINTS_COLOR,
+            text=total_labels,
+            textposition="inside",
+            insidetextanchor="end",
+            hovertemplate="Regular points: %{y:.0f}<br>Total points: %{customdata:.0f}<extra></extra>",
+            customdata=actual_values,
+        )
+    )
+    figure.add_trace(
+        go.Scatter(
+            name="Projected",
+            x=years,
+            y=projected.reindex(years),
+            mode="lines+markers",
+            line={"color": _PROJECTED_COLOR, "width": 3},
+            hovertemplate="Projected: %{y:.0f}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        title="Points",
+        barmode="stack",
+        height=_CHART_HEIGHT,
+        margin={"l": 45, "r": 12, "t": 42, "b": 38},
+        showlegend=False,
+        title_font={"size": 16},
+    )
+    figure.update_xaxes(title="Year", type="category")
+    figure.update_yaxes(title="Points", range=[0, yaxis_max], tickformat=".0f")
+    return dcc.Graph(
+        figure=figure,
+        config={"displayModeBar": False},
+        className="selected-player-graph",
+        style={"height": f"{_CHART_HEIGHT}px", "width": "100%"},
+    )
+
+
 def build_player_graphs(player: dict[str, object] | None = None) -> list[dcc.Graph]:
     """Build the position-appropriate annual charts for the highlighted player."""
     player = get_selected_player() if player is None else player
@@ -362,13 +427,11 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
     blocks_actual, blocks_projected = _derived_metric_values(table, "BLK", "GP")
     shots_actual, shots_projected = _derived_metric_values(table, "SOG", "GP")
     charts_by_name = {
-        "Points": _build_chart(
-            "Points",
+        "Points": _build_stacked_points_chart(
             points_actual,
+            special_teams_actual,
             points_projected,
-            yaxis_title="Points",
             yaxis_max=120 if position == "F" else 100,
-            value_format=".0f",
         ),
         "Points per Game": _build_chart(
             "Points per Game",

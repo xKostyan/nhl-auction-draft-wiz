@@ -48,8 +48,10 @@ highlighted from any live-auction or My Team table.
   separate color bands are defined.
 - Skaters also receive actual-versus-projected **Hits per Game**, **Blocks per
   Game**, and **Shots on Goal per Game**, each calculated from the relevant
-  season total divided by games played, plus actual-versus-projected **Points**
-  and **Special Teams Points** charts.
+  season total divided by games played. Their **Points** chart uses stacked
+  actual bars: special-teams points on the bottom and regular points above,
+  combining to the displayed total, with a projected total-points line.
+  The standalone **Special Teams Points** chart remains unchanged.
 - Goalies receive **AVG Performance**, which compares actual fantasy points
   average (bars) with projected values (line) by year.
 - Skaters receive an actual-versus-projected **Points per Game** chart

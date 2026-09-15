@@ -107,17 +107,23 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     ]
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")
-    assert [trace.name for trace in points.data] == ["Actual", "Projected"]
+    assert [trace.name for trace in points.data] == ["Special teams points", "Regular points", "Projected"]
     assert [trace.name for trace in health.data] == ["Actual", "Projected"]
     assert points.data[0].type == "bar"
-    assert points.data[0].texttemplate == "%{y:.0f}"
-    assert points.data[0].textposition == "inside"
-    assert points.data[0].insidetextanchor == "start"
-    assert list(points.data[0].insidetextfont.color) == ["white"] * len(points.data[0].y)
-    assert points.data[0].hovertemplate == "Actual: %{y:.0f}<extra></extra>"
-    assert points.data[1].type == "scatter"
-    assert points.data[1].hovertemplate == "Projected: %{y:.0f}<extra></extra>"
+    assert list(points.data[0].y) == [0, 1, 1, 1, 0]
+    assert points.data[0].hovertemplate == "Special teams points: %{y:.0f}<extra></extra>"
+    assert points.data[1].type == "bar"
+    assert list(points.data[1].y)[:4] == [12, 11, 16, 31]
+    assert list(points.data[1].text) == ["12", "12", "17", "32", ""]
+    assert points.data[1].textposition == "inside"
+    assert points.data[1].insidetextanchor == "end"
+    assert points.data[1].hovertemplate == (
+        "Regular points: %{y:.0f}<br>Total points: %{customdata:.0f}<extra></extra>"
+    )
+    assert points.data[2].type == "scatter"
+    assert points.data[2].hovertemplate == "Projected: %{y:.0f}<extra></extra>"
     assert points.layout.yaxis.tickformat == ".0f"
+    assert points.layout.barmode == "stack"
     assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
     assert next(graph for graph in graphs if graph.figure is points).style == {
@@ -154,9 +160,10 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     integer_charts = {"Health", "Points", "Special Teams Points", "Goals"}
     for graph in graphs:
         value_format = ".0f" if graph.figure.layout.title.text in integer_charts else ".2f"
-        assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
-        assert graph.figure.data[0].textposition == "inside"
-        assert graph.figure.data[0].insidetextanchor == "start"
+        if graph.figure.layout.title.text != "Points":
+            assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
+            assert graph.figure.data[0].textposition == "inside"
+            assert graph.figure.data[0].insidetextanchor == "start"
         assert graph.figure.layout.yaxis.tickformat == value_format
     assert all(
         [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
@@ -296,6 +303,9 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Hits per Game": ".2f",
         "Blocks per Game": ".2f",
     }
+    points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
+    assert [trace.name for trace in points.data] == ["Special teams points", "Regular points", "Projected"]
+    assert points.layout.barmode == "stack"
 
 
 def test_derived_skater_rates_use_the_imported_totals(tmp_path):
