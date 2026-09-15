@@ -409,10 +409,10 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
     }
     chart_order = (
         (
-            "Shots on Goal per Game",
-            "Points",
             "Points per Game",
+            "Points",
             "Special Teams Points",
+            "Shots on Goal per Game",
             "Hits per Game",
             "Blocks per Game",
         )
