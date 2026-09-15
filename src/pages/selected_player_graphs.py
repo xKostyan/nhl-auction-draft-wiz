@@ -356,6 +356,7 @@ def build_player_graphs(player: dict[str, object] | None = None) -> list[dcc.Gra
 def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[dcc.Graph]:
     """Build the position-specific chart order after the shared first skater row."""
     points_actual, points_projected = _metric_values(table, "PTS")
+    points_per_game_actual, points_per_game_projected = _derived_metric_values(table, "PTS", "GP")
     special_teams_actual, special_teams_projected = _metric_values(table, "STP")
     hits_actual, hits_projected = _derived_metric_values(table, "HIT", "GP")
     blocks_actual, blocks_projected = _derived_metric_values(table, "BLK", "GP")
@@ -368,6 +369,13 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
             yaxis_title="Points",
             yaxis_max=120 if position == "F" else 100,
             value_format=".0f",
+        ),
+        "Points per Game": _build_chart(
+            "Points per Game",
+            points_per_game_actual,
+            points_per_game_projected,
+            yaxis_title="Points per game",
+            yaxis_max=2.00,
         ),
         "Special Teams Points": _build_chart(
             "Special Teams Points",
@@ -400,9 +408,23 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
         ),
     }
     chart_order = (
-        ("Shots on Goal per Game", "Points", "Special Teams Points", "Hits per Game", "Blocks per Game")
+        (
+            "Shots on Goal per Game",
+            "Points",
+            "Points per Game",
+            "Special Teams Points",
+            "Hits per Game",
+            "Blocks per Game",
+        )
         if position == "D"
-        else ("Points", "Special Teams Points", "Hits per Game", "Blocks per Game", "Shots on Goal per Game")
+        else (
+            "Points",
+            "Points per Game",
+            "Special Teams Points",
+            "Hits per Game",
+            "Blocks per Game",
+            "Shots on Goal per Game",
+        )
     )
     return [charts_by_name[name] for name in chart_order]
 
@@ -414,7 +436,6 @@ def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
     }
     shooting_actual, shooting_projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
     goals_actual, goals_projected = _metric_values(table, "G")
-    assists_actual, assists_projected = _derived_metric_values(table, "A", "GP")
     charts_by_name = {
         "Shooting Percentage": _build_chart(
             "Shooting Percentage",
@@ -431,16 +452,9 @@ def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
             yaxis_max=60,
             value_format=".0f",
         ),
-        "Assists per Game": _build_chart(
-            "Assists per Game",
-            assists_actual,
-            assists_projected,
-            yaxis_title="Assists per game",
-            yaxis_max=2,
-        ),
     }
     return [
-        charts_by_name["Assists per Game"],
+        remaining_charts["Points per Game"],
         remaining_charts["Points"],
         remaining_charts["Special Teams Points"],
         remaining_charts["Shots on Goal per Game"],

@@ -29,10 +29,10 @@ highlighted from any live-auction or My Team table.
 - The page refreshes the graph set alongside the selected player's name.
 - Skater charts begin with **Health**, **AVG Performance**, and **Time on
   Ice**, in that order, filling the first three-column row.
-- Defencemen then show **Shots on Goal per Game**, **Points**, and **Special
-  Teams Points** in the second row, followed by **Hits per Game** and **Blocks
-  per Game** in the third row.
-- Forwards then show **Assists per Game**, **Points**, and **Special Teams
+- Defencemen then show **Shots on Goal per Game**, **Points**, and **Points per
+  Game** in the second row, followed by **Special Teams Points**, **Hits per
+  Game**, and **Blocks per Game** in the third row.
+- Forwards then show **Points per Game**, **Points**, and **Special Teams
   Points** in the second row; **Shots on Goal per Game**, **Shooting
   Percentage**, and **Goals** in the third; and **Hits per Game** and **Blocks
   per Game** in the fourth.
@@ -52,14 +52,15 @@ highlighted from any live-auction or My Team table.
   and **Special Teams Points** charts.
 - Goalies receive **AVG Performance**, which compares actual fantasy points
   average (bars) with projected values (line) by year.
-- Forwards additionally receive actual-versus-projected **Shooting
-  Percentage** (goals divided by shots on goal), **Goals**, and **Assists per
-  Game** (assists divided by games played) charts.
+- Skaters receive an actual-versus-projected **Points per Game** chart
+  (points divided by games played). Forwards additionally receive
+  actual-versus-projected **Shooting Percentage** (goals divided by shots on
+  goal) and **Goals** charts.
 - Fixed zero-based scales keep skater charts comparable: Health 0-84 and AVG
   Performance 0-6. Forward Points, Special Teams Points, Hits per Game, Blocks
   per Game, and Shots on Goal per Game use 0-120, 0-60, 0-2, 0-1.5, and 0-6;
-  defencemen use 0-100, 0-50, 0-3, 0-3, and 0-4. Shooting Percentage uses
-  0-20, Goals 0-60, and Assists per Game 0-2.
+  defencemen use 0-100, 0-50, 0-3, 0-3, and 0-4. Points per Game uses 0-2;
+  Shooting Percentage uses 0-20 and Goals 0-60.
 - Goalies additionally receive actual-versus-projected **Game Starts**, **Win
   Percentage**, and **Save Percentage** charts.
 - Goalie axes use fixed scales: AVG Performance 0-12, Game Starts 0-60, Win
