@@ -30,6 +30,7 @@ WATCH_INPUT_ID = "selected-player-watch-rating"
 TAGS_INPUT_ID = "selected-player-tags"
 NOTES_INPUT_ID = "selected-player-notes"
 _ACTUAL_COLOR = "#1f77b4"
+_SPECIAL_TEAMS_POINTS_COLOR = "#6baed6"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
 _DARK_ACTUAL_BAR_COLORS = {_ACTUAL_COLOR, "#d32f2f"}
@@ -249,6 +250,77 @@ def _build_chart(
     )
 
 
+def _build_stacked_points_chart(
+    actual: pd.Series,
+    special_teams: pd.Series,
+    projected: pd.Series,
+    *,
+    yaxis_max: float,
+) -> dcc.Graph:
+    """Build total-points bars split into special-teams and regular points."""
+    years = sorted(set(actual.index).union(special_teams.index).union(projected.index))
+    actual_values = actual.reindex(years)
+    special_teams_values = special_teams.reindex(years).fillna(0)
+    regular_values = actual_values.sub(special_teams_values)
+    total_labels = ["" if pd.isna(value) else f"{float(value):.0f}" for value in actual_values]
+    special_teams_labels = [
+        "" if value == 0 else f"{float(value):.0f}" for value in special_teams_values
+    ]
+    figure = go.Figure()
+    figure.add_trace(
+        go.Bar(
+            name="Special teams points",
+            x=years,
+            y=special_teams_values,
+            marker_color=_SPECIAL_TEAMS_POINTS_COLOR,
+            text=special_teams_labels,
+            textposition="inside",
+            insidetextanchor="start",
+            insidetextfont={"color": "black"},
+            hovertemplate="Special teams points: %{y:.0f}<extra></extra>",
+        )
+    )
+    figure.add_trace(
+        go.Bar(
+            name="Regular points",
+            x=years,
+            y=regular_values,
+            marker_color=_ACTUAL_COLOR,
+            text=total_labels,
+            textposition="inside",
+            insidetextanchor="end",
+            hovertemplate="Regular points: %{y:.0f}<br>Total points: %{customdata:.0f}<extra></extra>",
+            customdata=actual_values,
+        )
+    )
+    figure.add_trace(
+        go.Scatter(
+            name="Projected",
+            x=years,
+            y=projected.reindex(years),
+            mode="lines+markers",
+            line={"color": _PROJECTED_COLOR, "width": 3},
+            hovertemplate="Projected: %{y:.0f}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        title="Points",
+        barmode="stack",
+        height=_CHART_HEIGHT,
+        margin={"l": 45, "r": 12, "t": 42, "b": 38},
+        showlegend=False,
+        title_font={"size": 16},
+    )
+    figure.update_xaxes(title="Year", type="category")
+    figure.update_yaxes(title="Points", range=[0, yaxis_max], tickformat=".0f")
+    return dcc.Graph(
+        figure=figure,
+        config={"displayModeBar": False},
+        className="selected-player-graph",
+        style={"height": f"{_CHART_HEIGHT}px", "width": "100%"},
+    )
+
+
 def build_player_graphs(player: dict[str, object] | None = None) -> list[dcc.Graph]:
     """Build the position-appropriate annual charts for the highlighted player."""
     player = get_selected_player() if player is None else player
@@ -356,18 +428,24 @@ def build_player_graphs(player: dict[str, object] | None = None) -> list[dcc.Gra
 def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[dcc.Graph]:
     """Build the position-specific chart order after the shared first skater row."""
     points_actual, points_projected = _metric_values(table, "PTS")
+    points_per_game_actual, points_per_game_projected = _derived_metric_values(table, "PTS", "GP")
     special_teams_actual, special_teams_projected = _metric_values(table, "STP")
     hits_actual, hits_projected = _derived_metric_values(table, "HIT", "GP")
     blocks_actual, blocks_projected = _derived_metric_values(table, "BLK", "GP")
     shots_actual, shots_projected = _derived_metric_values(table, "SOG", "GP")
     charts_by_name = {
-        "Points": _build_chart(
-            "Points",
+        "Points": _build_stacked_points_chart(
             points_actual,
+            special_teams_actual,
             points_projected,
-            yaxis_title="Points",
             yaxis_max=120 if position == "F" else 100,
-            value_format=".0f",
+        ),
+        "Points per Game": _build_chart(
+            "Points per Game",
+            points_per_game_actual,
+            points_per_game_projected,
+            yaxis_title="Points per game",
+            yaxis_max=2.00,
         ),
         "Special Teams Points": _build_chart(
             "Special Teams Points",
@@ -400,9 +478,23 @@ def _build_remaining_skater_charts(table: pd.DataFrame, position: str) -> list[d
         ),
     }
     chart_order = (
-        ("Shots on Goal per Game", "Points", "Special Teams Points", "Hits per Game", "Blocks per Game")
+        (
+            "Points per Game",
+            "Points",
+            "Special Teams Points",
+            "Shots on Goal per Game",
+            "Hits per Game",
+            "Blocks per Game",
+        )
         if position == "D"
-        else ("Points", "Special Teams Points", "Hits per Game", "Blocks per Game", "Shots on Goal per Game")
+        else (
+            "Points",
+            "Points per Game",
+            "Special Teams Points",
+            "Hits per Game",
+            "Blocks per Game",
+            "Shots on Goal per Game",
+        )
     )
     return [charts_by_name[name] for name in chart_order]
 
@@ -414,7 +506,6 @@ def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
     }
     shooting_actual, shooting_projected = _derived_metric_values(table, "G", "SOG", multiplier=100)
     goals_actual, goals_projected = _metric_values(table, "G")
-    assists_actual, assists_projected = _derived_metric_values(table, "A", "GP")
     charts_by_name = {
         "Shooting Percentage": _build_chart(
             "Shooting Percentage",
@@ -431,16 +522,9 @@ def _build_forward_charts(table: pd.DataFrame) -> list[dcc.Graph]:
             yaxis_max=60,
             value_format=".0f",
         ),
-        "Assists per Game": _build_chart(
-            "Assists per Game",
-            assists_actual,
-            assists_projected,
-            yaxis_title="Assists per game",
-            yaxis_max=2,
-        ),
     }
     return [
-        charts_by_name["Assists per Game"],
+        remaining_charts["Points per Game"],
         remaining_charts["Points"],
         remaining_charts["Special Teams Points"],
         remaining_charts["Shots on Goal per Game"],

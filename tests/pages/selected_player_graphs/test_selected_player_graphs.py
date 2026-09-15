@@ -96,7 +96,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Health",
         "AVG Performance",
         "Time on Ice",
-        "Assists per Game",
+        "Points per Game",
         "Points",
         "Special Teams Points",
         "Shots on Goal per Game",
@@ -107,17 +107,29 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     ]
     points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
     health = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Health")
-    assert [trace.name for trace in points.data] == ["Actual", "Projected"]
+    assert [trace.name for trace in points.data] == ["Special teams points", "Regular points", "Projected"]
     assert [trace.name for trace in health.data] == ["Actual", "Projected"]
     assert points.data[0].type == "bar"
-    assert points.data[0].texttemplate == "%{y:.0f}"
+    assert list(points.data[0].y) == [0, 1, 1, 1, 0]
+    assert points.data[0].marker.color == "#6baed6"
+    assert list(points.data[0].text) == ["", "1", "1", "1", ""]
     assert points.data[0].textposition == "inside"
     assert points.data[0].insidetextanchor == "start"
-    assert list(points.data[0].insidetextfont.color) == ["white"] * len(points.data[0].y)
-    assert points.data[0].hovertemplate == "Actual: %{y:.0f}<extra></extra>"
-    assert points.data[1].type == "scatter"
-    assert points.data[1].hovertemplate == "Projected: %{y:.0f}<extra></extra>"
+    assert points.data[0].insidetextfont.color == "black"
+    assert points.data[0].hovertemplate == "Special teams points: %{y:.0f}<extra></extra>"
+    assert points.data[1].type == "bar"
+    assert list(points.data[1].y)[:4] == [12, 11, 16, 31]
+    assert points.data[1].marker.color == "#1f77b4"
+    assert list(points.data[1].text) == ["12", "12", "17", "32", ""]
+    assert points.data[1].textposition == "inside"
+    assert points.data[1].insidetextanchor == "end"
+    assert points.data[1].hovertemplate == (
+        "Regular points: %{y:.0f}<br>Total points: %{customdata:.0f}<extra></extra>"
+    )
+    assert points.data[2].type == "scatter"
+    assert points.data[2].hovertemplate == "Projected: %{y:.0f}<extra></extra>"
     assert points.layout.yaxis.tickformat == ".0f"
+    assert points.layout.barmode == "stack"
     assert points.layout.showlegend is False
     assert points.layout.height == selected_player_graphs._CHART_HEIGHT
     assert next(graph for graph in graphs if graph.figure is points).style == {
@@ -146,7 +158,7 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
         "Shots on Goal per Game": 6,
         "Shooting Percentage": 20,
         "Goals": 60,
-        "Assists per Game": 2,
+        "Points per Game": 2,
     }
     assert {
         graph.figure.layout.title.text: graph.figure.layout.yaxis.range[1] for graph in graphs
@@ -154,9 +166,10 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     integer_charts = {"Health", "Points", "Special Teams Points", "Goals"}
     for graph in graphs:
         value_format = ".0f" if graph.figure.layout.title.text in integer_charts else ".2f"
-        assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
-        assert graph.figure.data[0].textposition == "inside"
-        assert graph.figure.data[0].insidetextanchor == "start"
+        if graph.figure.layout.title.text != "Points":
+            assert graph.figure.data[0].texttemplate == f"%{{y:{value_format}}}"
+            assert graph.figure.data[0].textposition == "inside"
+            assert graph.figure.data[0].insidetextanchor == "start"
         assert graph.figure.layout.yaxis.tickformat == value_format
     assert all(
         [trace.name for trace in graph.figure.data] == ["Actual", "Projected"]
@@ -250,9 +263,10 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Health",
         "AVG Performance",
         "Time on Ice",
-        "Shots on Goal per Game",
+        "Points per Game",
         "Points",
         "Special Teams Points",
+        "Shots on Goal per Game",
         "Hits per Game",
         "Blocks per Game",
     ]
@@ -275,6 +289,7 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "AVG Performance": 6,
         "Time on Ice": 27,
         "Points": 100,
+        "Points per Game": 2,
         "Special Teams Points": 50,
         "Hits per Game": 3,
         "Blocks per Game": 3,
@@ -289,10 +304,14 @@ def test_defenceman_graphs_include_only_all_position_and_skater_metrics(tmp_path
         "Time on Ice": ".2f",
         "Shots on Goal per Game": ".2f",
         "Points": ".0f",
+        "Points per Game": ".2f",
         "Special Teams Points": ".0f",
         "Hits per Game": ".2f",
         "Blocks per Game": ".2f",
     }
+    points = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points")
+    assert [trace.name for trace in points.data] == ["Special teams points", "Regular points", "Projected"]
+    assert points.layout.barmode == "stack"
 
 
 def test_derived_skater_rates_use_the_imported_totals(tmp_path):
@@ -308,7 +327,7 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     blocks_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Blocks per Game")
     shots_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shots on Goal per Game")
     shooting_percentage = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Shooting Percentage")
-    assists_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Assists per Game")
+    points_per_game = next(graph.figure for graph in graphs if graph.figure.layout.title.text == "Points per Game")
 
     assert time_on_ice.data[0].y[0] == 33339 / 61 / 60
     assert time_on_ice.data[1].y[-1] == 57530.01 / 79 / 60
@@ -317,8 +336,8 @@ def test_derived_skater_rates_use_the_imported_totals(tmp_path):
     assert shots_per_game.data[0].y[0] == 66 / 61
     assert shots_per_game.data[1].y[-1] == 99 / 79
     assert shooting_percentage.data[0].y[0] == 5 / 66 * 100
-    assert assists_per_game.data[0].y[0] == 7 / 61
-    assert assists_per_game.data[1].y[-1] == 14 / 79
+    assert points_per_game.data[0].y[0] == 12 / 61
+    assert points_per_game.data[1].y[-1] == 29 / 79
 
 
 def test_skater_bar_color_bands_match_the_player_tables():
