@@ -30,7 +30,7 @@ WATCH_INPUT_ID = "selected-player-watch-rating"
 TAGS_INPUT_ID = "selected-player-tags"
 NOTES_INPUT_ID = "selected-player-notes"
 _ACTUAL_COLOR = "#1f77b4"
-_REGULAR_POINTS_COLOR = "#6baed6"
+_SPECIAL_TEAMS_POINTS_COLOR = "#6baed6"
 _PROJECTED_COLOR = "#ff7f0e"
 _CHART_HEIGHT = 260
 _DARK_ACTUAL_BAR_COLORS = {_ACTUAL_COLOR, "#d32f2f"}
@@ -263,13 +263,20 @@ def _build_stacked_points_chart(
     special_teams_values = special_teams.reindex(years).fillna(0)
     regular_values = actual_values.sub(special_teams_values)
     total_labels = ["" if pd.isna(value) else f"{float(value):.0f}" for value in actual_values]
+    special_teams_labels = [
+        "" if value == 0 else f"{float(value):.0f}" for value in special_teams_values
+    ]
     figure = go.Figure()
     figure.add_trace(
         go.Bar(
             name="Special teams points",
             x=years,
             y=special_teams_values,
-            marker_color=_ACTUAL_COLOR,
+            marker_color=_SPECIAL_TEAMS_POINTS_COLOR,
+            text=special_teams_labels,
+            textposition="inside",
+            insidetextanchor="start",
+            insidetextfont={"color": "black"},
             hovertemplate="Special teams points: %{y:.0f}<extra></extra>",
         )
     )
@@ -278,7 +285,7 @@ def _build_stacked_points_chart(
             name="Regular points",
             x=years,
             y=regular_values,
-            marker_color=_REGULAR_POINTS_COLOR,
+            marker_color=_ACTUAL_COLOR,
             text=total_labels,
             textposition="inside",
             insidetextanchor="end",

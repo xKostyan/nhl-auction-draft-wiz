@@ -111,9 +111,15 @@ def test_forward_graphs_include_all_skater_and_forward_metrics(tmp_path):
     assert [trace.name for trace in health.data] == ["Actual", "Projected"]
     assert points.data[0].type == "bar"
     assert list(points.data[0].y) == [0, 1, 1, 1, 0]
+    assert points.data[0].marker.color == "#6baed6"
+    assert list(points.data[0].text) == ["", "1", "1", "1", ""]
+    assert points.data[0].textposition == "inside"
+    assert points.data[0].insidetextanchor == "start"
+    assert points.data[0].insidetextfont.color == "black"
     assert points.data[0].hovertemplate == "Special teams points: %{y:.0f}<extra></extra>"
     assert points.data[1].type == "bar"
     assert list(points.data[1].y)[:4] == [12, 11, 16, 31]
+    assert points.data[1].marker.color == "#1f77b4"
     assert list(points.data[1].text) == ["12", "12", "17", "32", ""]
     assert points.data[1].textposition == "inside"
     assert points.data[1].insidetextanchor == "end"
